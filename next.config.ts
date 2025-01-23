@@ -1,5 +1,4 @@
-// next.config.ts
-import type { NextConfig } from "next"
+import { type NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   images: {
@@ -18,7 +17,6 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   compress: true,
-  // Improved caching
   headers: async () => [
     {
       source: '/:all*(svg|jpg|png)',
@@ -52,7 +50,6 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
-  // Bundle optimization
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
       Object.assign(config.resolve.alias, {
@@ -64,6 +61,6 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-};
+}
 
 export default nextConfig;
