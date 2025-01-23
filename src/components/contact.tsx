@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, Phone, Github, Linkedin } from 'lucide-react'
+import { Mail, Phone, Github, Linkedin, Loader2 } from 'lucide-react'
 import { useTheme } from './themeprovider'
+import { motion } from 'framer-motion'
 
 export function Contact() {
   const { theme } = useTheme()
@@ -11,19 +12,45 @@ export function Contact() {
     email: '',
     message: ''
   })
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
+    setStatus('loading')
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!res.ok) throw new Error()
+      
+      setStatus('success')
+      setFormData({ name: '', email: '', message: '' })
+      
+      setTimeout(() => setStatus('idle'), 3000)
+    } catch (error) {
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 3000)
+    }
   }
 
   return (
     <section id="contact" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:max-w-4xl">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mx-auto max-w-2xl lg:max-w-4xl"
+        >
           <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${
             theme === 'dark' ? 'text-white' : 'text-gray-900'
-          }`}>Contact</h2>
+          }`}>
+            Contact
+          </h2>
           
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Contact Info */}
@@ -35,9 +62,10 @@ export function Contact() {
                   { icon: Github, text: 'GitHub', href: 'https://github.com/yourusername' },
                   { icon: Linkedin, text: 'LinkedIn', href: 'https://linkedin.com/in/yourusername' }
                 ].map((item) => (
-                  <a
+                  <motion.a
                     key={item.text}
                     href={item.href}
+                    whileHover={{ x: 5 }}
                     className={`flex items-center gap-2 ${
                       theme === 'dark' 
                         ? 'text-gray-300 hover:text-white' 
@@ -46,7 +74,7 @@ export function Contact() {
                   >
                     <item.icon className="h-5 w-5" />
                     {item.text}
-                  </a>
+                  </motion.a>
                 ))}
               </div>
             </div>
@@ -74,9 +102,11 @@ export function Contact() {
                         : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     }`}
                     required
+                    disabled={status === 'loading'}
                   />
                 </div>
               ))}
+              
               <div>
                 <label htmlFor="message" className={`block text-sm font-medium ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
@@ -94,17 +124,35 @@ export function Contact() {
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                   required
+                  disabled={status === 'loading'}
                 />
               </div>
+
               <button
                 type="submit"
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors duration-200"
+                disabled={status === 'loading'}
+                className={`relative w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 ${
+                  status === 'loading' 
+                    ? 'bg-indigo-400 cursor-not-allowed'
+                    : 'bg-indigo-600 hover:bg-indigo-500'
+                }`}
               >
-                Send Message
+                {status === 'loading' ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </span>
+                ) : status === 'success' ? (
+                  'Message Sent!'
+                ) : status === 'error' ? (
+                  'Failed to Send - Try Again'
+                ) : (
+                  'Send Message'
+                )}
               </button>
             </form>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

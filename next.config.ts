@@ -1,4 +1,5 @@
-import type { NextConfig } from "next";
+// next.config.ts
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   images: {
@@ -17,6 +18,52 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   compress: true,
+  // Improved caching
+  headers: async () => [
+    {
+      source: '/:all*(svg|jpg|png)',
+      locale: false,
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=31536000, immutable',
+        },
+      ],
+    },
+    {
+      source: '/:path*',
+      headers: [
+        {
+          key: 'X-DNS-Prefetch-Control',
+          value: 'on'
+        },
+        {
+          key: 'X-XSS-Protection',
+          value: '1; mode=block'
+        },
+        {
+          key: 'X-Frame-Options',
+          value: 'SAMEORIGIN'
+        },
+        {
+          key: 'X-Content-Type-Options',
+          value: 'nosniff'
+        },
+      ],
+    },
+  ],
+  // Bundle optimization
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      Object.assign(config.resolve.alias, {
+        'react/jsx-runtime.js': 'preact/compat/jsx-runtime',
+        react: 'preact/compat',
+        'react-dom/test-utils': 'preact/test-utils',
+        'react-dom': 'preact/compat',
+      });
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
