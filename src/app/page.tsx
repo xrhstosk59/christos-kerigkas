@@ -1,5 +1,11 @@
-import { Navbar } from '@/components/navbar'
-import { Hero } from '@/components/hero'
+// src/app/page.tsx
+
+"use client"
+
+import dynamic from 'next/dynamic'
+
+const Navbar = dynamic(() => import('@/components/navbar'), { ssr: false })
+const Hero = dynamic(() => import('@/components/hero'), { ssr: false })
 import { About } from '@/components/about'
 import { Experience } from '@/components/experience'
 import { Skills } from '@/components/skills'

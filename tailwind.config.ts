@@ -6,7 +6,14 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: ['class', '[data-theme="dark"]'],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['var(--font-geist)'],
+        mono: ['var(--font-geist-mono)'],
+      },
+    },
+  },
   plugins: [
     require('@tailwindcss/forms'),
   ],

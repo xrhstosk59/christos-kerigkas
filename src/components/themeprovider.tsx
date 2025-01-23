@@ -2,13 +2,16 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type Theme = 'light' | 'dark'
 
-const ThemeContext = createContext<{
+type ThemeContextType = {
   theme: Theme
   toggleTheme: () => void
-}>({
+}
+
+const ThemeContext = createContext<ThemeContextType>({
   theme: 'light',
   toggleTheme: () => null,
 })
@@ -18,21 +21,39 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode
 }) {
+  const [mounted, setMounted] = useState(false)
   const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
+    setMounted(true)
     const savedTheme = localStorage.getItem('theme') as Theme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
     if (savedTheme) {
       setTheme(savedTheme)
-      document.documentElement.setAttribute('data-theme', savedTheme)
+    } else if (prefersDark) {
+      setTheme('dark')
     }
   }, [])
 
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('theme', theme)
+      document.documentElement.setAttribute('data-theme', theme)
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    }
+  }, [theme, mounted])
+
+  if (!mounted) {
+    return null
+  }
+
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    document.documentElement.setAttribute('data-theme', newTheme)
+    setTheme(theme === 'light' ? 'dark' : 'light')
   }
 
   return (
@@ -40,7 +61,12 @@ export function ThemeProvider({
       {children}
       <button
         onClick={toggleTheme}
-        className="fixed bottom-4 right-4 p-3 rounded-full bg-gray-100 dark:bg-gray-800 shadow-lg"
+        className={cn(
+          "fixed bottom-4 right-4 p-3 rounded-full shadow-lg transition-colors duration-200",
+          theme === 'dark' 
+            ? 'bg-gray-800 hover:bg-gray-700 text-gray-200' 
+            : 'bg-white hover:bg-gray-100 text-gray-900'
+        )}
         aria-label="Toggle theme"
       >
         {theme === 'light' ? (
