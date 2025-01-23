@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { Mail, Phone, Github, Linkedin } from 'lucide-react'
+import { useTheme } from './themeprovider'
 
 export function Contact() {
+  const { theme } = useTheme()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -13,82 +15,90 @@ export function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     console.log('Form submitted:', formData)
-    // Add your form submission logic here
   }
 
   return (
-    <section id="contact" className="py-24 bg-gray-50">
+    <section id="contact" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:max-w-4xl">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Contact</h2>
+          <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>Contact</h2>
           
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Contact Info */}
             <div>
               <div className="space-y-4">
-                <a href="mailto:your-email@example.com" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                  <Mail className="h-5 w-5" />
-                  your-email@example.com
-                </a>
-                <a href="tel:+1234567890" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                  <Phone className="h-5 w-5" />
-                  +30 123 456 7890
-                </a>
-                <a href="https://github.com/yourusername" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                  <Github className="h-5 w-5" />
-                  GitHub
-                </a>
-                <a href="https://linkedin.com/in/yourusername" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                  <Linkedin className="h-5 w-5" />
-                  LinkedIn
-                </a>
+                {[
+                  { icon: Mail, text: 'your-email@example.com', href: 'mailto:your-email@example.com' },
+                  { icon: Phone, text: '+30 123 456 7890', href: 'tel:+301234567890' },
+                  { icon: Github, text: 'GitHub', href: 'https://github.com/yourusername' },
+                  { icon: Linkedin, text: 'LinkedIn', href: 'https://linkedin.com/in/yourusername' }
+                ].map((item) => (
+                  <a
+                    key={item.text}
+                    href={item.href}
+                    className={`flex items-center gap-2 ${
+                      theme === 'dark' 
+                        ? 'text-gray-300 hover:text-white' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    } transition-colors duration-200`}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.text}
+                  </a>
+                ))}
               </div>
             </div>
 
             {/* Contact Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
+              {[
+                { id: 'name', type: 'text', label: 'Name' },
+                { id: 'email', type: 'email', label: 'Email' }
+              ].map((field) => (
+                <div key={field.id}>
+                  <label htmlFor={field.id} className={`block text-sm font-medium ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {field.label}
+                  </label>
+                  <input
+                    type={field.type}
+                    id={field.id}
+                    value={formData[field.id as keyof typeof formData]}
+                    onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                    className={`mt-1 block w-full rounded-md shadow-sm ${
+                      theme === 'dark'
+                        ? 'bg-gray-900 border-gray-700 text-white focus:ring-indigo-500 focus:border-indigo-500'
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    required
+                  />
+                </div>
+              ))}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="message" className={`block text-sm font-medium ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Message
                 </label>
                 <textarea
                   id="message"
                   rows={4}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                    theme === 'dark'
+                      ? 'bg-gray-900 border-gray-700 text-white focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors duration-200"
               >
                 Send Message
               </button>

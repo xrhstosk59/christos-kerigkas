@@ -1,3 +1,7 @@
+// src/components/projects.tsx
+'use client'
+
+import { useTheme } from './themeprovider'
 import { Github, ExternalLink } from 'lucide-react'
 
 const projects = [
@@ -28,11 +32,15 @@ const projects = [
 ]
 
 export function Projects() {
+  const { theme } = useTheme()
+  
   return (
-    <section id="projects" className="py-24 bg-white">
+    <section id="projects" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-white'}`}>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:max-w-4xl">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-16">
+          <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl mb-16 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>
             Featured Projects
           </h2>
           
@@ -43,20 +51,26 @@ export function Projects() {
               }`}>
                 {/* Project Image */}
                 <div className="lg:w-1/2">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="rounded-lg shadow-lg object-cover aspect-video w-full"
-                  />
+                  <div className={`rounded-lg shadow-lg overflow-hidden aspect-video ${
+                    theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                  }`}>
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
                 
                 {/* Project Info */}
                 <div className="lg:w-1/2 space-y-4">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className={`text-2xl font-bold ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
                     {project.title}
                   </h3>
                   
-                  <p className="text-gray-600">
+                  <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
                     {project.description}
                   </p>
                   
@@ -64,7 +78,11 @@ export function Projects() {
                     {project.tech.map((tech) => (
                       <span
                         key={tech}
-                        className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 text-gray-200'
+                            : 'bg-blue-50 text-blue-700'
+                        }`}
                       >
                         {tech}
                       </span>
@@ -74,14 +92,26 @@ export function Projects() {
                   <div className="flex gap-4 pt-4">
                     <a
                       href={project.github}
-                      className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1 ${
+                        theme === 'dark' 
+                          ? 'text-gray-300 hover:text-white' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      } transition-colors duration-200`}
                     >
                       <Github className="h-5 w-5" />
                       <span>Code</span>
                     </a>
                     <a
                       href={project.demo}
-                      className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1 ${
+                        theme === 'dark' 
+                          ? 'text-gray-300 hover:text-white' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      } transition-colors duration-200`}
                     >
                       <ExternalLink className="h-5 w-5" />
                       <span>Live Demo</span>
