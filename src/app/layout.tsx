@@ -1,9 +1,8 @@
-// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/themeprovider";
 import { Analytics } from "@/components/analytics";
-import { seoConfig } from "@/lib/seo";
+import { defaultMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const geist = Geist({
@@ -19,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  ...seoConfig.default,
+  ...defaultMetadata,
   metadataBase: new URL('https://christoskerigkas.com'),
   manifest: '/manifest.json',
   icons: {
@@ -28,8 +27,13 @@ export const metadata: Metadata = {
       { url: '/apple-icon.png', sizes: '180x180' }
     ]
   },
-  other: {
-    'google-site-verification': 'YOUR-VERIFICATION-CODE'
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: 'index,follow,max-image-preview:large,max-video-preview:-1,max-snippet:-1',
+  },
+  verification: {
+    google: 'YOUR-VERIFICATION-CODE'
   }
 };
 

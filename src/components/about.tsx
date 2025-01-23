@@ -9,27 +9,27 @@ const details = [
   {
     icon: Code2,
     title: 'Full Stack Developer',
-    description: 'Ειδικεύομαι στην ανάπτυξη web εφαρμογών με Next.js, React και TypeScript'
+    description: 'Specialized in web application development with Next.js, React, and TypeScript'
   },
   {
     icon: GraduationCap,
     title: 'Computer Science Student',
-    description: 'Φοιτητής Πληροφορικής με έμφαση στο web development'
+    description: 'Studying Computer Science with focus on web development and software engineering'
   },
   {
     icon: Binary,
     title: 'Crypto Enthusiast',
-    description: 'Ανάπτυξη εργαλείων ανάλυσης και trading bots για κρυπτονομίσματα'
+    description: 'Developing analysis tools and trading bots for cryptocurrency markets'
   },
   {
     icon: Home,
     title: 'Location',
-    description: 'Καβάλα, Ελλάδα με καταγωγή από τη Χαλκιδική'
+    description: 'Based in Kavala, Greece with roots in Chalkidiki'
   },
   {
     icon: Dumbbell,
     title: 'Lifestyle',
-    description: 'Καθημερινή γυμναστική και υγιεινή διατροφή'
+    description: 'Daily gym workouts and healthy nutrition enthusiast'
   }
 ]
 
@@ -37,10 +37,14 @@ export function About() {
   const { theme } = useTheme()
   
   return (
-    <section id="about" className={cn(
-      "py-24",
-      theme === 'dark' ? 'bg-gray-950' : 'bg-white'
-    )}>
+    <section 
+      id="about" 
+      className={cn(
+        "py-24",
+        theme === 'dark' ? 'bg-gray-950' : 'bg-white'
+      )}
+      aria-label="About Me Section"
+    >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -111,9 +115,9 @@ export function About() {
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             )}
           >
-            21 ετών, με πάθος για την τεχνολογία και την ανάπτυξη καινοτόμων λύσεων. 
-            Συνδυάζω τις σπουδές μου στην πληροφορική με πρακτική εμπειρία σε modern web development 
-            και blockchain τεχνολογίες.
+            21 years old, passionate about technology and developing innovative solutions. 
+            Combining computer science studies with hands-on experience in modern web development 
+            and blockchain technologies.
           </motion.p>
         </motion.div>
       </div>

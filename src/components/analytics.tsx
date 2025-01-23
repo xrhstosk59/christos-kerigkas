@@ -1,10 +1,9 @@
-// src/components/analytics.tsx
 'use client'
 
 import Script from 'next/script'
 
 export function Analytics() {
-  const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX' // Replace with your GA ID
+  const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID
 
   return (
     <>
@@ -22,6 +21,7 @@ export function Analytics() {
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}', {
               page_path: window.location.pathname,
+              debug_mode: process.env.NODE_ENV === 'development'
             });
           `,
         }}
