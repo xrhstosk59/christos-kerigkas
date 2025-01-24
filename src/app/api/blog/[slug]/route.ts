@@ -14,7 +14,7 @@ export async function GET(
     const post = JSON.parse(content) as BlogPost
 
     return NextResponse.json(post)
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: 'Post not found' },
       { status: 404 }
