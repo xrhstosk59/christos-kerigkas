@@ -2,12 +2,15 @@ src\app\api\blog\route.ts
 src\app\api\blog\[slug]\route.ts
 src\app\api\contact\route.ts
 src\app\blog\layoute.tsx
+src\app\blog\loading.tsx
 src\app\blog\page.tsx
 src\app\blog\[slug]\layoute.tsx
 src\app\blog\[slug]\page.tsx
+src\app\error.tsx
 src\app\favicon.ico
 src\app\globals.css
 src\app\layout.tsx
+src\app\loading.tsx
 src\app\page.tsx
 src\app\robot.ts
 src\app\sitemap.ts
@@ -15,6 +18,7 @@ src\components\about.tsx
 src\components\analytics.tsx
 src\components\blogcard.tsx
 src\components\contact.tsx
+src\components\error-boundary.tsx
 src\components\experience.tsx
 src\components\footer.tsx
 src\components\hero.tsx
@@ -26,6 +30,7 @@ src\components\skills.tsx
 src\components\themeprovider.tsx
 src\content\posts\crypto-trading-basics.json
 src\content\posts\getting-started-with-nextjs.json
+src\lib\image-loader.ts
 src\lib\navigation.ts
 src\lib\seo.ts
 src\lib\utils.ts
