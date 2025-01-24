@@ -31,6 +31,7 @@ C:\Users\chris\Downloads\christos-kerigkas\.env.local
 C:\Users\chris\Downloads\christos-kerigkas\.gitignore
 C:\Users\chris\Downloads\christos-kerigkas\eslint.config.mjs
 C:\Users\chris\Downloads\christos-kerigkas\getpaths.js
+C:\Users\chris\Downloads\christos-kerigkas\manifest.json
 C:\Users\chris\Downloads\christos-kerigkas\next-env.d.ts
 C:\Users\chris\Downloads\christos-kerigkas\next.config.ts
 C:\Users\chris\Downloads\christos-kerigkas\package-lock.json

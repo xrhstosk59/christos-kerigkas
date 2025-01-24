@@ -7,6 +7,7 @@ import { OptimizedImage } from '@/components/optimizedimage'
 import { motion } from 'framer-motion'
 import type { BlogPost } from '@/types/blog'
 import { formatDate } from '@/lib/utils'
+import { Markdown } from '@/components/markdown'
 
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const { theme } = useTheme()
@@ -51,12 +52,11 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           className="mx-auto max-w-2xl lg:max-w-4xl"
         >
           <div className="mb-8">
-            <h1 className={`text-4xl font-bold ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
+            <h1 className={`text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
               {post.title}
             </h1>
-            
+
             <div className="mt-6 flex items-center gap-4">
               <OptimizedImage
                 src={post.author.image}
@@ -69,7 +69,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                 <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
                   {post.author.name}
                 </p>
-                <time 
+                <time
                   dateTime={post.date}
                   className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}
                 >
@@ -87,19 +87,16 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             className="rounded-lg shadow-lg mb-8"
           />
 
-          <div className="prose max-w-none prose-lg">
-            {post.content}
-          </div>
+          <Markdown content={post.content} />
 
           <div className="mt-8 flex flex-wrap gap-2">
             {post.categories.map((category) => (
               <span
                 key={category}
-                className={`text-sm px-3 py-1 rounded-full ${
-                  theme === 'dark' 
-                    ? 'bg-gray-800 text-gray-300' 
+                className={`text-sm px-3 py-1 rounded-full ${theme === 'dark'
+                    ? 'bg-gray-800 text-gray-300'
                     : 'bg-gray-100 text-gray-700'
-                }`}
+                  }`}
               >
                 {category}
               </span>
