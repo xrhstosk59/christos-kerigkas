@@ -1,5 +1,7 @@
+// src/components/blogcard.tsx
 'use client'
 
+import { memo } from 'react'
 import { useTheme } from './themeprovider'
 import { motion } from 'framer-motion'
 import { OptimizedImage } from './optimizedimage'
@@ -12,7 +14,7 @@ interface BlogCardProps {
   index: number
 }
 
-export function BlogCard({ post, index }: BlogCardProps) {
+export const BlogCard = memo(function BlogCard({ post, index }: BlogCardProps) {
   const { theme } = useTheme()
   
   return (
@@ -26,18 +28,18 @@ export function BlogCard({ post, index }: BlogCardProps) {
           : 'bg-gray-50 hover:bg-gray-100'
       } transition-all duration-200`}
     >
-      <div className="lg:w-1/3">
+      <Link href={`/blog/${post.slug}`} className="lg:w-1/3">
         <OptimizedImage
           src={post.image}
           alt={post.title}
           width={400}
           height={250}
-          className="rounded-lg shadow-md"
+          className="rounded-lg shadow-md hover:scale-105 transition-transform duration-200"
         />
-      </div>
+      </Link>
       
       <div className="lg:w-2/3">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <OptimizedImage
             src={post.author.image}
             alt={post.author.name}
@@ -51,14 +53,14 @@ export function BlogCard({ post, index }: BlogCardProps) {
         </div>
         
         <Link href={`/blog/${post.slug}`}>
-          <h2 className={`mt-4 text-xl font-bold ${
-            theme === 'dark' ? 'text-white hover:text-gray-300' : 'text-gray-900 hover:text-gray-600'
+          <h2 className={`mt-4 text-xl font-bold group-hover:text-indigo-600 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
           } transition-colors duration-200`}>
             {post.title}
           </h2>
         </Link>
         
-        <p className={`mt-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+        <p className={`mt-2 line-clamp-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
           {post.description}
         </p>
         
@@ -79,4 +81,4 @@ export function BlogCard({ post, index }: BlogCardProps) {
       </div>
     </motion.article>
   )
-}
+})
