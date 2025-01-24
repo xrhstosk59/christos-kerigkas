@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   compress: true,
+  env: {
+    NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+  },
   headers: async () => [
     {
       source: '/:all*(svg|jpg|png)',
@@ -50,17 +53,6 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      Object.assign(config.resolve.alias, {
-        'react/jsx-runtime.js': 'preact/compat/jsx-runtime',
-        react: 'preact/compat',
-        'react-dom/test-utils': 'preact/test-utils',
-        'react-dom': 'preact/compat',
-      });
-    }
-    return config;
-  },
 }
 
-export default nextConfig;
+export default nextConfig

@@ -1,0 +1,16 @@
+{
+    "name": "Christos Kerigkas Portfolio",
+    "short_name": "CK Portfolio",
+    "description": "Personal portfolio website showcasing my work and skills",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4F46E5",
+    "icons": [
+      {
+        "src": "/apple-icon.png",
+        "sizes": "180x180",
+        "type": "image/png"
+      }
+    ]
+  }
