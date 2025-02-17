@@ -16,8 +16,7 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  const { theme } = useTheme()
-  const [profileImage, setProfileImage] = useState('/profile.jpg')
+  const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -182,27 +181,24 @@ export default function Hero() {
             transition={{ delay: 0.4 }}
             className="mt-8 flex justify-center gap-4"
           >
-            {socialLinks.map((socialLink) => {
-              const Icon = socialLink.icon
-              return (
-                <a
-                  key={socialLink.label}
-                  href={socialLink.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    "p-2 rounded-full transition-colors duration-200",
-                    theme === 'dark' 
-                      ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  )}
-                  aria-label={socialLink.label}
-                >
-                  <Icon className="w-6 h-6" />
-                  <span className="sr-only">{socialLink.username}</span>
-                </a>
-              )
-            })}
+            {socialLinks.map(({ icon: Icon, href, label, username }) => (
+              
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "p-2 rounded-full transition-colors duration-200",
+                  theme === 'dark' 
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                )}
+                aria-label={label}
+              >
+                <Icon className="w-6 h-6" />
+                <span className="sr-only">{username}</span>
+              </a>
+            ))}
           </motion.div>
 
           <motion.div 
@@ -211,7 +207,7 @@ export default function Hero() {
             transition={{ delay: 0.6 }}
             className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6"
           >
-            <a
+            
               href="#contact"
               className="w-full sm:w-auto rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
             >

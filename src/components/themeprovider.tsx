@@ -1,4 +1,5 @@
 // src/components/themeprovider.tsx
+
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, memo } from 'react'
@@ -6,9 +7,19 @@ import { Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Theme = 'light' | 'dark'
-type ThemeContextType = { theme: Theme; toggleTheme: () => void }
+type ThemeContextType = { 
+  theme: Theme
+  toggleTheme: () => void
+  profileImage: string
+  setProfileImage: (path: string) => void
+}
 
-const ThemeContext = createContext<ThemeContextType>({ theme: 'light', toggleTheme: () => null })
+const ThemeContext = createContext<ThemeContextType>({ 
+  theme: 'light', 
+  toggleTheme: () => null,
+  profileImage: '/profile.jpg',
+  setProfileImage: () => null
+})
 
 const ThemeToggleButton = memo(({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) => (
   <button
@@ -30,6 +41,7 @@ ThemeToggleButton.displayName = 'ThemeToggleButton'
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [theme, setTheme] = useState<Theme>('light')
+  const [profileImage, setProfileImage] = useState('/profile.jpg')
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light')
@@ -38,22 +50,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true)
     const savedTheme = localStorage.getItem('theme') as Theme
+    const savedProfileImage = localStorage.getItem('profileImage')
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    
     setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
+    if (savedProfileImage) {
+      setProfileImage(savedProfileImage)
+    }
   }, [])
 
   useEffect(() => {
     if (mounted) {
       localStorage.setItem('theme', theme)
+      localStorage.setItem('profileImage', profileImage)
       document.documentElement.dataset.theme = theme
       document.documentElement.classList.toggle('dark', theme === 'dark')
     }
-  }, [theme, mounted])
+  }, [theme, profileImage, mounted])
 
   if (!mounted) return null
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, profileImage, setProfileImage }}>
       {children}
       <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
     </ThemeContext.Provider>
