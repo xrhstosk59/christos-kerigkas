@@ -37,6 +37,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\about.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\analytics.tsx
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-post-client.tsx
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blogcard.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\contact.tsx
