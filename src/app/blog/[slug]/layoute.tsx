@@ -4,9 +4,16 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import type { BlogPost } from '@/types/blog'
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+interface GenerateMetadataProps {
+  params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: GenerateMetadataProps): Promise<Metadata> {
   try {
-    const filePath = path.join(process.cwd(), 'src/content/posts', `${params.slug}.json`)
+    const resolvedParams = await params;
+    const { slug } = resolvedParams;
+
+    const filePath = path.join(process.cwd(), 'src/content/posts', `${slug}.json`)
     const content = await fs.readFile(filePath, 'utf8')
     const post = JSON.parse(content) as BlogPost
 

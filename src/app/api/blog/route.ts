@@ -8,11 +8,15 @@ let cachedPosts: BlogPost[] | null = null
 const CACHE_DURATION = 60 * 60 * 1000 // 1 hour
 let lastFetched = 0
 
-export async function GET() {
+export async function GET() {  // Αφαιρέθηκε η αχρησιμοποίητη παράμετρος request
   try {
     const now = Date.now()
     if (cachedPosts && now - lastFetched < CACHE_DURATION) {
-      return NextResponse.json(cachedPosts)
+      return NextResponse.json(cachedPosts, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+        }
+      })
     }
 
     const postsDirectory = path.join(process.cwd(), 'src/content/posts')

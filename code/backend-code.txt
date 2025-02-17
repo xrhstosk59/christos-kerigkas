@@ -6,8 +6,6 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import type { BlogPost } from '@/types/blog'
 
-export const dynamic = 'force-dynamic'
-
 let cachedPosts: BlogPost[] | null = null
 const CACHE_DURATION = 60 * 60 * 1000 // 1 hour
 let lastFetched = 0
@@ -40,7 +38,8 @@ export async function GET() {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
       }
     })
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch blog posts:', error)
     return NextResponse.json(
       { message: 'Failed to fetch blog posts' },
       { status: 500 }
@@ -56,24 +55,17 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import type { BlogPost } from '@/types/blog'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
-
 export async function GET(
   request: Request,
   { params }: { params: { slug: string } }
-) {
-  const filePath = path.join(
-    process.cwd(), 
-    'src/content/posts', 
-    `${params.slug}.json`
-  )
-  
+): Promise<NextResponse> {
   try {
+    const filePath = path.join(process.cwd(), 'src/content/posts', `${params.slug}.json`)
     const content = await fs.readFile(filePath, 'utf8')
     const post = JSON.parse(content) as BlogPost
+
     return NextResponse.json(post)
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { message: 'Post not found' },
       { status: 404 }
