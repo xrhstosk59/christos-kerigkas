@@ -5,6 +5,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\[slug]\route.t
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\contact\route.ts
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\upload\route.ts
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\layoute.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\loading.tsx
