@@ -553,7 +553,7 @@ console.log('Paths saved to paths.txt');
 [Image File Present]
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\public\uploads\profile-1739805464256.jpg ===
+=== C:\Users\chris\Downloads\christos-kerigkas\public\uploads\profile-1739825420121.jpg ===
 [Image File Present]
 
 
@@ -910,7 +910,7 @@ body {
 }
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\src\app\layout.tsx ===
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\layoute.tsx ===
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/themeprovider";
@@ -1681,6 +1681,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 interface SocialLink {
   icon: React.ComponentType<{ className?: string }>
@@ -1690,8 +1691,7 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  const { theme } = useTheme()
-  const [profileImage, setProfileImage] = useState('/profile.jpg')
+  const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -1856,27 +1856,24 @@ export default function Hero() {
             transition={{ delay: 0.4 }}
             className="mt-8 flex justify-center gap-4"
           >
-            {socialLinks.map((socialLink) => {
-              const Icon = socialLink.icon
-              return (
-                <a
-                  key={socialLink.label}
-                  href={socialLink.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    "p-2 rounded-full transition-colors duration-200",
-                    theme === 'dark' 
-                      ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  )}
-                  aria-label={socialLink.label}
-                >
-                  <Icon className="w-6 h-6" />
-                  <span className="sr-only">{socialLink.username}</span>
-                </a>
-              )
-            })}
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "p-2 rounded-full transition-colors duration-200",
+                  theme === 'dark' 
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                )}
+                aria-label={link.label}
+              >
+                <link.icon className="w-6 h-6" />
+                <span className="sr-only">{link.username}</span>
+              </a>
+            ))}
           </motion.div>
 
           <motion.div 
@@ -1885,13 +1882,13 @@ export default function Hero() {
             transition={{ delay: 0.6 }}
             className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6"
           >
-            <a
+            <Link
               href="#contact"
               className="w-full sm:w-auto rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
             >
               Get in Touch
-            </a>
-            <a 
+            </Link>
+            <Link
               href="#projects" 
               className={cn(
                 "group w-full sm:w-auto flex items-center justify-center gap-2 text-sm font-semibold leading-6 transition-colors duration-200",
@@ -1902,7 +1899,7 @@ export default function Hero() {
             >
               View Projects
               <ArrowDownCircle className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
-            </a>
+            </Link>
           </motion.div>
         </div>
       </div>
@@ -2350,6 +2347,7 @@ export function Skills() {
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\themeprovider.tsx ===
 // src/components/themeprovider.tsx
+
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, memo } from 'react'
@@ -2357,9 +2355,19 @@ import { Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Theme = 'light' | 'dark'
-type ThemeContextType = { theme: Theme; toggleTheme: () => void }
+type ThemeContextType = { 
+  theme: Theme
+  toggleTheme: () => void
+  profileImage: string
+  setProfileImage: (path: string) => void
+}
 
-const ThemeContext = createContext<ThemeContextType>({ theme: 'light', toggleTheme: () => null })
+const ThemeContext = createContext<ThemeContextType>({ 
+  theme: 'light', 
+  toggleTheme: () => null,
+  profileImage: '/profile.jpg',
+  setProfileImage: () => null
+})
 
 const ThemeToggleButton = memo(({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) => (
   <button
@@ -2381,6 +2389,7 @@ ThemeToggleButton.displayName = 'ThemeToggleButton'
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [theme, setTheme] = useState<Theme>('light')
+  const [profileImage, setProfileImage] = useState('/profile.jpg')
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light')
@@ -2389,22 +2398,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true)
     const savedTheme = localStorage.getItem('theme') as Theme
+    const savedProfileImage = localStorage.getItem('profileImage')
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    
     setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
+    if (savedProfileImage) {
+      setProfileImage(savedProfileImage)
+    }
   }, [])
 
   useEffect(() => {
     if (mounted) {
       localStorage.setItem('theme', theme)
+      localStorage.setItem('profileImage', profileImage)
       document.documentElement.dataset.theme = theme
       document.documentElement.classList.toggle('dark', theme === 'dark')
     }
-  }, [theme, mounted])
+  }, [theme, profileImage, mounted])
 
   if (!mounted) return null
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, profileImage, setProfileImage }}>
       {children}
       <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
     </ThemeContext.Provider>

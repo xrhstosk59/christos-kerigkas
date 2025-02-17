@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 interface SocialLink {
   icon: React.ComponentType<{ className?: string }>
@@ -181,10 +182,10 @@ export default function Hero() {
             transition={{ delay: 0.4 }}
             className="mt-8 flex justify-center gap-4"
           >
-            {socialLinks.map(({ icon: Icon, href, label, username }) => (
-              
-                key={label}
-                href={href}
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
@@ -193,10 +194,10 @@ export default function Hero() {
                     ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 )}
-                aria-label={label}
+                aria-label={link.label}
               >
-                <Icon className="w-6 h-6" />
-                <span className="sr-only">{username}</span>
+                <link.icon className="w-6 h-6" />
+                <span className="sr-only">{link.username}</span>
               </a>
             ))}
           </motion.div>
@@ -207,13 +208,13 @@ export default function Hero() {
             transition={{ delay: 0.6 }}
             className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6"
           >
-            
+            <Link
               href="#contact"
               className="w-full sm:w-auto rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
             >
               Get in Touch
-            </a>
-            <a 
+            </Link>
+            <Link
               href="#projects" 
               className={cn(
                 "group w-full sm:w-auto flex items-center justify-center gap-2 text-sm font-semibold leading-6 transition-colors duration-200",
@@ -224,7 +225,7 @@ export default function Hero() {
             >
               View Projects
               <ArrowDownCircle className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
-            </a>
+            </Link>
           </motion.div>
         </div>
       </div>

@@ -23,7 +23,7 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\favicon.ico
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\globals.css
 
-FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\layout.tsx
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\layoute.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\loading.tsx
 
