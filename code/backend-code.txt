@@ -1,0 +1,173 @@
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\route.ts ===
+// src/app/api/blog/route.ts
+import { NextResponse } from 'next/server'
+import { promises as fs } from 'fs'
+import path from 'path'
+import type { BlogPost } from '@/types/blog'
+
+let cachedPosts: BlogPost[] | null = null
+const CACHE_DURATION = 60 * 60 * 1000 // 1 hour
+let lastFetched = 0
+
+export async function GET() {
+  try {
+    const now = Date.now()
+    if (cachedPosts && now - lastFetched < CACHE_DURATION) {
+      return NextResponse.json(cachedPosts)
+    }
+
+    const postsDirectory = path.join(process.cwd(), 'src/content/posts')
+    const files = await fs.readdir(postsDirectory)
+    
+    const posts = await Promise.all(
+      files.map(async (filename) => {
+        const filePath = path.join(postsDirectory, filename)
+        const content = await fs.readFile(filePath, 'utf8')
+        return JSON.parse(content) as BlogPost
+      })
+    )
+
+    posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    
+    cachedPosts = posts
+    lastFetched = now
+
+    return NextResponse.json(posts, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+      }
+    })
+  } catch (error) {
+    console.error('Failed to fetch blog posts:', error)
+    return NextResponse.json(
+      { message: 'Failed to fetch blog posts' },
+      { status: 500 }
+    )
+  }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\[slug]\route.ts ===
+// src/app/api/blog/[slug]/route.ts
+import { NextResponse } from 'next/server'
+import { promises as fs } from 'fs'
+import path from 'path'
+import type { BlogPost } from '@/types/blog'
+
+export async function GET(
+  request: Request,
+  { params }: { params: { slug: string } }
+): Promise<NextResponse> {
+  try {
+    const filePath = path.join(process.cwd(), 'src/content/posts', `${params.slug}.json`)
+    const content = await fs.readFile(filePath, 'utf8')
+    const post = JSON.parse(content) as BlogPost
+
+    return NextResponse.json(post)
+  } catch (error) {
+    return NextResponse.json(
+      { message: 'Post not found' },
+      { status: 404 }
+    )
+  }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\api\contact\route.ts ===
+// src/app/api/contact/route.ts
+import { NextResponse } from 'next/server'
+import { createTransport } from 'nodemailer'
+
+export async function POST(req: Request) {
+  try {
+    const { name, email, message } = await req.json()
+
+    const transporter = createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    })
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: process.env.CONTACT_EMAIL,
+      subject: `New Contact Form Message from ${name}`,
+      text: `
+        Name: ${name}
+        Email: ${email}
+        Message: ${message}
+      `,
+      html: `
+        <h3>New Contact Form Submission</h3>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `,
+    })
+
+    return NextResponse.json(
+      { message: 'Email sent successfully' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Contact form error:', error)
+    return NextResponse.json(
+      { message: 'Failed to send email' },
+      { status: 500 }
+    )
+  }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\robot.ts ===
+// src/app/robots.ts
+import { siteConfig } from '@/lib/seo'
+
+export default function robots() {
+  return {
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/private/', '/admin/'],
+    },
+    sitemap: `${siteConfig.url}/sitemap.xml`,
+  }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\sitemap.ts ===
+// src/app/sitemap.ts
+import { MetadataRoute } from 'next'
+import { promises as fs } from 'fs'
+import path from 'path'
+import { siteConfig } from '@/lib/seo'
+
+type ChangeFreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never'
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+ const routes = ['', '/blog'].map((route): MetadataRoute.Sitemap[number] => ({
+   url: `${siteConfig.url}${route}`,
+   lastModified: new Date().toISOString(),
+   changeFrequency: (route === '' ? 'daily' : 'weekly') as ChangeFreq,
+   priority: route === '' ? 1 : 0.8
+ }))
+
+ const postsDirectory = path.join(process.cwd(), 'src/content/posts')
+ const files = await fs.readdir(postsDirectory)
+ 
+ const blogPosts = files.map((filename): MetadataRoute.Sitemap[number] => ({
+   url: `${siteConfig.url}/blog/${filename.replace('.json', '')}`,
+   lastModified: new Date().toISOString(), 
+   changeFrequency: 'monthly' as ChangeFreq,
+   priority: 0.6
+ }))
+
+ return [...routes, ...blogPosts]
+}
+

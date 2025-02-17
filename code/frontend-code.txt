@@ -1,0 +1,2315 @@
+
+=== C:\Users\chris\Downloads\christos-kerigkas\.eslintrc.json ===
+{
+    "extends": "next/core-web-vitals",
+    "rules": {
+      "@typescript-eslint/no-unused-vars": ["error", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }]
+    }
+  }
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\get-her-code.js ===
+const fs = require('fs/promises');
+const path = require('path');
+
+// Configuration constants updated for Next.js project structure
+const CONFIG = {
+  allowedExtensions: [
+    '.js', '.jsx', '.ts', '.tsx', 
+    '.css', '.json', '.svg', '.ico',
+    '.md', '.png', '.jpg', '.jpeg', '.gif'
+  ],
+  imageExtensions: [
+    '.svg', '.ico', '.png', '.jpg', 
+    '.jpeg', '.gif'
+  ],
+  excludedFiles: [
+    'package-lock.json',
+    'code-dump.txt',
+    'paths.txt',
+    'paths-src.txt',
+    'paths-public.txt',
+    'frontend-code.txt',
+    'backend-code.txt',
+    'shared-code.txt',
+    'config-code.txt',
+    'README.md',
+    '.env.local',
+    '.gitignore',
+    '.npmrc',
+  ],
+  excludedFolders: [
+    '.next',
+    'node_modules',
+    'coverage',
+    'dist',
+    'build',
+    '.git'
+  ],
+  outputFiles: {
+    frontend: 'code/frontend-code.txt',
+    backend: 'code/backend-code.txt',
+    shared: 'code/shared-code.txt',
+    config: 'code/config-code.txt'
+  }
+};
+
+// Updated pattern matcher for Next.js project
+class PatternMatcher {
+  constructor() {
+    this.basePatterns = {
+      frontend: [
+        '/src/components/',
+        '/src/app/blog/',
+        '/src/app/page.',
+        '/src/app/layout.',
+        '/src/app/loading.',
+        '/src/app/error.',
+        '/src/app/globals.css',
+        'favicon.',
+        '/public/',
+        'theme',
+        'optimizedimage',
+        'markdown',
+        'navbar',
+        'footer',
+        'hero',
+      ],
+      backend: [
+        '/src/app/api/',
+        '/src/lib/services/',
+        'route.ts',
+        'middleware.ts',
+        'robot.ts',
+        'sitemap.ts',
+      ],
+      shared: [
+        '/src/lib/utils/',
+        '/src/lib/seo.',
+        '/src/lib/navigation.',
+        '/src/lib/image-loader.',
+        '/src/types/',
+        '/src/content/',
+        'utils.',
+        'types.',
+        'analytics.',
+      ],
+      config: [
+        'tsconfig.',
+        'package.json',
+        'next.config.',
+        'tailwind.config.',
+        'postcss.config.',
+        'jest.config.',
+        '.env'
+      ]
+    };
+
+    this.learnedPatterns = {
+      frontend: new Set(),
+      backend: new Set(),
+      shared: new Set(),
+      config: new Set()
+    };
+  }
+
+  // Learn new patterns from existing file structure
+  async learnFromDirectory(dir) {
+    try {
+      const files = await this.getAllFiles(dir);
+      const categoryMap = new Map();
+
+      for (const file of files) {
+        const category = this.categorizeWithConfidence(file);
+        if (category) {
+          if (!categoryMap.has(category)) {
+            categoryMap.set(category, []);
+          }
+          categoryMap.get(category).push(file);
+        }
+      }
+
+      for (const [category, files] of categoryMap) {
+        this.learnPatternsFromFiles(category, files);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error learning patterns:', error);
+      return false;
+    }
+  }
+
+  async getAllFiles(dir) {
+    const files = [];
+    async function traverse(currentDir) {
+      const items = await fs.readdir(currentDir);
+      for (const item of items) {
+        const fullPath = path.join(currentDir, item);
+        const stats = await fs.stat(fullPath);
+        if (stats.isDirectory() && !CONFIG.excludedFolders.includes(item)) {
+          await traverse(fullPath);
+        } else if (!CONFIG.excludedFiles.includes(item)) {
+          const ext = path.extname(item);
+          if (CONFIG.allowedExtensions.includes(ext)) {
+            files.push(fullPath);
+          }
+        }
+      }
+    }
+    await traverse(dir);
+    return files;
+  }
+
+  learnPatternsFromFiles(category, files) {
+    for (const file of files) {
+      const normalizedPath = file.replace(/\\/g, '/');
+      const parts = normalizedPath.split('/');
+      
+      // Learn from directory structure
+      for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (part && !this.basePatterns[category].some(p => p.includes(part))) {
+          this.learnedPatterns[category].add(part);
+        }
+      }
+
+      // Learn from file naming patterns
+      const fileName = parts[parts.length - 1];
+      const namePatterns = this.extractNamePatterns(fileName);
+      namePatterns.forEach(pattern => {
+        this.learnedPatterns[category].add(pattern);
+      });
+    }
+  }
+
+  extractNamePatterns(fileName) {
+    const patterns = new Set();
+    const baseName = fileName.replace(/\.[^/.]+$/, '');
+    
+    // Updated patterns for Next.js components and pages
+    const suffixes = [
+      'page', 'layout', 'loading', 'error',
+      'component', 'provider', 'boundary',
+      'card', 'section'
+    ];
+    suffixes.forEach(suffix => {
+      if (baseName.endsWith(suffix)) {
+        patterns.add(suffix);
+      }
+    });
+
+    const prefixes = ['use', 'is', 'has', 'get', 'set', 'create', 'update', 'delete'];
+    prefixes.forEach(prefix => {
+      if (baseName.startsWith(prefix)) {
+        patterns.add(prefix);
+      }
+    });
+
+    return patterns;
+  }
+
+  categorizeWithConfidence(filePath) {
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    
+    // Check base patterns first
+    for (const [category, patterns] of Object.entries(this.basePatterns)) {
+      if (patterns.some(pattern => normalizedPath.includes(pattern))) {
+        return category;
+      }
+    }
+
+    // Use learned patterns if base patterns don't match
+    for (const [category, patterns] of Object.entries(this.learnedPatterns)) {
+      if ([...patterns].some(pattern => normalizedPath.includes(pattern))) {
+        return category;
+      }
+    }
+
+    // Next.js specific categorization
+    if (normalizedPath.includes('/app/') && !normalizedPath.includes('/api/')) {
+      return 'frontend';
+    }
+    if (normalizedPath.includes('/components/')) {
+      return 'frontend';
+    }
+    if (normalizedPath.includes('/api/') || normalizedPath.endsWith('route.ts')) {
+      return 'backend';
+    }
+    if (normalizedPath.includes('/lib/') || normalizedPath.includes('/types/')) {
+      return 'shared';
+    }
+
+    return null;
+  }
+
+  async analyzeFileContent(filePath) {
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      const indicators = {
+        frontend: [
+          'React', 'useState', 'useEffect', 'component',
+          '<div', 'className', 'export default function Page',
+          'layout.tsx', 'loading.tsx'
+        ],
+        backend: [
+          'export async function', 'NextResponse', 'NextRequest',
+          'route.ts', 'middleware', 'api'
+        ],
+        shared: [
+          'interface', 'type', 'enum', 'export const',
+          'utils', 'helpers', 'lib'
+        ],
+        config: [
+          'module.exports', 'export default {',
+          'configuration', 'config'
+        ]
+      };
+
+      const matches = {};
+      for (const [category, patterns] of Object.entries(indicators)) {
+        matches[category] = patterns.filter(pattern => content.includes(pattern)).length;
+      }
+
+      const maxMatches = Math.max(...Object.values(matches));
+      const category = Object.keys(matches).find(key => matches[key] === maxMatches);
+      
+      return maxMatches > 0 ? category : null;
+    } catch (error) {
+      console.error(`Error analyzing file ${filePath}:`, error);
+      return null;
+    }
+  }
+}
+
+// Main code organization class
+class CodeOrganizer {
+  constructor() {
+    this.patternMatcher = new PatternMatcher();
+    this.stats = {
+      total: 0,
+      categorized: 0,
+      uncategorized: 0,
+      categories: {
+        frontend: 0,
+        backend: 0,
+        shared: 0,
+        config: 0
+      }
+    };
+  }
+
+  async organize(rootDir) {
+    try {
+      console.log('Starting Next.js code organization...');
+      
+      const codeFolder = path.join(rootDir, 'code');
+      await fs.mkdir(codeFolder, { recursive: true });
+      
+      for (const file of Object.values(CONFIG.outputFiles)) {
+        await fs.writeFile(path.join(rootDir, file), '', 'utf8');
+      }
+
+      console.log('Learning from Next.js project structure...');
+      await this.patternMatcher.learnFromDirectory(rootDir);
+
+      console.log('Processing files...');
+      const files = await this.patternMatcher.getAllFiles(rootDir);
+      this.stats.total = files.length;
+
+      for (const file of files) {
+        const category = await this.categorizeFile(file);
+        if (category) {
+          this.stats.categorized++;
+          this.stats.categories[category]++;
+          
+          const ext = path.extname(file);
+          const isImage = CONFIG.imageExtensions.includes(ext);
+          
+          let outputContent;
+          if (isImage) {
+            outputContent = `\n=== ${file} ===\n[Image File Present]\n\n`;
+          } else {
+            const content = await fs.readFile(file, 'utf8');
+            outputContent = `\n=== ${file} ===\n${content}\n\n`;
+          }
+          
+          const outputPath = path.join(rootDir, CONFIG.outputFiles[category]);
+          await fs.appendFile(outputPath, outputContent, 'utf8');
+        } else {
+          this.stats.uncategorized++;
+          console.log(`Uncategorized file: ${file}`);
+        }
+      }
+
+      this.printResults();
+
+    } catch (error) {
+      console.error('Error during code organization:', error);
+      process.exit(1);
+    }
+  }
+
+  async categorizeFile(filePath) {
+    let category = this.patternMatcher.categorizeWithConfidence(filePath);
+    
+    if (!category) {
+      category = await this.patternMatcher.analyzeFileContent(filePath);
+    }
+
+    return category;
+  }
+
+  printResults() {
+    console.log('\n=== Next.js Code Organization Results ===');
+    console.log('-'.repeat(50));
+    console.log(`Total files processed: ${this.stats.total}`);
+    console.log(`Successfully categorized: ${this.stats.categorized}`);
+    console.log(`Uncategorized: ${this.stats.uncategorized}`);
+    console.log('\nFiles per category:');
+    for (const [category, count] of Object.entries(this.stats.categories)) {
+      const outputFile = CONFIG.outputFiles[category];
+      console.log(`${category.padEnd(10)}: ${count} files -> ${outputFile}`);
+    }
+    console.log('-'.repeat(50));
+
+    if (this.stats.uncategorized > 0) {
+      console.log('\nNote: Some files were not categorized. You may want to:');
+      console.log('1. Check the console output for uncategorized files');
+      console.log('2. Review the file structure in src/app and src/components');
+      console.log('3. Adjust the patterns in the PatternMatcher\n');
+    }
+  }
+}
+
+// Start the organization process
+const organizer = new CodeOrganizer();
+organizer.organize(process.cwd())
+  .then(() => console.log('Next.js code organization completed successfully!'))
+  .catch(error => {
+    console.error('Error during code organization:', error);
+    process.exit(1);
+  });
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\get-paths.js ===
+const fs = require('fs');
+const path = require('path');
+
+// ----- ΡΥΘΜΙΣΕΙΣ ----- //
+const CODE_EXTENSIONS = [
+  '.js', '.jsx', '.ts', '.tsx',
+  '.html', '.css', '.json',
+  '.env', '.md',
+  '.txt',
+  '.webmanifest',
+];
+
+const IMAGE_EXTENSIONS = [
+  '.png', '.jpg', '.jpeg', '.gif', '.bmp',
+  '.webp', '.svg', '.ico', '.glb'
+];
+
+const EXCLUDED_FILES = [
+  'paths-public.txt',
+];
+
+const EXCLUDED_FOLDERS = [];
+
+// ----- ΣΥΝΑΡΤΗΣΗ ΑΝΑΔΡΟΜΗΣ ----- //
+function readFilesRecursively(dir, outputFile) {
+  const items = fs.readdirSync(dir);
+
+  items.forEach((item) => {
+    const fullPath = path.join(dir, item);
+    const stats = fs.statSync(fullPath);
+
+    if (stats.isDirectory()) {
+      if (EXCLUDED_FOLDERS.includes(item)) {
+        return;
+      }
+      readFilesRecursively(fullPath, outputFile);
+    } else {
+      if (EXCLUDED_FILES.includes(item)) {
+        return;
+      }
+      const ext = path.extname(item).toLowerCase();
+
+      if (CODE_EXTENSIONS.includes(ext) || IMAGE_EXTENSIONS.includes(ext)) {
+        const contentToAppend = `\nFILE: ${fullPath}\n`;
+        fs.appendFileSync(outputFile, contentToAppend, 'utf8');
+      }
+    }
+  });
+}
+
+// ----- ΚΥΡΙΩΣ ΛΕΙΤΟΥΡΓΙΑ ----- //
+function createPathsFiles(folderToScan, outputFile) {
+  // Δημιουργία του φακέλου code αν δεν υπάρχει
+  const codeFolder = path.join(__dirname, 'code');
+  if (!fs.existsSync(codeFolder)) {
+    fs.mkdirSync(codeFolder);
+  }
+
+  // Ενημέρωση των paths των αρχείων εξόδου
+  const outputPath = path.join(codeFolder, outputFile);
+  fs.writeFileSync(outputPath, '', 'utf8');
+
+  if (!fs.existsSync(folderToScan)) {
+    console.error(`Δεν βρέθηκε ο φάκελος: ${folderToScan}`);
+    return;
+  }
+
+  readFilesRecursively(folderToScan, outputPath);
+  console.log(`\n✅ Η διαδικασία ολοκληρώθηκε! Δες το αρχείο "code/${outputFile}".\n`);
+}
+
+// ----- ΕΚΚΙΝΗΣΗ ----- //
+const srcFolder = path.join(__dirname, 'src');
+const srcOutputFile = 'paths-src.txt';
+createPathsFiles(srcFolder, srcOutputFile);
+
+const publicFolder = path.join(__dirname, 'public');
+const publicOutputFile = 'paths-public.txt';
+createPathsFiles(publicFolder, publicOutputFile);
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\getpaths.js ===
+const fs = require('fs');
+const path = require('path');
+
+const getAllPaths = (dir) => {
+    const files = fs.readdirSync(dir);
+    let paths = [];
+    files.forEach((file) => {
+        const fullPath = path.join(dir, file);
+        if (fs.statSync(fullPath).isDirectory()) {
+            // Εξαίρεση για φακέλους
+            if (!['node_modules', '.next', 'public'].includes(file)) {
+                paths = paths.concat(getAllPaths(fullPath));
+            }
+        } else {
+            paths.push(fullPath);
+        }
+    });
+    return paths;
+};
+
+// Διαδρομές μόνο από "src" και αρχεία του root
+const srcPaths = getAllPaths('./src');
+const rootFiles = fs.readdirSync('./')
+    .filter(file => fs.statSync(file).isFile()) // Ελέγχει αν είναι αρχείο
+    .map(file => path.resolve(file)); // Επιστρέφει πλήρη paths
+
+// Συνδυασμός των paths
+const paths = [...srcPaths, ...rootFiles];
+
+// Αποθήκευση στο paths.txt
+fs.writeFileSync('paths.txt', paths.join('\n'));
+console.log('Paths saved to paths.txt');
+
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\manifest.json ===
+{
+    "name": "Christos Kerigkas Portfolio",
+    "short_name": "CK Portfolio",
+    "description": "Personal portfolio website showcasing my work and skills",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4F46E5",
+    "icons": [
+      {
+        "src": "/apple-icon.png",
+        "sizes": "180x180",
+        "type": "image/png"
+      }
+    ]
+  }
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\next-env.d.ts ===
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\file.svg ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\globe.svg ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\next.svg ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\vercel.svg ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\window.svg ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\layoute.tsx ===
+import type { Metadata } from 'next'
+import { defaultMetadata } from '@/lib/seo'
+
+export const metadata: Metadata = {
+  ...defaultMetadata,
+  title: 'Blog | Christos Kerigkas',
+  description: 'Articles about web development, cryptocurrency trading, and software engineering',
+  openGraph: {
+    title: 'Blog | Christos Kerigkas',
+    description: 'Articles about web development, cryptocurrency trading, and software engineering',
+  }
+}
+
+export default function BlogLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return children
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\loading.tsx ===
+// src/app/blog/loading.tsx
+export default function BlogLoading() {
+    return (
+      <div className="min-h-screen pt-20 bg-gray-50 dark:bg-gray-950">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
+          <div className="space-y-8">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse flex flex-col lg:flex-row gap-8 p-6 rounded-lg bg-white dark:bg-gray-900">
+                <div className="lg:w-1/3 h-64 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+                <div className="lg:w-2/3 space-y-4">
+                  <div className="h-4 w-1/4 bg-gray-200 dark:bg-gray-800 rounded" />
+                  <div className="h-8 w-3/4 bg-gray-200 dark:bg-gray-800 rounded" />
+                  <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded" />
+                  <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\page.tsx ===
+'use client'
+
+import { useTheme } from '@/components/themeprovider'
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { BlogCard } from '@/components/blogcard'
+import type { BlogPost } from '@/types/blog'
+
+export default function BlogPage() {
+  const { theme } = useTheme()
+  const [posts, setPosts] = useState<BlogPost[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('/api/blog')
+        if (!response.ok) throw new Error('Failed to fetch')
+        const data = await response.json()
+        setPosts(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error('Failed to fetch posts:', error)
+        setPosts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPosts()
+  }, [])
+
+  return (
+    <div className={`min-h-screen pt-20 ${theme === 'dark' ? 'bg-gray-950' : 'bg-white'}`}>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto max-w-2xl lg:max-w-4xl"
+        >
+          <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl mb-12 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>
+            Blog
+          </h1>
+
+          {loading ? (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+          ) : posts.length > 0 ? (
+            <div className="space-y-8">
+              {posts.map((post, index) => (
+                <BlogCard key={post.slug} post={post} index={index} />
+              ))}
+            </div>
+          ) : (
+            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+              No blog posts found.
+            </p>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\layoute.tsx ===
+// src/app/blog/[slug]/layout.tsx
+import type { Metadata } from 'next'
+import { promises as fs } from 'fs'
+import path from 'path'
+import type { BlogPost } from '@/types/blog'
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  try {
+    const filePath = path.join(process.cwd(), 'src/content/posts', `${params.slug}.json`)
+    const content = await fs.readFile(filePath, 'utf8')
+    const post = JSON.parse(content) as BlogPost
+
+    return {
+      title: `${post.title} | Blog`,
+      description: post.description,
+      authors: [{ name: post.author.name }],
+      openGraph: {
+        title: post.title,
+        description: post.description,
+        type: 'article',
+        publishedTime: post.date,
+        authors: [post.author.name],
+        images: [
+          {
+            url: post.image,
+            width: 1200,
+            height: 630,
+            alt: post.title,
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description: post.description,
+        images: [post.image],
+      },
+    }
+  } catch {
+    return {
+      title: 'Blog Post Not Found',
+    }
+  }
+}
+
+export default function BlogPostLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return children
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\page.tsx ===
+// src/app/blog/[slug]/page.tsx
+'use client'
+
+import { useTheme } from '@/components/themeprovider'
+import { useEffect, useState } from 'react'
+import { OptimizedImage } from '@/components/optimizedimage'
+import { motion } from 'framer-motion'
+import type { BlogPost } from '@/types/blog'
+import { formatDate } from '@/lib/utils'
+import { Markdown } from '@/components/markdown'
+
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const { theme } = useTheme()
+  const [post, setPost] = useState<BlogPost | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`/api/blog/${params.slug}`)
+      .then(res => res.json())
+      .then(data => {
+        setPost(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to fetch post:', err)
+        setLoading(false)
+      })
+  }, [params.slug])
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    )
+  }
+
+  if (!post) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>Post not found</p>
+      </div>
+    )
+  }
+
+  return (
+    <article className={`min-h-screen pt-20 ${theme === 'dark' ? 'bg-gray-950' : 'bg-white'}`}>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto max-w-2xl lg:max-w-4xl"
+        >
+          <div className="mb-8">
+            <h1 className={`text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
+              {post.title}
+            </h1>
+
+            <div className="mt-6 flex items-center gap-4">
+              <OptimizedImage
+                src={post.author.image}
+                alt={post.author.name}
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+              <div>
+                <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
+                  {post.author.name}
+                </p>
+                <time
+                  dateTime={post.date}
+                  className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}
+                >
+                  {formatDate(new Date(post.date))}
+                </time>
+              </div>
+            </div>
+          </div>
+
+          <OptimizedImage
+            src={post.image}
+            alt={post.title}
+            width={800}
+            height={400}
+            className="rounded-lg shadow-lg mb-8"
+          />
+
+          <Markdown content={post.content} />
+
+          <div className="mt-8 flex flex-wrap gap-2">
+            {post.categories.map((category) => (
+              <span
+                key={category}
+                className={`text-sm px-3 py-1 rounded-full ${theme === 'dark'
+                    ? 'bg-gray-800 text-gray-300'
+                    : 'bg-gray-100 text-gray-700'
+                  }`}
+              >
+                {category}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </article>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\error.tsx ===
+// src/app/error.tsx
+'use client'
+export { default } from '@/components/error-boundary'
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\favicon.ico ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\globals.css ===
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #171717;
+  --accent: #f3f4f6;
+  --accent-foreground: #171717;
+  --border: #e5e7eb;
+}
+
+[data-theme='dark'] {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --card: #09090b;
+  --card-foreground: #fafafa;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+  --primary: #6366f1;
+  --primary-foreground: #fafafa;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --border: #27272a;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+::selection {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\layout.tsx ===
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/themeprovider";
+import { Analytics } from "@/components/analytics";
+import { defaultMetadata } from "@/lib/seo";
+import "./globals.css";
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  ...defaultMetadata,
+  metadataBase: new URL('https://christoskerigkas.com'),
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180' }
+    ]
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: 'index,follow,max-image-preview:large,max-video-preview:-1,max-snippet:-1',
+  },
+  verification: {
+    google: 'YOUR-VERIFICATION-CODE'
+  }
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head />
+      <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider>
+          {children}
+          <Analytics />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\loading.tsx ===
+// src/app/loading.tsx
+import { Loader2 } from 'lucide-react'
+
+export default function Loading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\page.tsx ===
+// src/app/page.tsx
+
+"use client"
+
+import dynamic from 'next/dynamic'
+
+const Navbar = dynamic(() => import('@/components/navbar'), { ssr: false })
+const Hero = dynamic(() => import('@/components/hero'), { ssr: false })
+import { About } from '@/components/about'
+import { Experience } from '@/components/experience'
+import { Skills } from '@/components/skills'
+import { Projects } from '@/components/projects'
+import { Contact } from '@/components/contact'
+import { Footer } from '@/components/footer'
+
+export default function Home() {
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <Navbar />
+      <Hero />
+      <About />
+      <Experience />
+      <Skills />
+      <Projects />
+      <Contact />
+      <Footer />
+    </main>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\about.tsx ===
+'use client'
+
+import { useTheme } from './themeprovider'
+import { motion } from 'framer-motion'
+import { Code2, Dumbbell, GraduationCap, Home, Binary } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const details = [
+  {
+    icon: Code2,
+    title: 'Full Stack Developer',
+    description: 'Specialized in web application development with Next.js, React, and TypeScript'
+  },
+  {
+    icon: GraduationCap,
+    title: 'Computer Science Student',
+    description: 'Studying Computer Science with focus on web development and software engineering'
+  },
+  {
+    icon: Binary,
+    title: 'Crypto Enthusiast',
+    description: 'Developing analysis tools and trading bots for cryptocurrency markets'
+  },
+  {
+    icon: Home,
+    title: 'Location',
+    description: 'Based in Kavala, Greece with roots in Chalkidiki'
+  },
+  {
+    icon: Dumbbell,
+    title: 'Lifestyle',
+    description: 'Daily gym workouts and healthy nutrition enthusiast'
+  }
+]
+
+export function About() {
+  const { theme } = useTheme()
+  
+  return (
+    <section 
+      id="about" 
+      className={cn(
+        "py-24",
+        theme === 'dark' ? 'bg-gray-950' : 'bg-white'
+      )}
+      aria-label="About Me Section"
+    >
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mx-auto max-w-2xl lg:max-w-4xl"
+        >
+          <h2 className={cn(
+            "text-3xl font-bold tracking-tight sm:text-4xl text-center",
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          )}>
+            About Me
+          </h2>
+          
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {details.map((detail, index) => (
+              <motion.div
+                key={detail.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className={cn(
+                  "relative p-6 rounded-2xl transition-colors",
+                  theme === 'dark' 
+                    ? 'bg-gray-900/50 hover:bg-gray-900/80' 
+                    : 'bg-gray-50 hover:bg-gray-100'
+                )}
+              >
+                <div className={cn(
+                  "rounded-lg p-2 w-10 h-10 mb-4 flex items-center justify-center",
+                  theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                )}>
+                  <detail.icon className={cn(
+                    "w-5 h-5",
+                    theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
+                  )} />
+                </div>
+                
+                <h3 className={cn(
+                  "text-lg font-semibold mb-2",
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                )}>
+                  {detail.title}
+                </h3>
+                
+                <p className={cn(
+                  "text-sm leading-relaxed",
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                )}>
+                  {detail.description}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.p 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className={cn(
+              "mt-12 text-lg leading-8 text-center",
+              theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+            )}
+          >
+            21 years old, passionate about technology and developing innovative solutions. 
+            Combining computer science studies with hands-on experience in modern web development 
+            and blockchain technologies.
+          </motion.p>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\analytics.tsx ===
+// src/components/analytics.tsx
+'use client'
+
+import Script from 'next/script'
+
+export function Analytics() {
+  const GA_ID = process.env.NEXT_PUBLIC_GA_ID
+
+  if (!GA_ID) return null
+
+  return (
+    <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+        strategy="afterInteractive"
+      />
+      <Script id="ga-script" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_ID}', {
+            page_path: window.location.pathname,
+            debug_mode: process.env.NODE_ENV === 'development'
+          });
+        `}
+      </Script>
+    </>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\blogcard.tsx ===
+// src/components/blogcard.tsx
+'use client'
+
+import { memo } from 'react'
+import { useTheme } from './themeprovider'
+import { motion } from 'framer-motion'
+import { OptimizedImage } from './optimizedimage'
+import Link from 'next/link'
+import { formatDate } from '@/lib/utils'
+import type { BlogPost } from '@/types/blog'
+
+interface BlogCardProps {
+  post: BlogPost
+  index: number
+}
+
+export const BlogCard = memo(function BlogCard({ post, index }: BlogCardProps) {
+  const { theme } = useTheme()
+  
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className={`flex flex-col lg:flex-row gap-8 p-6 rounded-lg ${
+        theme === 'dark' 
+          ? 'bg-gray-900/50 hover:bg-gray-900/80' 
+          : 'bg-gray-50 hover:bg-gray-100'
+      } transition-all duration-200`}
+    >
+      <Link href={`/blog/${post.slug}`} className="lg:w-1/3">
+        <OptimizedImage
+          src={post.image}
+          alt={post.title}
+          width={400}
+          height={250}
+          className="rounded-lg shadow-md hover:scale-105 transition-transform duration-200"
+        />
+      </Link>
+      
+      <div className="lg:w-2/3">
+        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <OptimizedImage
+            src={post.author.image}
+            alt={post.author.name}
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+          <span>{post.author.name}</span>
+          <span>•</span>
+          <time dateTime={post.date}>{formatDate(new Date(post.date))}</time>
+        </div>
+        
+        <Link href={`/blog/${post.slug}`}>
+          <h2 className={`mt-4 text-xl font-bold group-hover:text-indigo-600 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          } transition-colors duration-200`}>
+            {post.title}
+          </h2>
+        </Link>
+        
+        <p className={`mt-2 line-clamp-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+          {post.description}
+        </p>
+        
+        <div className="mt-4 flex flex-wrap gap-2">
+          {post.categories.map((category) => (
+            <span
+              key={category}
+              className={`text-sm px-3 py-1 rounded-full ${
+                theme === 'dark' 
+                  ? 'bg-gray-800 text-gray-300' 
+                  : 'bg-gray-100 text-gray-700'
+              }`}
+            >
+              {category}
+            </span>
+          ))}
+        </div>
+      </div>
+    </motion.article>
+  )
+})
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\contact.tsx ===
+'use client'
+
+import { useState } from 'react'
+import { Mail, Phone, Github, Linkedin, Loader2 } from 'lucide-react'
+import { useTheme } from './themeprovider'
+import { motion } from 'framer-motion'
+
+export function Contact() {
+  const { theme } = useTheme()
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  })
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!res.ok) throw new Error()
+
+      setStatus('success')
+      setFormData({ name: '', email: '', message: '' })
+
+      setTimeout(() => setStatus('idle'), 3000)
+    } catch {
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 3000)
+    }
+  }
+  return (
+    <section id="contact" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mx-auto max-w-2xl lg:max-w-4xl"
+        >
+          <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}>
+            Contact
+          </h2>
+
+          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {/* Contact Info */}
+            <div>
+              <div className="space-y-4">
+                {[
+                  { icon: Mail, text: 'your-email@example.com', href: 'mailto:your-email@example.com' },
+                  { icon: Phone, text: '+30 123 456 7890', href: 'tel:+301234567890' },
+                  { icon: Github, text: 'GitHub', href: 'https://github.com/yourusername' },
+                  { icon: Linkedin, text: 'LinkedIn', href: 'https://linkedin.com/in/yourusername' }
+                ].map((item) => (
+                  <motion.a
+                    key={item.text}
+                    href={item.href}
+                    whileHover={{ x: 5 }}
+                    className={`flex items-center gap-2 ${theme === 'dark'
+                        ? 'text-gray-300 hover:text-white'
+                        : 'text-gray-600 hover:text-gray-900'
+                      } transition-colors duration-200`}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.text}
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {[
+                { id: 'name', type: 'text', label: 'Name' },
+                { id: 'email', type: 'email', label: 'Email' }
+              ].map((field) => (
+                <div key={field.id}>
+                  <label htmlFor={field.id} className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                    {field.label}
+                  </label>
+                  <input
+                    type={field.type}
+                    id={field.id}
+                    value={formData[field.id as keyof typeof formData]}
+                    onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                    className={`mt-1 block w-full rounded-md shadow-sm ${theme === 'dark'
+                        ? 'bg-gray-900 border-gray-700 text-white focus:ring-indigo-500 focus:border-indigo-500'
+                        : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      }`}
+                    required
+                    disabled={status === 'loading'}
+                  />
+                </div>
+              ))}
+
+              <div>
+                <label htmlFor="message" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  rows={4}
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className={`mt-1 block w-full rounded-md shadow-sm ${theme === 'dark'
+                      ? 'bg-gray-900 border-gray-700 text-white focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                  required
+                  disabled={status === 'loading'}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className={`relative w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 ${status === 'loading'
+                    ? 'bg-indigo-400 cursor-not-allowed'
+                    : 'bg-indigo-600 hover:bg-indigo-500'
+                  }`}
+              >
+                {status === 'loading' ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </span>
+                ) : status === 'success' ? (
+                  'Message Sent!'
+                ) : status === 'error' ? (
+                  'Failed to Send - Try Again'
+                ) : (
+                  'Send Message'
+                )}
+              </button>
+            </form>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\error-boundary.tsx ===
+// src/components/error-boundary.tsx
+'use client'
+
+import { useEffect } from 'react'
+
+export default function ErrorBoundary({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
+        <button
+          onClick={reset}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-500"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\experience.tsx ===
+'use client'
+
+import { useTheme } from './themeprovider'
+import { motion } from 'framer-motion'
+import { FileCode2, LineChart, Bot } from 'lucide-react'
+
+const projects = [
+  {
+    name: 'Real Estate Platform',
+    icon: FileCode2,
+    description: `
+      Full-stack web application for real estate listings featuring dynamic property search,
+      user authentication, and responsive design. Implemented with modern web technologies
+      and best practices for performance and SEO.
+    `,
+    keyFeatures: [
+      'Dynamic property search with filters',
+      'User authentication and profiles',
+      'Real-time updates with WebSocket',
+      'Responsive design for all devices',
+      'SEO optimization and performance metrics'
+    ],
+    tech: ['Next.js', 'React', 'Supabase', 'Drizzle', 'Tailwind CSS', 'PostgreSQL'],
+    status: 'In Development',
+    link: 'https://github.com/yourusername/real-estate'
+  },
+  {
+    name: 'Sniper4Crypto',
+    icon: LineChart,
+    description: `
+      Advanced crypto analysis tool using data mining and machine learning to detect trending
+      meme tokens. Features automated market analysis, social media monitoring, and real-time
+      notifications through Telegram.
+    `,
+    keyFeatures: [
+      'Real-time token detection',
+      'Social media trend analysis',
+      'Machine learning predictions',
+      'Automated market analysis',
+      'Telegram notifications'
+    ],
+    tech: ['Python', 'Scikit-learn', 'Telegram Bot API', 'MongoDB', 'PostgreSQL'],
+    status: 'Active',
+    link: 'https://github.com/yourusername/sniper4crypto'
+  },
+  {
+    name: 'Trading Bot',
+    icon: Bot,
+    description: `
+      Automated trading system with comprehensive market analysis, strategy implementation,
+      and real-time notifications. Includes backtesting capabilities and risk management
+      features.
+    `,
+    keyFeatures: [
+      'Automated trading strategies',
+      'Real-time market analysis',
+      'Risk management system',
+      'Performance analytics',
+      'Backtesting framework'
+    ],
+    tech: ['Python', 'Exchange APIs', 'Telegram Bot API', 'Technical Analysis', 'Data Science'],
+    status: 'Active',
+    link: 'https://github.com/yourusername/trading-bot'
+  }
+]
+
+export function Experience() {
+  const { theme } = useTheme()
+  
+  return (
+    <section 
+      id="experience" 
+      className={`py-24 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}
+      aria-label="Experience and Projects"
+    >
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl lg:max-w-4xl">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className={`text-3xl font-bold tracking-tight sm:text-4xl ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}
+          >
+            Experience & Projects
+          </motion.h2>
+          
+          <div className="mt-16 space-y-8">
+            {projects.map((project, index) => (
+              <motion.article
+                key={project.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className={`p-6 rounded-lg shadow-sm hover:shadow-md transition-all ${
+                  theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`p-2 rounded-lg ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                  }`}>
+                    <project.icon className={`w-6 h-6 ${
+                      theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
+                    }`} />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <h3 className={`text-lg font-semibold ${
+                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {project.name}
+                      </h3>
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                        project.status === 'Active' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    
+                    <p className={`mt-2 text-base ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      {project.description}
+                    </p>
+                    
+                    <ul className="mt-4 space-y-2">
+                      {project.keyFeatures.map((feature) => (
+                        <li 
+                          key={feature}
+                          className={`flex items-center text-sm ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}
+                        >
+                          <span className="mr-2">•</span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {project.tech.map((tech) => (
+                        <span
+                          key={tech}
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                            theme === 'dark'
+                              ? 'bg-gray-700 text-gray-200'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`mt-4 inline-flex items-center text-sm font-medium ${
+                        theme === 'dark' 
+                          ? 'text-indigo-400 hover:text-indigo-300'
+                          : 'text-indigo-600 hover:text-indigo-500'
+                      }`}
+                    >
+                      View Project
+                      <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\footer.tsx ===
+'use client'
+
+import { Github, Linkedin, Mail } from 'lucide-react'
+import { useTheme } from './themeprovider'
+
+export function Footer() {
+  const { theme } = useTheme()
+  return (
+    <footer className={theme === 'dark' ? 'bg-gray-950' : 'bg-gray-900'}>
+      <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
+        <div className="flex justify-center space-x-6 md:order-2">
+          <a href="https://github.com/yourusername" className="text-gray-400 hover:text-gray-300 transition-colors duration-200">
+            <Github className="h-6 w-6" />
+          </a>
+          <a href="https://linkedin.com/in/yourusername" className="text-gray-400 hover:text-gray-300 transition-colors duration-200">
+            <Linkedin className="h-6 w-6" />
+          </a>
+          <a href="mailto:your-email@example.com" className="text-gray-400 hover:text-gray-300 transition-colors duration-200">
+            <Mail className="h-6 w-6" />
+          </a>
+        </div>
+        <div className="mt-8 md:order-1 md:mt-0">
+          <p className="text-center text-xs leading-5 text-gray-400">
+            &copy; {new Date().getFullYear()} Christos Kerigkas. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\hero.tsx ===
+'use client'
+
+import { useTheme } from './themeprovider'
+import Image from 'next/image'
+import { motion } from 'framer-motion'
+import { ArrowDownCircle, Github, Linkedin, Mail } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+export default function Hero() {
+  const { theme } = useTheme()
+  
+  const socialLinks = [
+    { 
+      icon: Github, 
+      href: 'https://github.com/yourusername', 
+      label: 'GitHub Profile',
+      username: '@yourusername'
+    },
+    { 
+      icon: Linkedin, 
+      href: 'https://linkedin.com/in/yourusername', 
+      label: 'LinkedIn Profile',
+      username: 'Christos Kerigkas'
+    },
+    { 
+      icon: Mail, 
+      href: 'mailto:your-email@example.com', 
+      label: 'Email Contact',
+      username: 'your-email@example.com'
+    }
+  ]
+
+  return (
+    <section 
+      className={cn(
+        "relative isolate px-4 sm:px-6 pt-14 lg:px-8 min-h-[calc(100vh-64px)] flex items-center",
+        theme === 'dark' ? 'bg-gray-950' : 'bg-white'
+      )}
+      aria-label="Introduction"
+    >
+      <div className="mx-auto max-w-2xl py-12 sm:py-20 lg:py-32">
+        <div className="text-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8 relative w-32 h-32 mx-auto rounded-full overflow-hidden ring-2 ring-indigo-600"
+          >
+            <Image
+              src="/profile.jpg"
+              alt="Christos Kerigkas Profile Picture"
+              fill
+              priority
+              className="object-cover"
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h1 className={cn(
+              "text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight",
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+              Christos Kerigkas
+            </h1>
+
+            <p className={cn(
+              "mt-4 text-lg lg:text-xl font-semibold",
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            )}>
+              Full Stack Developer
+            </p>
+
+            <p className={cn(
+              "mt-6 text-base sm:text-lg max-w-2xl mx-auto",
+              theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+            )}>
+              Building modern web applications and crypto trading solutions.
+              Specialized in Next.js, React, and TypeScript development.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8 flex justify-center gap-4"
+          >
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "p-2 rounded-full transition-colors duration-200",
+                  theme === 'dark' 
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                )}
+                aria-label={link.label}
+              >
+                <link.icon className="w-6 h-6" />
+                <span className="sr-only">{link.username}</span>
+              </a>
+            ))}
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6"
+          >
+            <a
+              href="#contact"
+              className="w-full sm:w-auto rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
+            >
+              Get in Touch
+            </a>
+            <a 
+              href="#projects" 
+              className={cn(
+                "group w-full sm:w-auto flex items-center justify-center gap-2 text-sm font-semibold leading-6 transition-colors duration-200",
+                theme === 'dark' 
+                  ? 'text-gray-300 hover:text-white' 
+                  : 'text-gray-900 hover:text-gray-700'
+              )}
+            >
+              View Projects
+              <ArrowDownCircle className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
+            </a>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\markdown.tsx ===
+'use client'
+
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
+import { useTheme } from './themeprovider'
+import type { Components } from 'react-markdown'
+import { Highlight, themes } from 'prism-react-renderer'
+
+interface MarkdownProps {
+ content: string
+}
+
+export function Markdown({ content }: MarkdownProps) {
+ const { theme } = useTheme()
+ 
+ const components: Components = {
+   code({ className, children, ...props }) {
+     const match = /language-(\w+)/.exec(className || '')
+     const language = match ? match[1] : ''
+     
+     if (language) {
+       return (
+         <Highlight
+           theme={theme === 'dark' ? themes.nightOwl : themes.github}
+           code={String(children).replace(/\n$/, '')}
+           language={language}
+         >
+           {({ className, style, tokens, getLineProps, getTokenProps }) => (
+             <pre className={`${className} overflow-auto rounded-lg p-4`} style={style}>
+               {tokens.map((line, i) => (
+                 <div key={i} {...getLineProps({ line })}>
+                   {line.map((token, key) => (
+                     <span key={key} {...getTokenProps({ token })} />
+                   ))}
+                 </div>
+               ))}
+             </pre>
+           )}
+         </Highlight>
+       )
+     }
+
+     return (
+       <code
+         className={`${className} ${
+           !className ? 'bg-gray-200 dark:bg-gray-800 rounded px-1' : ''
+         }`}
+         {...props}
+       >
+         {children}
+       </code>
+     )
+   }
+ }
+
+ return (
+   <div className={`prose max-w-none ${theme === 'dark' ? 'prose-invert' : ''}`}>
+     <ReactMarkdown
+       remarkPlugins={[remarkGfm]}
+       rehypePlugins={[rehypeRaw, rehypeSanitize]}
+       components={components}
+     >
+       {content}
+     </ReactMarkdown>
+   </div>
+ )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\navbar.tsx ===
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Menu, X } from 'lucide-react'
+import { useTheme } from './themeprovider'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
+
+const navigation = [
+  { name: 'About', href: '#about' },
+  { name: 'Experience', href: '#experience' },
+  { name: 'Skills', href: '#skills' },
+  { name: 'Projects', href: '#projects' },
+  { name: 'Blog', href: '/blog' },  
+  { name: 'Contact', href: '#contact' },
+] as const
+
+export default function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const { theme } = useTheme()
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const headerClasses = cn(
+    'fixed w-full z-50 transition-all duration-200 backdrop-blur-md',
+    theme === 'dark' ? 'bg-gray-900/90' : 'bg-white/90',
+    scrolled && 'shadow-sm'
+  )
+
+  const linkClasses = cn(
+    'text-sm font-semibold transition-colors duration-200',
+    theme === 'dark' 
+      ? 'text-gray-400 hover:text-white' 
+      : 'text-gray-600 hover:text-gray-900'
+  )
+
+  const mobileMenuClasses = cn(
+    'block rounded-lg px-3 py-2 text-base font-semibold transition-colors duration-200',
+    theme === 'dark'
+      ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
+      : 'text-gray-900 hover:bg-gray-50'
+  )
+
+  return (
+    <header className={headerClasses}>
+      <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 sm:p-6 lg:px-8">
+        <div className="flex lg:flex-1">
+          <a 
+            href="#" 
+            className={cn(
+              'text-lg font-bold sm:text-xl transition-colors duration-200',
+              theme === 'dark' 
+                ? 'text-white hover:text-gray-300' 
+                : 'text-gray-900 hover:text-gray-600'
+            )}
+          >
+            CK
+          </a>
+        </div>
+
+        <div className="flex lg:hidden">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={cn(
+              'rounded-md p-2 transition-colors duration-200',
+              theme === 'dark' 
+                ? 'text-gray-400 hover:text-white' 
+                : 'text-gray-700 hover:text-gray-900'
+            )}
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+
+        <div className="hidden lg:flex lg:gap-x-12">
+          {navigation.map((item) => (
+            <a
+              key={item.name}
+              href={item.href}
+              className={linkClasses}
+            >
+              {item.name}
+            </a>
+          ))}
+        </div>
+      </nav>
+      
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className={theme === 'dark' ? 'bg-gray-900' : 'bg-white'}
+          >
+            <div className="space-y-1 px-4 pb-3 pt-2">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={mobileMenuClasses}
+                >
+                  {item.name}
+                </a>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\optimizedimage.tsx ===
+// src/components/optimized-image.tsx
+'use client'
+
+import Image from 'next/image'
+import { useState } from 'react'
+
+type OptimizedImageProps = {
+  src: string
+  alt: string
+  width: number
+  height: number
+  className?: string
+}
+
+export function OptimizedImage({ src, alt, width, height, className }: OptimizedImageProps) {
+  const [isLoading, setIsLoading] = useState(true)
+
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        quality={90}
+        loading="lazy"
+        className={`
+          duration-700 ease-in-out
+          ${isLoading ? 'scale-110 blur-lg' : 'scale-100 blur-0'}
+        `}
+        onLoadingComplete={() => setIsLoading(false)}
+      />
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\projects.tsx ===
+'use client'
+
+import { useTheme } from './themeprovider'
+import { Github, ExternalLink } from 'lucide-react'
+import { OptimizedImage } from './optimizedimage'
+import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
+
+const projects = [
+ {
+   title: 'Real Estate Platform',
+   description: 'A modern web application for real estate listings built with Next.js, featuring dynamic property search, user authentication, and responsive design.',
+   tech: ['Next.js', 'React', 'TypeScript', 'Supabase', 'Tailwind CSS', 'PostgreSQL'],
+   github: 'https://github.com/yourusername/real-estate',
+   demo: 'https://real-estate-demo.com',
+   image: '/real-estate-preview.jpg'
+ },
+ {
+   title: 'Sniper4Crypto',
+   description: 'Advanced crypto analysis tool using data mining and machine learning for detecting trending meme tokens. Features real-time notifications via Telegram.',
+   tech: ['Python', 'Scikit-learn', 'MongoDB', 'Telegram API'],
+   github: 'https://github.com/yourusername/sniper4crypto',
+   demo: 'https://sniper4crypto.com',
+   image: '/crypto-preview.jpg'
+ },
+ {
+   title: 'Trading Bot',
+   description: 'Automated trading system with market analysis, strategy implementation, and real-time alerts. Includes backtesting and paper trading capabilities.',
+   tech: ['Python', 'Exchange APIs', 'Technical Analysis', 'Telegram API'],
+   github: 'https://github.com/yourusername/trading-bot',
+   demo: 'https://trading-bot-demo.com',
+   image: '/trading-preview.jpg'
+ }
+]
+
+export function Projects() {
+ const { theme } = useTheme()
+ 
+ return (
+   <motion.section 
+     id="projects" 
+     className={cn("py-24", theme === 'dark' ? 'bg-gray-950' : 'bg-white')}
+     initial={{ opacity: 0 }}
+     animate={{ opacity: 1 }}
+     transition={{ duration: 0.5 }}
+   >
+     <div className="mx-auto max-w-7xl px-6 lg:px-8">
+       <div className="mx-auto max-w-2xl lg:max-w-4xl">
+         <motion.h2 
+           className={cn("text-3xl font-bold tracking-tight sm:text-4xl mb-16", 
+             theme === 'dark' ? 'text-white' : 'text-gray-900')}
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.2 }}
+         >
+           Featured Projects
+         </motion.h2>
+         
+         <div className="space-y-16">
+           {projects.map((project, index) => (
+             <motion.div 
+               key={project.title} 
+               className={cn("flex flex-col lg:flex-row gap-8", 
+                 index % 2 === 1 ? 'lg:flex-row-reverse' : '')}
+               initial={{ opacity: 0, y: 20 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               transition={{ delay: index * 0.1 }}
+               viewport={{ once: true }}
+             >
+               <div className="lg:w-1/2">
+                 <div className={cn("rounded-lg shadow-lg overflow-hidden aspect-video",
+                   theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100')}>
+                   <OptimizedImage
+                     src={project.image}
+                     alt={project.title}
+                     width={800}
+                     height={450}
+                     className="w-full h-full object-cover"
+                   />
+                 </div>
+               </div>
+               
+               <div className="lg:w-1/2 space-y-4">
+                 <h3 className={cn("text-2xl font-bold",
+                   theme === 'dark' ? 'text-white' : 'text-gray-900')}>
+                   {project.title}
+                 </h3>
+                 
+                 <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+                   {project.description}
+                 </p>
+                 
+                 <div className="flex flex-wrap gap-2">
+                   {project.tech.map((tech) => (
+                     <span
+                       key={tech}
+                       className={cn("inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
+                         theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-blue-50 text-blue-700'
+                       )}
+                     >
+                       {tech}
+                     </span>
+                   ))}
+                 </div>
+                 
+                 <div className="flex gap-4 pt-4">
+                   <motion.a
+                     href={project.github}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className={cn("inline-flex items-center gap-1 transition-colors duration-200",
+                       theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                     )}
+                     whileHover={{ scale: 1.05 }}
+                     whileTap={{ scale: 0.95 }}
+                   >
+                     <Github className="h-5 w-5" />
+                     <span>Code</span>
+                   </motion.a>
+                   <motion.a
+                     href={project.demo}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className={cn("inline-flex items-center gap-1 transition-colors duration-200",
+                       theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                     )}
+                     whileHover={{ scale: 1.05 }}
+                     whileTap={{ scale: 0.95 }}
+                   >
+                     <ExternalLink className="h-5 w-5" />
+                     <span>Live Demo</span>
+                   </motion.a>
+                 </div>
+               </div>
+             </motion.div>
+           ))}
+         </div>
+       </div>
+     </div>
+   </motion.section>
+ )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\skills.tsx ===
+// src/components/skills.tsx
+'use client'
+
+import { useTheme } from './themeprovider'
+
+const skills = {
+  frontend: ['React', 'Next.js', 'TypeScript', 'JavaScript', 'Tailwind CSS', 'HTML5/CSS3'],
+  backend: ['Node.js', 'Python', 'PostgreSQL', 'MongoDB', 'Supabase', 'Drizzle ORM'],
+  tools: ['Git', 'VS Code', 'Docker', 'REST APIs', 'Telegram Bot API'],
+  trading: ['Technical Analysis', 'Bot Development', 'Data Mining', 'Machine Learning']
+}
+
+export function Skills() {
+  const { theme } = useTheme()
+  
+  return (
+    <section id="skills" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-white'}`}>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl lg:max-w-4xl">
+          <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>
+            Skills & Technologies
+          </h2>
+          
+          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2">
+            {Object.entries(skills).map(([category, items]) => (
+              <div key={category} className={`border rounded-lg p-6 ${
+                theme === 'dark' ? 'border-gray-800 bg-gray-900/50' : 'border-gray-200 bg-white'
+              }`}>
+                <h3 className={`text-lg font-semibold capitalize mb-4 ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {category}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {items.map((skill) => (
+                    <span
+                      key={skill}
+                      className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
+                          : 'bg-blue-50 text-blue-700'
+                      } transition-colors duration-200`}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\themeprovider.tsx ===
+// src/components/themeprovider.tsx
+'use client'
+
+import { createContext, useContext, useEffect, useState, useCallback, memo } from 'react'
+import { Sun, Moon } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+type Theme = 'light' | 'dark'
+type ThemeContextType = { theme: Theme; toggleTheme: () => void }
+
+const ThemeContext = createContext<ThemeContextType>({ theme: 'light', toggleTheme: () => null })
+
+const ThemeToggleButton = memo(({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) => (
+  <button
+    onClick={toggleTheme}
+    className={cn(
+      "fixed bottom-4 right-4 p-3 rounded-full shadow-lg transition-colors duration-200",
+      theme === 'dark' 
+        ? 'bg-gray-800 hover:bg-gray-700 text-gray-200' 
+        : 'bg-white hover:bg-gray-100 text-gray-900'
+    )}
+    aria-label="Toggle theme"
+  >
+    {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+  </button>
+))
+
+ThemeToggleButton.displayName = 'ThemeToggleButton'
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  const [theme, setTheme] = useState<Theme>('light')
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  }, [])
+
+  useEffect(() => {
+    setMounted(true)
+    const savedTheme = localStorage.getItem('theme') as Theme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('theme', theme)
+      document.documentElement.dataset.theme = theme
+      document.documentElement.classList.toggle('dark', theme === 'dark')
+    }
+  }, [theme, mounted])
+
+  if (!mounted) return null
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+      <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
+    </ThemeContext.Provider>
+  )
+}
+
+export const useTheme = () => useContext(ThemeContext)
+
