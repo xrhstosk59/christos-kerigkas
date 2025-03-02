@@ -98,15 +98,25 @@ export default function BlogPostClient({ initialData }: BlogPostClientProps) {
 
           <Markdown content={post.content} />
 
+          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+            <h3 className={`text-xl font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              Σχετικά άρθρα
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Εδώ θα προστεθούν τα σχετικά άρθρα */}
+              {/* Θα πρέπει να τροποποιηθεί το component για να δέχεται σχετικά posts */}
+            </div>
+          </div>
+
           <div className="mt-8 flex flex-wrap gap-2">
             {post.categories.map((category) => (
               <span
                 key={category}
-                className={`text-sm px-3 py-1 rounded-full ${
-                  theme === 'dark'
+                className={`text-sm px-3 py-1 rounded-full ${theme === 'dark'
                     ? 'bg-gray-800 text-gray-300'
                     : 'bg-gray-100 text-gray-700'
-                }`}
+                  }`}
               >
                 {category}
               </span>

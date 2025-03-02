@@ -7,13 +7,15 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\contact\route.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\upload\route.ts
 
-FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\layoute.tsx
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\layout.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\loading.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\page.tsx
 
-FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\layoute.tsx
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\layout.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\opengraph-image.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\page.tsx
 
@@ -36,6 +38,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\sitemap.ts
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\about.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\analytics.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-categories.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-post-client.tsx
 
@@ -67,12 +71,22 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\content\posts\crypto-tradin
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\content\posts\getting-started-with-nextjs.json
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\hooks\use-blog.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\blog.ts
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\image-loader.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\navigation.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\rate-limit.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\seo.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\utils.ts
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\middleware.ts
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\types\blog.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\types\gtag.d.ts

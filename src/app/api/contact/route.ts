@@ -1,11 +1,48 @@
 // src/app/api/contact/route.ts
 import { NextResponse } from 'next/server'
 import { createTransport } from 'nodemailer'
+import { z } from 'zod'
+import { rateLimit } from '@/lib/rate-limit'
+
+// Create limiter
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 10, // Max 10 users per minute
+})
+
+// Form validation schema
+const contactSchema = z.object({
+  name: z.string().min(2, 'Name is too short').max(100, 'Name is too long'),
+  email: z.string().email('Invalid email address'),
+  message: z.string().min(10, 'Message is too short').max(1000, 'Message is too long'),
+})
 
 export async function POST(req: Request) {
   try {
-    const { name, email, message } = await req.json()
+    // Check rate limit
+    try {
+      await limiter.check(5, 'CONTACT_FORM') // 5 requests per minute per user
+    } catch {
+      return NextResponse.json(
+        { message: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
+    }
+    
+    // Get and validate data
+    const body = await req.json()
+    const validationResult = contactSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: 'Invalid form data', errors: validationResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+    
+    const { name, email, message } = validationResult.data
 
+    // Create email transporter
     const transporter = createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -16,6 +53,7 @@ export async function POST(req: Request) {
       },
     })
 
+    // Send email
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: process.env.CONTACT_EMAIL,
@@ -30,7 +68,7 @@ export async function POST(req: Request) {
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Message:</strong></p>
-        <p>${message}</p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
       `,
     })
 

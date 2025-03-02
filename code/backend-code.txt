@@ -9,16 +9,18 @@ import type { BlogPost } from '@/types/blog'
 let cachedPosts: BlogPost[] | null = null
 const CACHE_DURATION = 60 * 60 * 1000 // 1 hour
 let lastFetched = 0
+const POSTS_PER_PAGE = 6
 
-export async function GET() {  // Αφαιρέθηκε η αχρησιμοποίητη παράμετρος request
+export async function GET(request: Request) {
   try {
     const now = Date.now()
+    const url = new URL(request.url)
+    const page = parseInt(url.searchParams.get('page') || '1', 10)
+    const category = url.searchParams.get('category') || ''
+    
+    // Use cached posts if available
     if (cachedPosts && now - lastFetched < CACHE_DURATION) {
-      return NextResponse.json(cachedPosts, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
-        }
-      })
+      return handlePagination(cachedPosts, page, category)
     }
 
     const postsDirectory = path.join(process.cwd(), 'src/content/posts')
@@ -37,11 +39,7 @@ export async function GET() {  // Αφαιρέθηκε η αχρησιμοποί
     cachedPosts = posts
     lastFetched = now
 
-    return NextResponse.json(posts, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
-      }
-    })
+    return handlePagination(posts, page, category)
   } catch (error) {
     console.error('Failed to fetch blog posts:', error)
     return NextResponse.json(
@@ -49,6 +47,39 @@ export async function GET() {  // Αφαιρέθηκε η αχρησιμοποί
       { status: 500 }
     )
   }
+}
+
+function handlePagination(posts: BlogPost[], page: number, category: string) {
+  // Filter by category if specified
+  const filteredPosts = category 
+    ? posts.filter(post => post.categories.includes(category))
+    : posts
+  
+  // Calculate pagination
+  const totalPosts = filteredPosts.length
+  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE)
+  const start = (page - 1) * POSTS_PER_PAGE
+  const end = start + POSTS_PER_PAGE
+  const paginatedPosts = filteredPosts.slice(start, end)
+  
+  return NextResponse.json(
+    {
+      posts: paginatedPosts,
+      pagination: {
+        totalPosts,
+        totalPages,
+        currentPage: page,
+        postsPerPage: POSTS_PER_PAGE,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    }
+  )
 }
 
 
@@ -114,11 +145,48 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 // src/app/api/contact/route.ts
 import { NextResponse } from 'next/server'
 import { createTransport } from 'nodemailer'
+import { z } from 'zod'
+import { rateLimit } from '@/lib/rate-limit'
+
+// Create limiter
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 10, // Max 10 users per minute
+})
+
+// Form validation schema
+const contactSchema = z.object({
+  name: z.string().min(2, 'Name is too short').max(100, 'Name is too long'),
+  email: z.string().email('Invalid email address'),
+  message: z.string().min(10, 'Message is too short').max(1000, 'Message is too long'),
+})
 
 export async function POST(req: Request) {
   try {
-    const { name, email, message } = await req.json()
+    // Check rate limit
+    try {
+      await limiter.check(5, 'CONTACT_FORM') // 5 requests per minute per user
+    } catch {
+      return NextResponse.json(
+        { message: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
+    }
+    
+    // Get and validate data
+    const body = await req.json()
+    const validationResult = contactSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: 'Invalid form data', errors: validationResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+    
+    const { name, email, message } = validationResult.data
 
+    // Create email transporter
     const transporter = createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -129,6 +197,7 @@ export async function POST(req: Request) {
       },
     })
 
+    // Send email
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: process.env.CONTACT_EMAIL,
@@ -143,7 +212,7 @@ export async function POST(req: Request) {
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Message:</strong></p>
-        <p>${message}</p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
       `,
     })
 
@@ -319,5 +388,54 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
  }))
 
  return [...routes, ...blogPosts]
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\middleware.ts ===
+// src/middleware.ts
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  // Security headers
+  const headers = new Headers(request.headers)
+  
+  // Security headers
+  const response = NextResponse.next({
+    request: {
+      headers,
+    },
+  })
+  
+  // Add security headers
+  response.headers.set('X-DNS-Prefetch-Control', 'on')
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  
+  // Optional: handle redirects for old paths
+  const url = request.nextUrl.clone()
+  if (url.pathname === '/projects' || url.pathname === '/projects/') {
+    url.pathname = '/#projects'
+    return NextResponse.redirect(url)
+  }
+  
+  return response
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+  ],
 }
 

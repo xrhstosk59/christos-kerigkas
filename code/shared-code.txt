@@ -162,3 +162,15 @@ export type BlogPost = {
     content: string
   }
 
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\types\gtag.d.ts ===
+// src/types/gtag.d.ts
+interface Window {
+    gtag: (
+      command: 'config' | 'event' | 'js' | 'set' | 'consent',
+      targetId: string,
+      config?: { [key: string]: any }
+    ) => void;
+    dataLayer: any[];
+  }
+

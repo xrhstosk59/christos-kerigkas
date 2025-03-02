@@ -565,7 +565,7 @@ console.log('Paths saved to paths.txt');
 [Image File Present]
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\layoute.tsx ===
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\layout.tsx ===
 import type { Metadata } from 'next'
 import { defaultMetadata } from '@/lib/seo'
 
@@ -614,36 +614,39 @@ export default function BlogLoading() {
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\page.tsx ===
+// src/app/blog/page.tsx
 'use client'
 
 import { useTheme } from '@/components/themeprovider'
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BlogCard } from '@/components/blogcard'
-import type { BlogPost } from '@/types/blog'
+import { BlogCategories } from '@/components/blog-categories'
+import { useBlog } from '@/hooks/use-blog'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export default function BlogPage() {
   const { theme } = useTheme()
-  const [posts, setPosts] = useState<BlogPost[]>([])
-  const [loading, setLoading] = useState(true)
+  const {
+    posts,
+    pagination,
+    loading,
+    error,
+    category,
+    nextPage,
+    prevPage,
+    changeCategory,
+  } = useBlog()
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch('/api/blog')
-        if (!response.ok) throw new Error('Failed to fetch')
-        const data = await response.json()
-        setPosts(Array.isArray(data) ? data : [])
-      } catch (error) {
-        console.error('Failed to fetch posts:', error)
-        setPosts([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchPosts()
-  }, [])
+  const allCategories = [
+    'Next.js',
+    'TypeScript',
+    'Web Development',
+    'Cryptocurrency',
+    'Trading',
+    'Programming',
+    'Data Analysis'
+  ]
 
   return (
     <div className={`min-h-screen pt-20 ${theme === 'dark' ? 'bg-gray-950' : 'bg-white'}`}>
@@ -653,25 +656,88 @@ export default function BlogPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mx-auto max-w-2xl lg:max-w-4xl"
         >
-          <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl mb-12 ${
+          <h1 className={cn(
+            "text-3xl font-bold tracking-tight sm:text-4xl mb-12",
             theme === 'dark' ? 'text-white' : 'text-gray-900'
-          }`}>
+          )}>
             Blog
           </h1>
 
+          <BlogCategories 
+            categories={allCategories} 
+            activeCategory={category} 
+            onCategoryChange={changeCategory} 
+          />
+
           {loading ? (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
             </div>
+          ) : error ? (
+            <p className={cn(
+              "text-center py-12",
+              theme === 'dark' ? 'text-red-400' : 'text-red-600'
+            )}>
+              {error}
+            </p>
           ) : posts.length > 0 ? (
-            <div className="space-y-8">
-              {posts.map((post, index) => (
-                <BlogCard key={post.slug} post={post} index={index} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-8 mb-8">
+                {posts.map((post, index) => (
+                  <BlogCard key={post.slug} post={post} index={index} />
+                ))}
+              </div>
+              
+              {pagination && (
+                <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200 dark:border-gray-800">
+                  <button
+                    onClick={prevPage}
+                    disabled={!pagination.hasPrevPage}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-md transition-colors",
+                      pagination.hasPrevPage
+                        ? theme === 'dark'
+                          ? "text-white hover:bg-gray-800" 
+                          : "text-gray-900 hover:bg-gray-100"
+                        : "opacity-50 cursor-not-allowed",
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                    )}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </button>
+                  
+                  <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                    Page {pagination.currentPage} of {pagination.totalPages}
+                  </span>
+                  
+                  <button
+                    onClick={nextPage}
+                    disabled={!pagination.hasNextPage}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-md transition-colors",
+                      pagination.hasNextPage
+                        ? theme === 'dark'
+                          ? "text-white hover:bg-gray-800" 
+                          : "text-gray-900 hover:bg-gray-100"
+                        : "opacity-50 cursor-not-allowed",
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                    )}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
-            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              No blog posts found.
+            <p className={cn(
+              "text-center py-12",
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            )}>
+              {category === 'all' 
+                ? 'Δεν βρέθηκαν blog posts.' 
+                : `Δεν βρέθηκαν blog posts στην κατηγορία "${category}".`}
             </p>
           )}
         </motion.div>
@@ -681,7 +747,7 @@ export default function BlogPage() {
 }
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\layoute.tsx ===
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\layout.tsx ===
 // src/app/blog/[slug]/layout.tsx
 import type { Metadata } from 'next'
 import { promises as fs } from 'fs'
@@ -740,6 +806,100 @@ export default function BlogPostLayout({
   children: React.ReactNode
 }) {
   return children
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\[slug]\opengraph-image.tsx ===
+// src/app/blog/[slug]/opengraph-image.tsx
+import { ImageResponse } from 'next/og';
+import { getPostBySlug } from '@/lib/blog';
+import { siteConfig } from '@/lib/seo';
+
+export const size = {
+  width: 1200,
+  height: 630,
+};
+
+export const contentType = 'image/png';
+export const alt = 'Blog Post';
+
+export default async function Image({ params }: { params: { slug: string } }) {
+  const post = await getPostBySlug(params.slug);
+  
+  if (!post) {
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            display: 'flex',
+            background: '#f8fafc',
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <h1 style={{ fontSize: 60, fontWeight: 'bold' }}>
+            {siteConfig.name}
+          </h1>
+          <p style={{ fontSize: 30, marginTop: 20 }}>Blog Post Not Found</p>
+        </div>
+      ),
+      { ...size }
+    );
+  }
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          display: 'flex',
+          background: '#f8fafc',
+          width: '100%',
+          height: '100%',
+          padding: 40,
+          flexDirection: 'column',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+          <img
+            src={`${siteConfig.url}/profile.jpg`}
+            width={60}
+            height={60}
+            style={{ borderRadius: 30 }}
+            alt={siteConfig.author.name}
+          />
+          <p style={{ marginLeft: 20, fontSize: 24 }}>{siteConfig.author.name}</p>
+        </div>
+        
+        <h1 style={{ fontSize: 60, fontWeight: 'bold', maxWidth: 900 }}>
+          {post.title}
+        </h1>
+        
+        <p style={{ fontSize: 30, marginTop: 20, color: '#64748b', maxWidth: 900 }}>
+          {post.description}
+        </p>
+        
+        <div style={{ display: 'flex', marginTop: 'auto', gap: 10 }}>
+          {post.categories.map((category) => (
+            <div
+              key={category}
+              style={{
+                background: '#e2e8f0',
+                padding: '8px 16px',
+                borderRadius: 20,
+                fontSize: 18,
+              }}
+            >
+              {category}
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+    { ...size }
+  );
 }
 
 
@@ -1063,31 +1223,116 @@ export function About() {
 // src/components/analytics.tsx
 'use client'
 
+import { useEffect } from 'react'
 import Script from 'next/script'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 export function Analytics() {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID
+
+  // Track page views
+  useEffect(() => {
+    if (!GA_ID) return
+
+    const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '')
+    
+    // Track page view - χρήση window['gtag'] αντί για window.gtag για να αποφύγουμε το TS error
+    if (typeof window !== 'undefined' && 'gtag' in window) {
+      window['gtag']('config', GA_ID, {
+        page_path: url,
+      })
+    }
+  }, [pathname, searchParams, GA_ID])
 
   if (!GA_ID) return null
 
   return (
     <>
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         strategy="afterInteractive"
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
       />
-      <Script id="ga-script" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${GA_ID}', {
-            page_path: window.location.pathname,
-            debug_mode: process.env.NODE_ENV === 'development'
-          });
-        `}
-      </Script>
+      <Script
+        id="gtag-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}', {
+              page_path: window.location.pathname,
+              debug_mode: ${process.env.NODE_ENV === 'development'}
+            });
+          `,
+        }}
+      />
     </>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-categories.tsx ===
+// src/components/blog-categories.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useTheme } from './themeprovider'
+import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+
+interface BlogCategoriesProps {
+  categories: string[]
+  activeCategory: string
+  onCategoryChange: (category: string) => void
+}
+
+export function BlogCategories({ categories, activeCategory, onCategoryChange }: BlogCategoriesProps) {
+  const { theme } = useTheme()
+
+  return (
+    <div className="mb-8">
+      <h3 className={`text-sm font-medium mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+        Φιλτράρισμα ανά κατηγορία
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => onCategoryChange('all')}
+          className={cn(
+            'px-3 py-1 text-sm rounded-full transition-colors',
+            activeCategory === 'all'
+              ? theme === 'dark'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-indigo-600 text-white'
+              : theme === 'dark'
+              ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          )}
+        >
+          Όλα
+        </button>
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => onCategoryChange(category)}
+            className={cn(
+              'px-3 py-1 text-sm rounded-full transition-colors',
+              activeCategory === category
+                ? theme === 'dark'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-indigo-600 text-white'
+                : theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            )}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -1193,15 +1438,25 @@ export default function BlogPostClient({ initialData }: BlogPostClientProps) {
 
           <Markdown content={post.content} />
 
+          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+            <h3 className={`text-xl font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              Σχετικά άρθρα
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Εδώ θα προστεθούν τα σχετικά άρθρα */}
+              {/* Θα πρέπει να τροποποιηθεί το component για να δέχεται σχετικά posts */}
+            </div>
+          </div>
+
           <div className="mt-8 flex flex-wrap gap-2">
             {post.categories.map((category) => (
               <span
                 key={category}
-                className={`text-sm px-3 py-1 rounded-full ${
-                  theme === 'dark'
+                className={`text-sm px-3 py-1 rounded-full ${theme === 'dark'
                     ? 'bg-gray-800 text-gray-300'
                     : 'bg-gray-100 text-gray-700'
-                }`}
+                  }`}
               >
                 {category}
               </span>
@@ -2465,4 +2720,180 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useTheme = () => useContext(ThemeContext)
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\hooks\use-blog.ts ===
+// src/hooks/use-blog.ts
+'use client'
+
+import { useCallback, useEffect, useState } from 'react'
+import type { BlogPost } from '@/types/blog'
+
+interface PaginationInfo {
+  totalPosts: number
+  totalPages: number
+  currentPage: number
+  postsPerPage: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
+interface BlogResponse {
+  posts: BlogPost[]
+  pagination: PaginationInfo
+}
+
+export function useBlog(initialPage = 1, initialCategory = 'all') {
+  const [posts, setPosts] = useState<BlogPost[]>([])
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  const [page, setPage] = useState(initialPage)
+  const [category, setCategory] = useState(initialCategory)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const categoryParam = category !== 'all' ? `&category=${category}` : ''
+      const response = await fetch(`/api/blog?page=${page}${categoryParam}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch blog posts')
+      }
+      
+      const data = await response.json() as BlogResponse
+      setPosts(data.posts)
+      setPagination(data.pagination)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load posts')
+      console.error('Error fetching blog posts:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [page, category])
+
+  useEffect(() => {
+    fetchPosts()
+  }, [fetchPosts])
+
+  const nextPage = useCallback(() => {
+    if (pagination?.hasNextPage) {
+      setPage(prev => prev + 1)
+    }
+  }, [pagination])
+
+  const prevPage = useCallback(() => {
+    if (pagination?.hasPrevPage) {
+      setPage(prev => prev - 1)
+    }
+  }, [pagination])
+
+  const changeCategory = useCallback((newCategory: string) => {
+    setCategory(newCategory)
+    setPage(1) // Reset to first page when changing category
+  }, [])
+
+  return {
+    posts,
+    pagination,
+    loading,
+    error,
+    page,
+    category,
+    nextPage,
+    prevPage,
+    changeCategory,
+    refreshPosts: fetchPosts,
+  }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\lib\blog.ts ===
+// src/lib/blog.ts
+import fs from 'fs/promises';
+import path from 'path';
+import type { BlogPost } from '@/types/blog';
+
+const postsDirectory = path.join(process.cwd(), 'src/content/posts');
+
+export async function getAllPosts(): Promise<BlogPost[]> {
+  const files = await fs.readdir(postsDirectory);
+  
+  const posts = await Promise.all(
+    files.map(async (filename) => {
+      const filePath = path.join(postsDirectory, filename);
+      const content = await fs.readFile(filePath, 'utf8');
+      return JSON.parse(content) as BlogPost;
+    })
+  );
+
+  // Sorting posts by date (newest first)
+  return posts.sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+}
+
+export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  try {
+    const filePath = path.join(postsDirectory, `${slug}.json`);
+    const content = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(content) as BlogPost;
+  } catch (error) {
+    console.error('Error reading post:', error);
+    return null;
+  }
+}
+
+export async function getRelatedPosts(currentPost: BlogPost, limit = 3): Promise<BlogPost[]> {
+  const allPosts = await getAllPosts();
+  
+  return allPosts
+    .filter(post => 
+      post.slug !== currentPost.slug && 
+      post.categories.some(category => 
+        currentPost.categories.includes(category)
+      )
+    )
+    .slice(0, limit);
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\lib\rate-limit.ts ===
+// src/lib/rate-limit.ts
+export interface RateLimitOptions {
+    interval: number
+    uniqueTokenPerInterval: number
+  }
+  
+  interface RateLimitRes {
+    check: (limit: number, token: string) => Promise<void>
+  }
+  
+  // Memory store για τα requests (σε production θα ήταν καλύτερα 
+  // να χρησιμοποιήσεις ένα persistent store όπως Redis)
+  const tokenCache = new Map<string, number[]>()
+  
+  export function rateLimit(options: RateLimitOptions): RateLimitRes {
+    return {
+      check: (limit: number, token: string): Promise<void> => {
+        const now = Date.now()
+        const windowStart = now - options.interval
+        
+        const tokenCount = tokenCache.get(token) || []
+        const validTokens = tokenCount.filter(timestamp => timestamp > windowStart)
+        
+        tokenCache.set(token, [...validTokens, now])
+        
+        return new Promise((resolve, reject) => {
+          if (validTokens.length < limit) {
+            resolve()
+          } else {
+            reject(new Error('Rate limit exceeded'))
+          }
+        })
+      },
+    }
+  }
 
