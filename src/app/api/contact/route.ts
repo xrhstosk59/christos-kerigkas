@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createTransport } from 'nodemailer'
 import { z } from 'zod'
 import { rateLimit } from '@/lib/rate-limit'
+import { contactMessagesRepository } from '@/lib/db'
 
 // Create limiter
 const limiter = rateLimit({
@@ -19,9 +20,14 @@ const contactSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    // Get client IP for rate limiting
+    const ip = req.headers.get('x-forwarded-for') || 
+               req.headers.get('x-real-ip') || 
+               'unknown'
+    
     // Check rate limit
     try {
-      await limiter.check(5, 'CONTACT_FORM') // 5 requests per minute per user
+      await limiter.check(5, `CONTACT_FORM_${ip}`) // 5 requests per minute per IP
     } catch {
       return NextResponse.json(
         { message: 'Rate limit exceeded. Please try again later.' },
@@ -41,6 +47,14 @@ export async function POST(req: Request) {
     }
     
     const { name, email, message } = validationResult.data
+
+    // Store in database
+    await contactMessagesRepository.create({
+      name,
+      email,
+      message,
+      ipAddress: typeof ip === 'string' ? ip : ip[0]
+    })
 
     // Create email transporter
     const transporter = createTransport({
@@ -73,13 +87,13 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json(
-      { message: 'Email sent successfully' },
+      { message: 'Message sent successfully' },
       { status: 200 }
     )
   } catch (error) {
     console.error('Contact form error:', error)
     return NextResponse.json(
-      { message: 'Failed to send email' },
+      { message: 'Failed to send message' },
       { status: 500 }
     )
   }

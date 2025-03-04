@@ -35,6 +35,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\robot.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\sitemap.ts
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\trading-dashboard\page.tsx
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\about.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\analytics.tsx
@@ -46,6 +48,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-post-client
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blogcard.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\contact.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\crypto-projects.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\error-boundary.tsx
 
@@ -67,6 +71,12 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\skills.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\themeprovider.tsx
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\trading-dashboard.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\ui\button.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\ui\card.tsx
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\content\posts\crypto-trading-basics.json
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\content\posts\getting-started-with-nextjs.json
@@ -75,6 +85,10 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\hooks\use-blog.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\blog.ts
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\db\index.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\db\schema.ts
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\image-loader.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\navigation.ts
@@ -82,6 +96,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\navigation.ts
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\rate-limit.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\seo.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\supabase.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\utils.ts
 

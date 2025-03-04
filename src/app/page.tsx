@@ -10,18 +10,20 @@ import { About } from '@/components/about'
 import { Experience } from '@/components/experience'
 import { Skills } from '@/components/skills'
 import { Projects } from '@/components/projects'
+import { CryptoProjects } from '@/components/crypto-projects'  // Προσθήκη εδώ
 import { Contact } from '@/components/contact'
 import { Footer } from '@/components/footer'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <Hero />
       <About />
       <Experience />
       <Skills />
       <Projects />
+      <CryptoProjects />  {/* Προσθήκη εδώ */}
       <Contact />
       <Footer />
     </main>
