@@ -236,7 +236,7 @@ async function verifyFileType(buffer: Buffer, type: string): Promise<boolean> {
   const signatures: Record<string, number[][]> = {
     'image/jpeg': [[0xFF, 0xD8, 0xFF]],
     'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
-    'image/webp': [[0x52, 0x49, 0x46, 0x46, null, null, null, null, 0x57, 0x45, 0x42, 0x50]]
+    'image/webp': [[0x52, 0x49, 0x46, 0x46, -1, -1, -1, -1, 0x57, 0x45, 0x42, 0x50]]
   }
 
   if (!signatures[type]) return false
@@ -245,7 +245,7 @@ async function verifyFileType(buffer: Buffer, type: string): Promise<boolean> {
   
   return signatures[type].some(signature => 
     signature.every((byte, i) => 
-      byte === null || byte === bytes[i]
+      byte === -1 || byte === bytes[i]
     )
   )
 }
