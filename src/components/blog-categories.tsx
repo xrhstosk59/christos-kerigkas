@@ -1,9 +1,7 @@
 // src/components/blog-categories.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useTheme } from './themeprovider'
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface BlogCategoriesProps {
