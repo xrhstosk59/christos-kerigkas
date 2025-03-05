@@ -224,8 +224,8 @@ export async function DELETE(request: Request) {
         throw new Error('File still exists after deletion attempt')
       }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_error) {
-      console.error('Error deleting file:', _error)
+    } catch (deleteError) {
+      console.error('Error deleting file:', deleteError)
       return NextResponse.json(
         { error: 'Αποτυχία διαγραφής αρχείου' },
         { status: 500 }
@@ -237,8 +237,8 @@ export async function DELETE(request: Request) {
       message: 'Το αρχείο διαγράφηκε επιτυχώς' 
     })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_error) {
-    console.error('Error deleting file:', _error)
+  } catch (catchError) {
+    console.error('Error deleting file:', catchError)
     return NextResponse.json(
       { error: 'Σφάλμα κατά τη διαγραφή του αρχείου' },
       { status: 500 }

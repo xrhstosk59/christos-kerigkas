@@ -11,7 +11,7 @@ import { ProjectsServer } from './projects-server'
 export function Projects() {
   const { theme } = useTheme()
 
-  // Αφαιρέθηκε η παράμετρος _index αφού δε χρησιμοποιείται
+  // Αφαιρέθηκε η παράμετρος index αφού δεν χρησιμοποιείται
   const renderImage = (src: string, alt: string) => (
     <OptimizedImage
       src={src}

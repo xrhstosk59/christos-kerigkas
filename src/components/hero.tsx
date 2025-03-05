@@ -17,6 +17,7 @@ interface SocialLink {
 }
 
 export default function Hero() {
+  // Αφαιρέθηκε το isUploadingImage από το destructuring αφού δεν χρησιμοποιείται
   const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
