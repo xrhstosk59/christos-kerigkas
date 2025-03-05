@@ -1,6 +1,6 @@
 // src/app/api/upload/route.ts
 import { NextResponse } from 'next/server'
-import { writeFile, unlink, mkdir } from 'fs/promises'
+import { writeFile, unlink, mkdir, stat } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
 import { z } from 'zod'
@@ -24,10 +24,15 @@ const fileSchema = z.object({
 
 // Generate a safe filename
 function getSafeFilename(originalName: string): string {
-  const ext = path.extname(originalName)
+  const ext = path.extname(originalName).toLowerCase()
   const timestamp = Date.now()
   const randomString = crypto.randomBytes(16).toString('hex')
-  return `profile-${timestamp}-${randomString}${ext}`
+  
+  // Ensure we only use allowed extensions
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp']
+  const safeExt = allowedExtensions.includes(ext) ? ext : '.jpg'
+  
+  return `profile-${timestamp}-${randomString}${safeExt}`
 }
 
 // Security check for file type
@@ -52,7 +57,7 @@ async function verifyFileType(buffer: Buffer, type: string): Promise<boolean> {
 
 export async function POST(request: Request) {
   try {
-    // Get client IP
+    // Get client IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || 
                request.headers.get('x-real-ip') || 
                'unknown'
@@ -62,7 +67,7 @@ export async function POST(request: Request) {
       await limiter.check(5, `UPLOAD_${ip}`)
     } catch {
       return NextResponse.json(
-        { error: 'Too many upload attempts. Please try again later.' },
+        { error: 'Πάρα πολλές προσπάθειες αποστολής. Παρακαλώ δοκιμάστε αργότερα.' },
         { status: 429 }
       )
     }
@@ -72,12 +77,12 @@ export async function POST(request: Request) {
 
     if (!file) {
       return NextResponse.json(
-        { error: 'No file uploaded' },
+        { error: 'Δεν βρέθηκε αρχείο για αποστολή' },
         { status: 400 }
       )
     }
 
-    // Validate file
+    // Validate file using zod schema
     const validationResult = fileSchema.safeParse({
       type: file.type,
       size: file.size
@@ -90,13 +95,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get file buffer and verify its actual type
+    // Get file buffer and verify its actual type using magic numbers
     const buffer = Buffer.from(await file.arrayBuffer())
     const isValidFileType = await verifyFileType(buffer, file.type)
     
     if (!isValidFileType) {
       return NextResponse.json(
-        { error: 'File content does not match the declared type' },
+        { error: 'Το περιεχόμενο του αρχείου δεν ταιριάζει με τον δηλωμένο τύπο' },
         { status: 400 }
       )
     }
@@ -113,15 +118,28 @@ export async function POST(request: Request) {
     const filepath = path.join(uploadsDir, safeFilename)
 
     try {
+      // Write the file to disk
       await writeFile(filepath, buffer)
+      
+      // Verify the file was written correctly by checking if it exists
+      if (!existsSync(filepath)) {
+        throw new Error('File verification failed: File does not exist after writing')
+      }
+      
+      // Optional: Check file size matches expected size
+      const stats = await stat(filepath)
+      if (stats.size !== buffer.length) {
+        throw new Error(`File verification failed: Size mismatch (expected ${buffer.length}, got ${stats.size})`)
+      }
     } catch (error) {
       console.error('Error writing file:', error)
       return NextResponse.json(
-        { error: 'Failed to save file' },
+        { error: 'Αποτυχία αποθήκευσης αρχείου' },
         { status: 500 }
       )
     }
 
+    // Return success response with the filename
     return NextResponse.json({ 
       success: true,
       filename: `/uploads/${safeFilename}`
@@ -129,7 +147,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error uploading file:', error)
     return NextResponse.json(
-      { error: 'Error uploading file' },
+      { error: 'Σφάλμα κατά την αποστολή του αρχείου' },
       { status: 500 }
     )
   }
@@ -137,7 +155,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    // Get client IP
+    // Get client IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || 
                request.headers.get('x-real-ip') || 
                'unknown'
@@ -147,16 +165,28 @@ export async function DELETE(request: Request) {
       await limiter.check(5, `DELETE_UPLOAD_${ip}`)
     } catch {
       return NextResponse.json(
-        { error: 'Too many delete attempts. Please try again later.' },
+        { error: 'Πάρα πολλές προσπάθειες διαγραφής. Παρακαλώ δοκιμάστε αργότερα.' },
         { status: 429 }
       )
     }
 
-    const { filename } = await request.json()
+    // Parse the request body to get the filename
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Μη έγκυρο αίτημα JSON' },
+        { status: 400 }
+      );
+    }
 
+    const { filename } = body;
+
+    // Check if filename is provided
     if (!filename) {
       return NextResponse.json(
-        { error: 'No filename provided' },
+        { error: 'Δεν δόθηκε όνομα αρχείου' },
         { status: 400 }
       )
     }
@@ -164,32 +194,51 @@ export async function DELETE(request: Request) {
     // Security checks to prevent directory traversal
     const normalizedFilename = path.normalize(filename).replace(/^\/+/, '')
     
-    // Extra security: ensure the file is in the uploads directory and has a valid extension
+    // Extra security: ensure the file is in the uploads directory and has a valid format
+    // Only allow profile images with our specific naming pattern
     if (!normalizedFilename.startsWith('uploads/') || 
         !normalizedFilename.match(/^uploads\/profile-\d+-[a-f0-9]+\.(jpg|jpeg|png|webp)$/i)) {
+      console.warn('Invalid file deletion attempt:', normalizedFilename)
       return NextResponse.json(
-        { error: 'Invalid file path' },
+        { error: 'Μη έγκυρη διαδρομή αρχείου' },
         { status: 400 }
       )
     }
 
     const filepath = path.join(process.cwd(), 'public', normalizedFilename)
 
+    // Check if file exists before attempting to delete
+    if (!existsSync(filepath)) {
+      return NextResponse.json(
+        { error: 'Το αρχείο δεν βρέθηκε' },
+        { status: 404 }
+      )
+    }
+
     try {
+      // Delete the file
       await unlink(filepath)
+      
+      // Verify the file was actually deleted
+      if (existsSync(filepath)) {
+        throw new Error('File still exists after deletion attempt')
+      }
     } catch (error) {
       console.error('Error deleting file:', error)
       return NextResponse.json(
-        { error: 'Failed to delete file' },
+        { error: 'Αποτυχία διαγραφής αρχείου' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ 
+      success: true,
+      message: 'Το αρχείο διαγράφηκε επιτυχώς' 
+    })
   } catch (error) {
     console.error('Error deleting file:', error)
     return NextResponse.json(
-      { error: 'Error deleting file' },
+      { error: 'Σφάλμα κατά τη διαγραφή του αρχείου' },
       { status: 500 }
     )
   }

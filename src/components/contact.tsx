@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Mail, Phone, Github, Linkedin, Loader2 } from 'lucide-react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 
 export function Contact() {

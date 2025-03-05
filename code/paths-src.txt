@@ -83,7 +83,7 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\skills-server.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\skills.tsx
 
-FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\themeprovider.tsx
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\theme-provider.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\trading-dashboard.tsx
 
@@ -104,6 +104,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\blog.ts
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\db\index.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\db\schema.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\ensure-uploads-dir.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\image-config.ts
 

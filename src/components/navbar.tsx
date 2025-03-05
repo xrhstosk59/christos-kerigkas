@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +25,33 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Add a function to close the mobile menu when clicking a link
+  const handleLinkClick = () => {
+    setMobileMenuOpen(false)
+  }
+
+  // Add smooth scrolling for anchor links
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Only apply for hash links
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      const targetId = href.slice(1)
+      const targetElement = document.getElementById(targetId)
+      
+      if (targetElement) {
+        targetElement.scrollIntoView({
+          behavior: 'smooth'
+        })
+        
+        // Update URL without page reload
+        window.history.pushState({}, '', href)
+        
+        // Close the mobile menu
+        setMobileMenuOpen(false)
+      }
+    }
+  }
 
   const headerClasses = cn(
     'fixed w-full z-50 transition-all duration-200 backdrop-blur-md',
@@ -58,6 +85,7 @@ export default function Navbar() {
                 ? 'text-white hover:text-gray-300' 
                 : 'text-gray-900 hover:text-gray-600'
             )}
+            onClick={(e) => handleAnchorClick(e, '#')}
           >
             CK
           </a>
@@ -72,6 +100,9 @@ export default function Navbar() {
                 ? 'text-gray-400 hover:text-white' 
                 : 'text-gray-700 hover:text-gray-900'
             )}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -83,6 +114,7 @@ export default function Navbar() {
               key={item.name}
               href={item.href}
               className={linkClasses}
+              onClick={(e) => handleAnchorClick(e, item.href)}
             >
               {item.name}
             </a>
@@ -93,6 +125,7 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            id="mobile-menu"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -104,7 +137,10 @@ export default function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    handleAnchorClick(e, item.href)
+                    handleLinkClick()
+                  }}
                   className={mobileMenuClasses}
                 >
                   {item.name}

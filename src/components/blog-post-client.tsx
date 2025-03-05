@@ -1,7 +1,7 @@
 // src/components/blog-post-client.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { useEffect, useState } from 'react'
 import { OptimizedImage } from './optimizedimage'
 import { motion } from 'framer-motion'

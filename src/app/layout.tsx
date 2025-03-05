@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/themeprovider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@/components/analytics";
 import PageTransition from "@/components/page-transition";
 import ScrollProgress from "@/components/scroll-progress";

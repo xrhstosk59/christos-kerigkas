@@ -18,6 +18,8 @@
   --accent: #f3f4f6;
   --accent-foreground: #171717;
   --border: #e5e7eb;
+  --ring: #4f46e5;
+  --radius: 0.5rem;
 }
 
 [data-theme='dark'] {
@@ -36,14 +38,53 @@
   --accent: #27272a;
   --accent-foreground: #fafafa;
   --border: #27272a;
+  --ring: #6366f1;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
 ::selection {
   background-color: var(--primary);
   color: var(--primary-foreground);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Image placeholder styles */
+.image-placeholder {
+  background: linear-gradient(110deg, var(--muted) 8%, var(--background) 18%, var(--muted) 33%);
+  background-size: 200% 100%;
+  animation: 1.5s shine linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position-x: -200%;
+  }
 }

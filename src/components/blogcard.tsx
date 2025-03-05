@@ -2,7 +2,7 @@
 'use client'
 
 import { memo } from 'react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 import { OptimizedImage } from './optimizedimage'
 import Link from 'next/link'

@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer, BarChart, Bar 

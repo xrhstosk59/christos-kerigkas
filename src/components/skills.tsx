@@ -1,7 +1,7 @@
 // src/components/skills.tsx
 "use client"
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { SkillsServer } from './skills-server'
 
 export function Skills() {

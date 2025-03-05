@@ -1,7 +1,7 @@
 // src/app/blog/page.tsx
 'use client'
 
-import { useTheme } from '@/components/themeprovider'
+import { useTheme } from '@/components/theme-provider'
 import { motion } from 'framer-motion'
 import { BlogCard } from '@/components/blogcard'
 import { BlogCategories } from '@/components/blog-categories'

@@ -1,7 +1,7 @@
 // src/components/experience.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 import { FileCode2, LineChart, Bot } from 'lucide-react'
 import { ExperienceServer } from './experience-server'

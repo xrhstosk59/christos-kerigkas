@@ -21,6 +21,14 @@ export const siteConfig = {
 export const defaultMetadata: Metadata = {
   title: siteConfig.title,
   description: siteConfig.description,
+  authors: [{ name: siteConfig.author.name, url: siteConfig.url }],
+  creator: siteConfig.author.name,
+  publisher: siteConfig.author.name,
+  formatDetection: {
+    email: true,
+    address: false,
+    telephone: true,
+  },
   openGraph: {
     type: 'website',
     url: siteConfig.url,
@@ -43,6 +51,24 @@ export const defaultMetadata: Metadata = {
     creator: '@yourusername'
   },
   alternates: {
-    canonical: siteConfig.url
-  }
+    canonical: siteConfig.url,
+    languages: {
+      'en-US': `${siteConfig.url}/en`,
+      'el-GR': `${siteConfig.url}/el`,
+    },
+  },
+  category: 'technology',
+  keywords: [
+    'Full Stack Developer', 
+    'Next.js', 
+    'React', 
+    'TypeScript', 
+    'Web Development',
+    'Crypto Trading',
+    'Portfolio',
+    'Software Engineer',
+    'JavaScript Developer',
+    'Frontend Developer',
+    'Backend Developer'
+  ]
 }

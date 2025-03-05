@@ -1,7 +1,7 @@
 // src/components/blog-categories.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { cn } from '@/lib/utils'
 
 interface BlogCategoriesProps {

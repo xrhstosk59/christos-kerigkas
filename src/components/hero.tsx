@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
@@ -17,7 +17,7 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  const { theme, profileImage, setProfileImage } = useTheme()
+  const { theme, profileImage, setProfileImage, isUploadingImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -45,6 +45,22 @@ export default function Hero() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    
+    // Reset input to ensure change event fires on selecting the same file
+    e.target.value = ''
+    
+    // Validate file type and size before sending
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      alert('Μη έγκυρος τύπος αρχείου. Παρακαλώ επιλέξτε εικόνα JPG, PNG ή WebP.')
+      return
+    }
+    
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      alert('Το αρχείο είναι πολύ μεγάλο. Το μέγιστο μέγεθος είναι 5MB.')
+      return
+    }
 
     try {
       setIsUploading(true)
@@ -56,19 +72,37 @@ export default function Hero() {
         body: formData
       })
 
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
       if (data.success) {
+        // Delete old profile image if it's not the default
         if (profileImage !== '/profile.jpg') {
-          await fetch('/api/upload', {
-            method: 'DELETE',
-            body: JSON.stringify({ filename: profileImage }),
-            headers: { 'Content-Type': 'application/json' }
-          })
+          try {
+            const deleteResponse = await fetch('/api/upload', {
+              method: 'DELETE',
+              body: JSON.stringify({ filename: profileImage }),
+              headers: { 'Content-Type': 'application/json' }
+            })
+            
+            if (!deleteResponse.ok) {
+              console.warn('Failed to delete old profile image:', profileImage)
+            }
+          } catch (deleteError) {
+            console.error('Error during old image deletion:', deleteError)
+          }
         }
+        
+        // Update profile image with the new one
         setProfileImage(data.filename)
+      } else {
+        throw new Error(data.error || 'Unknown error during upload')
       }
     } catch (error) {
       console.error('Error uploading image:', error)
+      alert('Παρουσιάστηκε σφάλμα κατά την αποστολή της εικόνας. Παρακαλώ δοκιμάστε ξανά.')
     } finally {
       setIsUploading(false)
     }
@@ -76,20 +110,31 @@ export default function Hero() {
 
   const handleDeleteImage = async () => {
     if (profileImage === '/profile.jpg') return
-
+    
     try {
+      setIsUploading(true)
+      
       const response = await fetch('/api/upload', {
         method: 'DELETE',
         body: JSON.stringify({ filename: profileImage }),
         headers: { 'Content-Type': 'application/json' }
       })
 
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
       if (data.success) {
         setProfileImage('/profile.jpg')
+      } else {
+        throw new Error(data.error || 'Unknown error during deletion')
       }
     } catch (error) {
       console.error('Error deleting image:', error)
+      alert('Παρουσιάστηκε σφάλμα κατά τη διαγραφή της εικόνας. Παρακαλώ δοκιμάστε ξανά.')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -110,14 +155,31 @@ export default function Hero() {
             className="relative group mb-8 mx-auto"
           >
             <div className="w-32 h-32 relative rounded-full overflow-hidden ring-2 ring-indigo-600">
-              <Image
-                src={profileImage}
-                alt="Christos Kerigkas Profile Picture"
-                width={128}
-                height={128}
-                priority
-                className="object-cover w-full h-full"
-              />
+              {isUploading ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+                  <svg className="animate-spin h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : (
+                <Image
+                  src={profileImage}
+                  alt="Christos Kerigkas Profile Picture"
+                  width={128}
+                  height={128}
+                  priority
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    // Fallback to default image if the custom one fails to load
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== '/profile.jpg') {
+                      console.warn('Profile image failed to load, falling back to default');
+                      setProfileImage('/profile.jpg');
+                    }
+                  }}
+                />
+              )}
             </div>
             
             <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full">
@@ -125,6 +187,7 @@ export default function Hero() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
                 className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                aria-label="Upload profile picture"
               >
                 <Upload className="w-5 h-5 text-white" />
               </button>
@@ -133,6 +196,7 @@ export default function Hero() {
                   onClick={handleDeleteImage}
                   disabled={isUploading}
                   className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  aria-label="Remove profile picture"
                 >
                   <Trash2 className="w-5 h-5 text-white" />
                 </button>
@@ -142,9 +206,10 @@ export default function Hero() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleImageUpload}
               className="hidden"
+              aria-label="Upload profile picture"
             />
           </motion.div>
 

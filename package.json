@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node -e \"require('fs').existsSync('./public/uploads') || require('fs').mkdirSync('./public/uploads', { recursive: true })\"",
     "dev": "next dev --turbopack",
+    "prebuild": "node -e \"require('fs').existsSync('./public/uploads') || require('fs').mkdirSync('./public/uploads', { recursive: true })\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup": "node -e \"require('fs').existsSync('./public/uploads') || require('fs').mkdirSync('./public/uploads', { recursive: true })\""
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.3",

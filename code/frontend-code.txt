@@ -479,21 +479,55 @@ createPathsFiles(publicFolder, publicOutputFile);
 
 === C:\Users\chris\Downloads\christos-kerigkas\manifest.json ===
 {
-    "name": "Christos Kerigkas Portfolio",
-    "short_name": "CK Portfolio",
-    "description": "Personal portfolio website showcasing my work and skills",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#4F46E5",
-    "icons": [
-      {
-        "src": "/apple-icon.png",
-        "sizes": "180x180",
-        "type": "image/png"
-      }
-    ]
-  }
+  "name": "Christos Kerigkas Portfolio",
+  "short_name": "CK Portfolio",
+  "description": "Personal portfolio website showcasing my work and skills",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "450x900",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1600x900",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "related_applications": [],
+  "orientation": "portrait-primary",
+  "categories": ["portfolio", "development", "personalization"],
+  "lang": "en",
+  "dir": "ltr"
+}
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\next-env.d.ts ===
@@ -665,7 +699,7 @@ export default function BlogLoading() {
 // src/app/blog/page.tsx
 'use client'
 
-import { useTheme } from '@/components/themeprovider'
+import { useTheme } from '@/components/theme-provider'
 import { motion } from 'framer-motion'
 import { BlogCard } from '@/components/blogcard'
 import { BlogCategories } from '@/components/blog-categories'
@@ -1054,6 +1088,8 @@ export { default } from '@/components/error-boundary'
   --accent: #f3f4f6;
   --accent-foreground: #171717;
   --border: #e5e7eb;
+  --ring: #4f46e5;
+  --radius: 0.5rem;
 }
 
 [data-theme='dark'] {
@@ -1072,11 +1108,13 @@ export { default } from '@/components/error-boundary'
   --accent: #27272a;
   --accent-foreground: #fafafa;
   --border: #27272a;
+  --ring: #6366f1;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
 ::selection {
@@ -1084,12 +1122,49 @@ body {
   color: var(--primary-foreground);
 }
 
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Image placeholder styles */
+.image-placeholder {
+  background: linear-gradient(110deg, var(--muted) 8%, var(--background) 18%, var(--muted) 33%);
+  background-size: 200% 100%;
+  animation: 1.5s shine linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position-x: -200%;
+  }
+}
+
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\app\layout.tsx ===
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/themeprovider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@/components/analytics";
 import PageTransition from "@/components/page-transition";
 import ScrollProgress from "@/components/scroll-progress";
@@ -1176,7 +1251,7 @@ import { About } from '@/components/about'
 import { Experience } from '@/components/experience'
 import { Skills } from '@/components/skills'
 import { Projects } from '@/components/projects'
-import { CryptoProjects } from '@/components/crypto-projects'  // Προσθήκη εδώ
+import { CryptoProjects } from '@/components/crypto-projects'
 import { Contact } from '@/components/contact'
 import { Footer } from '@/components/footer'
 
@@ -1189,7 +1264,7 @@ export default function Home() {
       <Experience />
       <Skills />
       <Projects />
-      <CryptoProjects />  {/* Προσθήκη εδώ */}
+      <CryptoProjects />
       <Contact />
       <Footer />
     </main>
@@ -1223,7 +1298,7 @@ export default function DashboardPage() {
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\about.tsx ===
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 import { Code2, Dumbbell, GraduationCap, Home, Binary } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -1456,7 +1531,7 @@ export function AnimatedNavLink({ href, children, className, onClick }: Animated
 // src/components/blog-categories.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { cn } from '@/lib/utils'
 
 interface BlogCategoriesProps {
@@ -1517,7 +1592,7 @@ export function BlogCategories({ categories, activeCategory, onCategoryChange }:
 // src/components/blog-post-client.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { useEffect, useState } from 'react'
 import { OptimizedImage } from './optimizedimage'
 import { motion } from 'framer-motion'
@@ -1650,7 +1725,7 @@ export default function BlogPostClient({ initialData }: BlogPostClientProps) {
 'use client'
 
 import { memo } from 'react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 import { OptimizedImage } from './optimizedimage'
 import Link from 'next/link'
@@ -1737,7 +1812,7 @@ export const BlogCard = memo(function BlogCard({ post, index }: BlogCardProps) {
 
 import { useState } from 'react'
 import { Mail, Phone, Github, Linkedin, Loader2 } from 'lucide-react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 
 export function Contact() {
@@ -1890,7 +1965,7 @@ export function Contact() {
 // src/components/crypto-projects.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 import { LineChart, Cpu, Bot, TrendingUp, Eye, BrainCircuit } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -2358,29 +2433,29 @@ export function ExperienceServer({ theme, renderIcon }: ExperienceServerProps) {
                                     ))}
                                 </div>
 
-
-                                href={project.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={cn(
-                                    "mt-4 inline-flex items-center text-sm font-medium",
-                                    theme === 'dark'
-                                        ? 'text-indigo-400 hover:text-indigo-300'
-                                        : 'text-indigo-600 hover:text-indigo-500'
-                                )}
-                >
-                                View Project
-                                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
-                            </a>
+                                <a
+                                    href={project.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={cn(
+                                        "mt-4 inline-flex items-center text-sm font-medium",
+                                        theme === 'dark'
+                                            ? 'text-indigo-400 hover:text-indigo-300'
+                                            : 'text-indigo-600 hover:text-indigo-500'
+                                    )}
+                                >
+                                    View Project
+                                    <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </a>
+                            </div>
                         </div>
-                    </div>
-          </article>
-        ))}
+                    </article>
+                ))}
+            </div>
         </div>
-    </div >
-  )
+    )
 }
 
 
@@ -2388,7 +2463,7 @@ export function ExperienceServer({ theme, renderIcon }: ExperienceServerProps) {
 // src/components/experience.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
 import { FileCode2, LineChart, Bot } from 'lucide-react'
 import { ExperienceServer } from './experience-server'
@@ -2431,7 +2506,7 @@ export function Experience() {
 'use client'
 
 import { Github, Linkedin, Mail } from 'lucide-react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 
 export function Footer() {
   const { theme } = useTheme()
@@ -2465,7 +2540,7 @@ export function Footer() {
 'use client'
 
 import { useState, useRef } from 'react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
@@ -2480,7 +2555,7 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  const { theme, profileImage, setProfileImage } = useTheme()
+  const { theme, profileImage, setProfileImage, isUploadingImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -2508,6 +2583,22 @@ export default function Hero() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    
+    // Reset input to ensure change event fires on selecting the same file
+    e.target.value = ''
+    
+    // Validate file type and size before sending
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      alert('Μη έγκυρος τύπος αρχείου. Παρακαλώ επιλέξτε εικόνα JPG, PNG ή WebP.')
+      return
+    }
+    
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      alert('Το αρχείο είναι πολύ μεγάλο. Το μέγιστο μέγεθος είναι 5MB.')
+      return
+    }
 
     try {
       setIsUploading(true)
@@ -2519,19 +2610,37 @@ export default function Hero() {
         body: formData
       })
 
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
       if (data.success) {
+        // Delete old profile image if it's not the default
         if (profileImage !== '/profile.jpg') {
-          await fetch('/api/upload', {
-            method: 'DELETE',
-            body: JSON.stringify({ filename: profileImage }),
-            headers: { 'Content-Type': 'application/json' }
-          })
+          try {
+            const deleteResponse = await fetch('/api/upload', {
+              method: 'DELETE',
+              body: JSON.stringify({ filename: profileImage }),
+              headers: { 'Content-Type': 'application/json' }
+            })
+            
+            if (!deleteResponse.ok) {
+              console.warn('Failed to delete old profile image:', profileImage)
+            }
+          } catch (deleteError) {
+            console.error('Error during old image deletion:', deleteError)
+          }
         }
+        
+        // Update profile image with the new one
         setProfileImage(data.filename)
+      } else {
+        throw new Error(data.error || 'Unknown error during upload')
       }
     } catch (error) {
       console.error('Error uploading image:', error)
+      alert('Παρουσιάστηκε σφάλμα κατά την αποστολή της εικόνας. Παρακαλώ δοκιμάστε ξανά.')
     } finally {
       setIsUploading(false)
     }
@@ -2539,20 +2648,31 @@ export default function Hero() {
 
   const handleDeleteImage = async () => {
     if (profileImage === '/profile.jpg') return
-
+    
     try {
+      setIsUploading(true)
+      
       const response = await fetch('/api/upload', {
         method: 'DELETE',
         body: JSON.stringify({ filename: profileImage }),
         headers: { 'Content-Type': 'application/json' }
       })
 
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
       if (data.success) {
         setProfileImage('/profile.jpg')
+      } else {
+        throw new Error(data.error || 'Unknown error during deletion')
       }
     } catch (error) {
       console.error('Error deleting image:', error)
+      alert('Παρουσιάστηκε σφάλμα κατά τη διαγραφή της εικόνας. Παρακαλώ δοκιμάστε ξανά.')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -2573,14 +2693,31 @@ export default function Hero() {
             className="relative group mb-8 mx-auto"
           >
             <div className="w-32 h-32 relative rounded-full overflow-hidden ring-2 ring-indigo-600">
-              <Image
-                src={profileImage}
-                alt="Christos Kerigkas Profile Picture"
-                width={128}
-                height={128}
-                priority
-                className="object-cover w-full h-full"
-              />
+              {isUploading ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+                  <svg className="animate-spin h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : (
+                <Image
+                  src={profileImage}
+                  alt="Christos Kerigkas Profile Picture"
+                  width={128}
+                  height={128}
+                  priority
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    // Fallback to default image if the custom one fails to load
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== '/profile.jpg') {
+                      console.warn('Profile image failed to load, falling back to default');
+                      setProfileImage('/profile.jpg');
+                    }
+                  }}
+                />
+              )}
             </div>
             
             <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full">
@@ -2588,6 +2725,7 @@ export default function Hero() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
                 className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                aria-label="Upload profile picture"
               >
                 <Upload className="w-5 h-5 text-white" />
               </button>
@@ -2596,6 +2734,7 @@ export default function Hero() {
                   onClick={handleDeleteImage}
                   disabled={isUploading}
                   className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  aria-label="Remove profile picture"
                 >
                   <Trash2 className="w-5 h-5 text-white" />
                 </button>
@@ -2605,9 +2744,10 @@ export default function Hero() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleImageUpload}
               className="hidden"
+              aria-label="Upload profile picture"
             />
           </motion.div>
 
@@ -2704,7 +2844,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import type { Components } from 'react-markdown'
 import { Highlight, themes } from 'prism-react-renderer'
 
@@ -2774,7 +2914,7 @@ export function Markdown({ content }: MarkdownProps) {
 
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -2797,6 +2937,33 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Add a function to close the mobile menu when clicking a link
+  const handleLinkClick = () => {
+    setMobileMenuOpen(false)
+  }
+
+  // Add smooth scrolling for anchor links
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Only apply for hash links
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      const targetId = href.slice(1)
+      const targetElement = document.getElementById(targetId)
+      
+      if (targetElement) {
+        targetElement.scrollIntoView({
+          behavior: 'smooth'
+        })
+        
+        // Update URL without page reload
+        window.history.pushState({}, '', href)
+        
+        // Close the mobile menu
+        setMobileMenuOpen(false)
+      }
+    }
+  }
 
   const headerClasses = cn(
     'fixed w-full z-50 transition-all duration-200 backdrop-blur-md',
@@ -2830,6 +2997,7 @@ export default function Navbar() {
                 ? 'text-white hover:text-gray-300' 
                 : 'text-gray-900 hover:text-gray-600'
             )}
+            onClick={(e) => handleAnchorClick(e, '#')}
           >
             CK
           </a>
@@ -2844,6 +3012,9 @@ export default function Navbar() {
                 ? 'text-gray-400 hover:text-white' 
                 : 'text-gray-700 hover:text-gray-900'
             )}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -2855,6 +3026,7 @@ export default function Navbar() {
               key={item.name}
               href={item.href}
               className={linkClasses}
+              onClick={(e) => handleAnchorClick(e, item.href)}
             >
               {item.name}
             </a>
@@ -2865,6 +3037,7 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            id="mobile-menu"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -2876,7 +3049,10 @@ export default function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    handleAnchorClick(e, item.href)
+                    handleLinkClick()
+                  }}
                   className={mobileMenuClasses}
                 >
                   {item.name}
@@ -3061,7 +3237,7 @@ export function ProjectsServer({
 // src/components/projects.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { Github, ExternalLink } from 'lucide-react'
 import { OptimizedImage } from './optimizedimage'
 import { cn } from '@/lib/utils'
@@ -3155,7 +3331,7 @@ export function Projects() {
 "use client"
 
 import { motion, useScroll } from "framer-motion"
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 
 export default function ScrollProgress() {
   const { scrollYProgress } = useScroll()
@@ -3233,7 +3409,7 @@ export function SkillsServer({ theme }: SkillsServerProps) {
 // src/components/skills.tsx
 "use client"
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { SkillsServer } from './skills-server'
 
 export function Skills() {
@@ -3249,7 +3425,7 @@ export function Skills() {
 }
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\src\components\themeprovider.tsx ===
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\theme-provider.tsx ===
 // src/components/themeprovider.tsx
 
 'use client'
@@ -3264,20 +3440,24 @@ type ThemeContextType = {
   toggleTheme: () => void
   profileImage: string
   setProfileImage: (path: string) => void
+  isUploadingImage: boolean
 }
+
+const DEFAULT_PROFILE_IMAGE = '/profile.jpg'
 
 const ThemeContext = createContext<ThemeContextType>({ 
   theme: 'light', 
   toggleTheme: () => null,
-  profileImage: '/profile.jpg',
-  setProfileImage: () => null
+  profileImage: DEFAULT_PROFILE_IMAGE,
+  setProfileImage: () => null,
+  isUploadingImage: false
 })
 
 const ThemeToggleButton = memo(({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) => (
   <button
     onClick={toggleTheme}
     className={cn(
-      "fixed bottom-4 right-4 p-3 rounded-full shadow-lg transition-colors duration-200",
+      "fixed bottom-4 right-4 p-3 rounded-full shadow-lg transition-colors duration-200 z-10",
       theme === 'dark' 
         ? 'bg-gray-800 hover:bg-gray-700 text-gray-200' 
         : 'bg-white hover:bg-gray-100 text-gray-900'
@@ -3293,37 +3473,82 @@ ThemeToggleButton.displayName = 'ThemeToggleButton'
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [theme, setTheme] = useState<Theme>('light')
-  const [profileImage, setProfileImage] = useState('/profile.jpg')
+  const [profileImage, setProfileImageState] = useState(DEFAULT_PROFILE_IMAGE)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+
+  // Wrapper for setProfileImage to handle persistence
+  const setProfileImage = useCallback((path: string) => {
+    if (!path || path.trim() === '') {
+      console.warn('Attempted to set empty profile image path')
+      return
+    }
+    
+    setProfileImageState(path)
+    
+    // If mounted, update localStorage immediately
+    if (mounted && typeof window !== 'undefined') {
+      localStorage.setItem('profileImage', path)
+    }
+  }, [mounted])
 
   const toggleTheme = useCallback(() => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
-  }, [])
+    setTheme(prev => {
+      const newTheme = prev === 'light' ? 'dark' : 'light'
+      if (mounted && typeof window !== 'undefined') {
+        localStorage.setItem('theme', newTheme)
+      }
+      return newTheme
+    })
+  }, [mounted])
 
+  // Initialize from localStorage
   useEffect(() => {
-    setMounted(true)
-    const savedTheme = localStorage.getItem('theme') as Theme
-    const savedProfileImage = localStorage.getItem('profileImage')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    
-    setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
-    if (savedProfileImage) {
-      setProfileImage(savedProfileImage)
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as Theme
+      const savedProfileImage = localStorage.getItem('profileImage')
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      
+      setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
+      
+      if (savedProfileImage) {
+        // Simple validation to ensure we have a valid path
+        if (savedProfileImage.startsWith('/') && !savedProfileImage.includes('..')) {
+          setProfileImageState(savedProfileImage)
+        } else {
+          console.warn('Invalid profile image path found in localStorage')
+          localStorage.removeItem('profileImage')
+        }
+      }
+      
+      setMounted(true)
     }
   }, [])
 
+  // Apply theme to document
   useEffect(() => {
-    if (mounted) {
-      localStorage.setItem('theme', theme)
-      localStorage.setItem('profileImage', profileImage)
+    if (mounted && typeof document !== 'undefined') {
       document.documentElement.dataset.theme = theme
       document.documentElement.classList.toggle('dark', theme === 'dark')
     }
-  }, [theme, profileImage, mounted])
+  }, [theme, mounted])
 
-  if (!mounted) return null
+  // SSR safe return
+  if (!mounted) {
+    return null
+  }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, profileImage, setProfileImage }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      toggleTheme, 
+      profileImage, 
+      setProfileImage: (path) => {
+        setIsUploadingImage(true)
+        setProfileImage(path)
+        setIsUploadingImage(false)
+      },
+      isUploadingImage
+    }}>
       {children}
       <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
     </ThemeContext.Provider>
@@ -3338,7 +3563,7 @@ export const useTheme = () => useContext(ThemeContext)
 'use client'
 
 import { useState } from 'react'
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer, BarChart, Bar 
@@ -4008,6 +4233,37 @@ export type ContactMessage = typeof contactMessages.$inferSelect
 export type NewContactMessage = typeof contactMessages.$inferInsert
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\lib\ensure-uploads-dir.ts ===
+// src/lib/ensure-uploads-dir.ts
+import { existsSync, mkdirSync } from 'fs';
+import path from 'path';
+
+/**
+ * Ensures that the uploads directory exists in the public folder
+ * This is important for storing and retrieving user uploads like profile images
+ */
+export function ensureUploadsDirectory(): void {
+  try {
+    const publicDir = path.join(process.cwd(), 'public');
+    const uploadsDir = path.join(publicDir, 'uploads');
+    
+    // Create public directory if it doesn't exist (unlikely but just in case)
+    if (!existsSync(publicDir)) {
+      console.log('Creating public directory...');
+      mkdirSync(publicDir, { recursive: true });
+    }
+    
+    // Create uploads directory if it doesn't exist
+    if (!existsSync(uploadsDir)) {
+      console.log('Creating uploads directory...');
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+  } catch (error) {
+    console.error('Error ensuring uploads directory exists:', error);
+  }
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\lib\image-config.ts ===
 // src/lib/image-config.ts
 export const imageConfig = {
@@ -4025,39 +4281,39 @@ export const imageConfig = {
 === C:\Users\chris\Downloads\christos-kerigkas\src\lib\rate-limit.ts ===
 // src/lib/rate-limit.ts
 export interface RateLimitOptions {
-    interval: number
-    uniqueTokenPerInterval: number
+  interval: number
+  uniqueTokenPerInterval: number
+}
+
+interface RateLimitRes {
+  check: (limit: number, token: string) => Promise<void>
+}
+
+// Memory store για τα requests (σε production θα ήταν καλύτερα 
+// να χρησιμοποιήσεις ένα persistent store όπως Redis)
+const tokenCache = new Map<string, number[]>()
+
+export function rateLimit(options: RateLimitOptions): RateLimitRes {
+  return {
+    check: (limit: number, token: string): Promise<void> => {
+      const now = Date.now()
+      const windowStart = now - options.interval
+      
+      const tokenCount = tokenCache.get(token) || []
+      const validTokens = tokenCount.filter(timestamp => timestamp > windowStart)
+      
+      tokenCache.set(token, [...validTokens, now])
+      
+      return new Promise((resolve, reject) => {
+        if (validTokens.length < limit) {
+          resolve()
+        } else {
+          reject(new Error('Rate limit exceeded'))
+        }
+      })
+    },
   }
-  
-  interface RateLimitRes {
-    check: (limit: number, token: string) => Promise<void>
-  }
-  
-  // Memory store για τα requests (σε production θα ήταν καλύτερα 
-  // να χρησιμοποιήσεις ένα persistent store όπως Redis)
-  const tokenCache = new Map<string, number[]>()
-  
-  export function rateLimit(options: RateLimitOptions): RateLimitRes {
-    return {
-      check: (limit: number, token: string): Promise<void> => {
-        const now = Date.now()
-        const windowStart = now - options.interval
-        
-        const tokenCount = tokenCache.get(token) || []
-        const validTokens = tokenCount.filter(timestamp => timestamp > windowStart)
-        
-        tokenCache.set(token, [...validTokens, now])
-        
-        return new Promise((resolve, reject) => {
-          if (validTokens.length < limit) {
-            resolve()
-          } else {
-            reject(new Error('Rate limit exceeded'))
-          }
-        })
-      },
-    }
-  }
+}
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\lib\supabase.ts ===

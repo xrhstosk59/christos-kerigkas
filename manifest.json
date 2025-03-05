@@ -1,16 +1,50 @@
 {
-    "name": "Christos Kerigkas Portfolio",
-    "short_name": "CK Portfolio",
-    "description": "Personal portfolio website showcasing my work and skills",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#4F46E5",
-    "icons": [
-      {
-        "src": "/apple-icon.png",
-        "sizes": "180x180",
-        "type": "image/png"
-      }
-    ]
-  }
+  "name": "Christos Kerigkas Portfolio",
+  "short_name": "CK Portfolio",
+  "description": "Personal portfolio website showcasing my work and skills",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "450x900",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1600x900",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "related_applications": [],
+  "orientation": "portrait-primary",
+  "categories": ["portfolio", "development", "personalization"],
+  "lang": "en",
+  "dir": "ltr"
+}

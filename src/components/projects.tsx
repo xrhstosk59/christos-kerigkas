@@ -1,7 +1,7 @@
 // src/components/projects.tsx
 'use client'
 
-import { useTheme } from './themeprovider'
+import { useTheme } from './theme-provider'
 import { Github, ExternalLink } from 'lucide-react'
 import { OptimizedImage } from './optimizedimage'
 import { cn } from '@/lib/utils'
