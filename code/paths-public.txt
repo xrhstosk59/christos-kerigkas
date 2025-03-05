@@ -5,7 +5,7 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\public\globe.svg
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\public\next.svg
 
-FILE: C:\Users\chris\Downloads\christos-kerigkas\public\uploads\profile-1739825420121.jpg
+FILE: C:\Users\chris\Downloads\christos-kerigkas\public\uploads\profile.jpg
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\public\vercel.svg
 

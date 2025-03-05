@@ -517,7 +517,7 @@ createPathsFiles(publicFolder, publicOutputFile);
 [Image File Present]
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\public\uploads\profile-1739825420121.jpg ===
+=== C:\Users\chris\Downloads\christos-kerigkas\public\uploads\profile.jpg ===
 [Image File Present]
 
 
