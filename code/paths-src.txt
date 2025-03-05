@@ -41,6 +41,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\about.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\analytics.tsx
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\animated-nav-link.tsx
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-categories.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-post-client.tsx
@@ -51,7 +53,11 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\contact.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\crypto-projects.tsx
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\enhanced-image.tsx
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\error-boundary.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\experience-server.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\experience.tsx
 
@@ -65,13 +71,23 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\navbar.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\optimizedimage.tsx
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\page-transition.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\projects-server.tsx
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\projects.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\scroll-progress.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\skills-server.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\skills.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\themeprovider.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\trading-dashboard.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\ui\animated-button.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\ui\button.tsx
 
@@ -88,6 +104,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\blog.ts
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\db\index.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\db\schema.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\image-config.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\image-loader.ts
 

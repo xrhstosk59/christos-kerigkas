@@ -1,12 +1,13 @@
 // next.config.ts
 import { type NextConfig } from "next"
+import { imageConfig } from "./src/lib/image-config"
 
 const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    minimumCacheTTL: 60,
-    unoptimized: true,
+    deviceSizes: imageConfig.deviceSizes,
+    imageSizes: imageConfig.imageSizes,
+    minimumCacheTTL: imageConfig.minimumCacheTTL,
     remotePatterns: [{
       protocol: 'https',
       hostname: '**',
@@ -33,7 +34,7 @@ const nextConfig: NextConfig = {
       headers: [
         {
           key: 'Cache-Control',
-          value: 'public, max-age=31536000, immutable',
+          value: `public, max-age=${imageConfig.cacheMaxAge}, s-maxage=${imageConfig.cacheMaxAge}, stale-while-revalidate=${imageConfig.staleWhileRevalidate}`,
         }
       ],
     },
@@ -42,7 +43,7 @@ const nextConfig: NextConfig = {
       headers: [
         {
           key: 'Cache-Control',
-          value: 'public, max-age=31536000, immutable',
+          value: `public, max-age=${imageConfig.cacheMaxAge}, immutable`,
         }
       ],
     },
@@ -72,6 +73,13 @@ const nextConfig: NextConfig = {
       ],
     }
   ],
+  // Experimental features για το Next.js 15
+  experimental: {
+    optimizeServerReact: true,
+    optimizeCss: true,
+    serverMinification: true,
+    // Αφαιρέθηκε το useDeploymentId που δεν υποστηρίζεται
+  },
 }
 
 export default nextConfig

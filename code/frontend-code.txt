@@ -1086,10 +1086,13 @@ body {
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\app\layout.tsx ===
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/themeprovider";
 import { Analytics } from "@/components/analytics";
+import PageTransition from "@/components/page-transition";
+import ScrollProgress from "@/components/scroll-progress";
 import { defaultMetadata } from "@/lib/seo";
 import "./globals.css";
 
@@ -1135,7 +1138,10 @@ export default function RootLayout({
       <head />
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
-          {children}
+          <ScrollProgress />
+          <PageTransition>
+            {children}
+          </PageTransition>
           <Analytics />
         </ThemeProvider>
       </body>
@@ -1394,6 +1400,54 @@ export function Analytics() {
         }}
       />
     </>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\animated-nav-link.tsx ===
+// src/components/animated-nav-link.tsx
+"use client"
+
+import { usePathname } from "next/navigation"
+import { motion } from "framer-motion"
+import { cn } from "@/lib/utils"
+
+interface AnimatedNavLinkProps {
+  href: string
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+export function AnimatedNavLink({ href, children, className, onClick }: AnimatedNavLinkProps) {
+  const pathname = usePathname()
+  const isActive = pathname === href || 
+                  (pathname?.startsWith(href) && href !== '/' && pathname !== '/')
+  
+  return (
+    <a 
+      href={href} 
+      className={cn(
+        "relative py-1.5 px-1 text-sm font-medium transition-colors",
+        className
+      )}
+      onClick={onClick}
+    >
+      {children}
+      {isActive && (
+        <motion.span
+          layoutId="navbar-indicator"
+          className="absolute inset-x-0 bottom-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30,
+          }}
+        />
+      )}
+    </a>
   )
 }
 
@@ -2062,6 +2116,62 @@ export function CryptoProjects() {
 }
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\enhanced-image.tsx ===
+// src/components/enhanced-image.tsx
+"use client"
+
+import Image from 'next/image'
+import { useState } from 'react'
+
+type EnhancedImageProps = {
+  src: string
+  alt: string
+  width: number
+  height: number
+  className?: string
+  priority?: boolean
+}
+
+export function EnhancedImage({ 
+  src, 
+  alt, 
+  width, 
+  height, 
+  className,
+  priority = false
+}: EnhancedImageProps) {
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Create unique cache key based on image dimensions and src
+  const cacheKey = `${width}x${height}-${src.replace(/\W/g, '')}`
+
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        quality={90}
+        priority={priority}
+        loading={priority ? 'eager' : 'lazy'}
+        className={`
+          duration-700 ease-in-out
+          ${isLoading ? 'scale-110 blur-lg' : 'scale-100 blur-0'}
+        `}
+        onLoadingComplete={() => setIsLoading(false)}
+        // Next.js 15 new image cache options
+        {...(process.env.NODE_ENV === 'production' ? {
+          fetchPriority: priority ? 'high' : 'auto',
+          // Add cache-specific params for CDN caching
+          cacheId: cacheKey,
+        } : {})}
+      />
+    </div>
+  )
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\error-boundary.tsx ===
 // src/components/error-boundary.tsx
 'use client'
@@ -2095,75 +2205,207 @@ export default function ErrorBoundary({
 }
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\experience-server.tsx ===
+// src/components/experience-server.tsx
+import { type ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+
+const projects = [
+    {
+        name: 'Real Estate Platform',
+        icon: 'FileCode2',
+        description: `
+      Full-stack web application for real estate listings featuring dynamic property search,
+      user authentication, and responsive design. Implemented with modern web technologies
+      and best practices for performance and SEO.
+    `,
+        keyFeatures: [
+            'Dynamic property search with filters',
+            'User authentication and profiles',
+            'Real-time updates with WebSocket',
+            'Responsive design for all devices',
+            'SEO optimization and performance metrics'
+        ],
+        tech: ['Next.js', 'React', 'Supabase', 'Drizzle', 'Tailwind CSS', 'PostgreSQL'],
+        status: 'In Development',
+        link: 'https://github.com/yourusername/real-estate'
+    },
+    {
+        name: 'Sniper4Crypto',
+        icon: 'LineChart',
+        description: `
+      Advanced crypto analysis tool using data mining and machine learning to detect trending
+      meme tokens. Features automated market analysis, social media monitoring, and real-time
+      notifications through Telegram.
+    `,
+        keyFeatures: [
+            'Real-time token detection',
+            'Social media trend analysis',
+            'Machine learning predictions',
+            'Automated market analysis',
+            'Telegram notifications'
+        ],
+        tech: ['Python', 'Scikit-learn', 'Telegram Bot API', 'MongoDB', 'PostgreSQL'],
+        status: 'Active',
+        link: 'https://github.com/yourusername/sniper4crypto'
+    },
+    {
+        name: 'Trading Bot',
+        icon: 'Bot',
+        description: `
+      Automated trading system with comprehensive market analysis, strategy implementation,
+      and real-time notifications. Includes backtesting capabilities and risk management
+      features.
+    `,
+        keyFeatures: [
+            'Automated trading strategies',
+            'Real-time market analysis',
+            'Risk management system',
+            'Performance analytics',
+            'Backtesting framework'
+        ],
+        tech: ['Python', 'Exchange APIs', 'Telegram Bot API', 'Technical Analysis', 'Data Science'],
+        status: 'Active',
+        link: 'https://github.com/yourusername/trading-bot'
+    }
+]
+
+interface ExperienceServerProps {
+    theme: 'light' | 'dark'
+    renderIcon: (iconName: string) => ReactNode
+}
+
+export function ExperienceServer({ theme, renderIcon }: ExperienceServerProps) {
+    return (
+        <div className="mx-auto max-w-2xl lg:max-w-4xl">
+            <h2 className={cn(
+                "text-3xl font-bold tracking-tight sm:text-4xl",
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+                Experience & Projects
+            </h2>
+
+            <div className="mt-16 space-y-8">
+                {projects.map((project) => (
+                    <article
+                        key={project.name}
+                        className={cn(
+                            "p-6 rounded-lg shadow-sm hover:shadow-md transition-all",
+                            theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                        )}
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className={cn(
+                                "p-2 rounded-lg",
+                                theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                            )}>
+                                {renderIcon(project.icon)}
+                            </div>
+
+                            <div className="flex-1">
+                                <div className="flex justify-between items-center">
+                                    <h3 className={cn(
+                                        "text-lg font-semibold",
+                                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                    )}>
+                                        {project.name}
+                                    </h3>
+                                    <span className={cn(
+                                        "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
+                                        project.status === 'Active'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-blue-100 text-blue-700'
+                                    )}>
+                                        {project.status}
+                                    </span>
+                                </div>
+
+                                <p className={cn(
+                                    "mt-2 text-base",
+                                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                                )}>
+                                    {project.description}
+                                </p>
+
+                                <ul className="mt-4 space-y-2">
+                                    {project.keyFeatures.map((feature) => (
+                                        <li
+                                            key={feature}
+                                            className={cn(
+                                                "flex items-center text-sm",
+                                                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                            )}
+                                        >
+                                            <span className="mr-2">•</span>
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {project.tech.map((tech) => (
+                                        <span
+                                            key={tech}
+                                            className={cn(
+                                                "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
+                                                theme === 'dark'
+                                                    ? 'bg-gray-700 text-gray-200'
+                                                    : 'bg-gray-100 text-gray-700'
+                                            )}
+                                        >
+                                            {tech}
+                                        </span>
+                                    ))}
+                                </div>
+
+
+                                href={project.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={cn(
+                                    "mt-4 inline-flex items-center text-sm font-medium",
+                                    theme === 'dark'
+                                        ? 'text-indigo-400 hover:text-indigo-300'
+                                        : 'text-indigo-600 hover:text-indigo-500'
+                                )}
+                >
+                                View Project
+                                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+          </article>
+        ))}
+        </div>
+    </div >
+  )
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\experience.tsx ===
+// src/components/experience.tsx
 'use client'
 
 import { useTheme } from './themeprovider'
 import { motion } from 'framer-motion'
 import { FileCode2, LineChart, Bot } from 'lucide-react'
-
-const projects = [
-  {
-    name: 'Real Estate Platform',
-    icon: FileCode2,
-    description: `
-      Full-stack web application for real estate listings featuring dynamic property search,
-      user authentication, and responsive design. Implemented with modern web technologies
-      and best practices for performance and SEO.
-    `,
-    keyFeatures: [
-      'Dynamic property search with filters',
-      'User authentication and profiles',
-      'Real-time updates with WebSocket',
-      'Responsive design for all devices',
-      'SEO optimization and performance metrics'
-    ],
-    tech: ['Next.js', 'React', 'Supabase', 'Drizzle', 'Tailwind CSS', 'PostgreSQL'],
-    status: 'In Development',
-    link: 'https://github.com/yourusername/real-estate'
-  },
-  {
-    name: 'Sniper4Crypto',
-    icon: LineChart,
-    description: `
-      Advanced crypto analysis tool using data mining and machine learning to detect trending
-      meme tokens. Features automated market analysis, social media monitoring, and real-time
-      notifications through Telegram.
-    `,
-    keyFeatures: [
-      'Real-time token detection',
-      'Social media trend analysis',
-      'Machine learning predictions',
-      'Automated market analysis',
-      'Telegram notifications'
-    ],
-    tech: ['Python', 'Scikit-learn', 'Telegram Bot API', 'MongoDB', 'PostgreSQL'],
-    status: 'Active',
-    link: 'https://github.com/yourusername/sniper4crypto'
-  },
-  {
-    name: 'Trading Bot',
-    icon: Bot,
-    description: `
-      Automated trading system with comprehensive market analysis, strategy implementation,
-      and real-time notifications. Includes backtesting capabilities and risk management
-      features.
-    `,
-    keyFeatures: [
-      'Automated trading strategies',
-      'Real-time market analysis',
-      'Risk management system',
-      'Performance analytics',
-      'Backtesting framework'
-    ],
-    tech: ['Python', 'Exchange APIs', 'Telegram Bot API', 'Technical Analysis', 'Data Science'],
-    status: 'Active',
-    link: 'https://github.com/yourusername/trading-bot'
-  }
-]
+import { ExperienceServer } from './experience-server'
 
 export function Experience() {
   const { theme } = useTheme()
+  
+  const renderIcon = (iconName: string) => {
+    const iconProps = { className: `w-6 h-6 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}` }
+    
+    switch (iconName) {
+      case 'FileCode2': return <FileCode2 {...iconProps} />
+      case 'LineChart': return <LineChart {...iconProps} />
+      case 'Bot': return <Bot {...iconProps} />
+      default: return <FileCode2 {...iconProps} />
+    }
+  }
   
   return (
     <section 
@@ -2172,111 +2414,13 @@ export function Experience() {
       aria-label="Experience and Projects"
     >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:max-w-4xl">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className={`text-3xl font-bold tracking-tight sm:text-4xl ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}
-          >
-            Experience & Projects
-          </motion.h2>
-          
-          <div className="mt-16 space-y-8">
-            {projects.map((project, index) => (
-              <motion.article
-                key={project.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className={`p-6 rounded-lg shadow-sm hover:shadow-md transition-all ${
-                  theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${
-                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>
-                    <project.icon className={`w-6 h-6 ${
-                      theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
-                    }`} />
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                      <h3 className={`text-lg font-semibold ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        {project.name}
-                      </h3>
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                        project.status === 'Active' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </div>
-                    
-                    <p className={`mt-2 text-base ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>
-                      {project.description}
-                    </p>
-                    
-                    <ul className="mt-4 space-y-2">
-                      {project.keyFeatures.map((feature) => (
-                        <li 
-                          key={feature}
-                          className={`flex items-center text-sm ${
-                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                          }`}
-                        >
-                          <span className="mr-2">•</span>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {project.tech.map((tech) => (
-                        <span
-                          key={tech}
-                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                            theme === 'dark'
-                              ? 'bg-gray-700 text-gray-200'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    <a
-                      href={project.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`mt-4 inline-flex items-center text-sm font-medium ${
-                        theme === 'dark' 
-                          ? 'text-indigo-400 hover:text-indigo-300'
-                          : 'text-indigo-600 hover:text-indigo-500'
-                      }`}
-                    >
-                      View Project
-                      <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              </motion.article>
-            ))}
-          </div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <ExperienceServer theme={theme} renderIcon={renderIcon} />
+        </motion.div>
       </div>
     </section>
   )
@@ -2785,15 +2929,43 @@ export function OptimizedImage({ src, alt, width, height, className }: Optimized
 }
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\src\components\projects.tsx ===
-'use client'
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\page-transition.tsx ===
+// src/components/page-transition.tsx
+"use client"
 
-import { useTheme } from './themeprovider'
-import { Github, ExternalLink } from 'lucide-react'
-import { OptimizedImage } from './optimizedimage'
-import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from "framer-motion"
+import { usePathname } from "next/navigation"
+import { ReactNode } from "react"
 
+interface PageTransitionProps {
+  children: ReactNode
+}
+
+export default function PageTransition({ children }: PageTransitionProps) {
+  const pathname = usePathname()
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\projects-server.tsx ===
+// src/components/projects-server.tsx
+import { type ReactNode } from 'react'
+import { cn } from "@/lib/utils"
+
+// These would normally come from a CMS or API
 const projects = [
  {
    title: 'Real Estate Platform',
@@ -2821,120 +2993,189 @@ const projects = [
  }
 ]
 
-export function Projects() {
- const { theme } = useTheme()
- 
- return (
-   <motion.section 
-     id="projects" 
-     className={cn("py-24", theme === 'dark' ? 'bg-gray-950' : 'bg-white')}
-     initial={{ opacity: 0 }}
-     animate={{ opacity: 1 }}
-     transition={{ duration: 0.5 }}
-   >
-     <div className="mx-auto max-w-7xl px-6 lg:px-8">
-       <div className="mx-auto max-w-2xl lg:max-w-4xl">
-         <motion.h2 
-           className={cn("text-3xl font-bold tracking-tight sm:text-4xl mb-16", 
-             theme === 'dark' ? 'text-white' : 'text-gray-900')}
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.2 }}
-         >
-           Featured Projects
-         </motion.h2>
-         
-         <div className="space-y-16">
-           {projects.map((project, index) => (
-             <motion.div 
-               key={project.title} 
-               className={cn("flex flex-col lg:flex-row gap-8", 
-                 index % 2 === 1 ? 'lg:flex-row-reverse' : '')}
-               initial={{ opacity: 0, y: 20 }}
-               whileInView={{ opacity: 1, y: 0 }}
-               transition={{ delay: index * 0.1 }}
-               viewport={{ once: true }}
-             >
-               <div className="lg:w-1/2">
-                 <div className={cn("rounded-lg shadow-lg overflow-hidden aspect-video",
-                   theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100')}>
-                   <OptimizedImage
-                     src={project.image}
-                     alt={project.title}
-                     width={800}
-                     height={450}
-                     className="w-full h-full object-cover"
-                   />
-                 </div>
-               </div>
-               
-               <div className="lg:w-1/2 space-y-4">
-                 <h3 className={cn("text-2xl font-bold",
-                   theme === 'dark' ? 'text-white' : 'text-gray-900')}>
-                   {project.title}
-                 </h3>
-                 
-                 <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
-                   {project.description}
-                 </p>
-                 
-                 <div className="flex flex-wrap gap-2">
-                   {project.tech.map((tech) => (
-                     <span
-                       key={tech}
-                       className={cn("inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
-                         theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-blue-50 text-blue-700'
-                       )}
-                     >
-                       {tech}
-                     </span>
-                   ))}
-                 </div>
-                 
-                 <div className="flex gap-4 pt-4">
-                   <motion.a
-                     href={project.github}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className={cn("inline-flex items-center gap-1 transition-colors duration-200",
-                       theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                     )}
-                     whileHover={{ scale: 1.05 }}
-                     whileTap={{ scale: 0.95 }}
-                   >
-                     <Github className="h-5 w-5" />
-                     <span>Code</span>
-                   </motion.a>
-                   <motion.a
-                     href={project.demo}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className={cn("inline-flex items-center gap-1 transition-colors duration-200",
-                       theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                     )}
-                     whileHover={{ scale: 1.05 }}
-                     whileTap={{ scale: 0.95 }}
-                   >
-                     <ExternalLink className="h-5 w-5" />
-                     <span>Live Demo</span>
-                   </motion.a>
-                 </div>
-               </div>
-             </motion.div>
-           ))}
-         </div>
-       </div>
-     </div>
-   </motion.section>
- )
+interface ProjectsServerProps {
+  theme: 'light' | 'dark';
+  renderImage: (src: string, alt: string, index: number) => ReactNode;
+  renderTechBadge: (tech: string, theme: 'light' | 'dark') => ReactNode;
+  renderProjectLinks: (project: {
+    github: string;
+    demo: string;
+  }, theme: 'light' | 'dark') => ReactNode;
+}
+
+export function ProjectsServer({ 
+  theme, 
+  renderImage, 
+  renderTechBadge,
+  renderProjectLinks
+}: ProjectsServerProps) {
+  return (
+    <div className="mx-auto max-w-2xl lg:max-w-4xl">
+      <h2 className={cn("text-3xl font-bold tracking-tight sm:text-4xl mb-16", 
+        theme === 'dark' ? 'text-white' : 'text-gray-900')}
+      >
+        Featured Projects
+      </h2>
+      
+      <div className="space-y-16">
+        {projects.map((project, index) => (
+          <div 
+            key={project.title} 
+            className={cn("flex flex-col lg:flex-row gap-8", 
+              index % 2 === 1 ? 'lg:flex-row-reverse' : '')}
+          >
+            <div className="lg:w-1/2">
+              <div className={cn("rounded-lg shadow-lg overflow-hidden aspect-video",
+                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100')}>
+                {renderImage(project.image, project.title, index)}
+              </div>
+            </div>
+            
+            <div className="lg:w-1/2 space-y-4">
+              <h3 className={cn("text-2xl font-bold",
+                theme === 'dark' ? 'text-white' : 'text-gray-900')}>
+                {project.title}
+              </h3>
+              
+              <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+                {project.description}
+              </p>
+              
+              <div className="flex flex-wrap gap-2">
+                {project.tech.map((tech) => renderTechBadge(tech, theme))}
+              </div>
+              
+              <div className="flex gap-4 pt-4">
+                {renderProjectLinks(project, theme)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\src\components\skills.tsx ===
-// src/components/skills.tsx
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\projects.tsx ===
+// src/components/projects.tsx
 'use client'
 
 import { useTheme } from './themeprovider'
+import { Github, ExternalLink } from 'lucide-react'
+import { OptimizedImage } from './optimizedimage'
+import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import { ProjectsServer } from './projects-server'
+
+export function Projects() {
+  const { theme } = useTheme()
+
+  const renderImage = (src: string, alt: string, index: number) => (
+    <OptimizedImage
+      src={src}
+      alt={alt}
+      width={800}
+      height={450}
+      className="w-full h-full object-cover"
+    />
+  )
+
+  const renderTechBadge = (tech: string, currentTheme: 'light' | 'dark') => (
+    <span
+      key={tech}
+      className={cn("inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
+        currentTheme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-blue-50 text-blue-700'
+      )}
+    >
+      {tech}
+    </span>
+  )
+
+  const renderProjectLinks = (project: { github: string; demo: string }, currentTheme: 'light' | 'dark') => (
+    <>
+      <motion.a
+        href={project.github}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn("inline-flex items-center gap-1 transition-colors duration-200",
+          currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+        )}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <Github className="h-5 w-5" />
+        <span>Code</span>
+      </motion.a>
+      <motion.a
+        href={project.demo}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn("inline-flex items-center gap-1 transition-colors duration-200",
+          currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+        )}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <ExternalLink className="h-5 w-5" />
+        <span>Live Demo</span>
+      </motion.a>
+    </>
+  )
+  
+  return (
+    <motion.section 
+      id="projects" 
+      className={cn("py-24", theme === 'dark' ? 'bg-gray-950' : 'bg-white')}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <ProjectsServer 
+            theme={theme}
+            renderImage={renderImage}
+            renderTechBadge={renderTechBadge}
+            renderProjectLinks={renderProjectLinks}
+          />
+        </motion.div>
+      </div>
+    </motion.section>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\scroll-progress.tsx ===
+// src/components/scroll-progress.tsx
+"use client"
+
+import { motion, useScroll } from "framer-motion"
+import { useTheme } from './themeprovider'
+
+export default function ScrollProgress() {
+  const { scrollYProgress } = useScroll()
+  const { theme } = useTheme()
+  
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
+      style={{ 
+        scaleX: scrollYProgress, 
+        backgroundColor: theme === 'dark' ? 'rgb(99, 102, 241)' : 'rgb(79, 70, 229)' 
+      }}
+    />
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\skills-server.tsx ===
+// src/components/skills-server.tsx
+import { cn } from "@/lib/utils"
 
 const skills = {
   frontend: ['React', 'Next.js', 'TypeScript', 'JavaScript', 'Tailwind CSS', 'HTML5/CSS3'],
@@ -2943,47 +3184,65 @@ const skills = {
   trading: ['Technical Analysis', 'Bot Development', 'Data Mining', 'Machine Learning']
 }
 
+interface SkillsServerProps {
+  theme: 'light' | 'dark'
+}
+
+export function SkillsServer({ theme }: SkillsServerProps) {
+  return (
+    <div className="mx-auto max-w-2xl lg:max-w-4xl">
+      <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${
+        theme === 'dark' ? 'text-white' : 'text-gray-900'
+      }`}>
+        Skills & Technologies
+      </h2>
+      
+      <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2">
+        {Object.entries(skills).map(([category, items]) => (
+          <div key={category} className={`border rounded-lg p-6 ${
+            theme === 'dark' ? 'border-gray-800 bg-gray-900/50' : 'border-gray-200 bg-white'
+          }`}>
+            <h3 className={`text-lg font-semibold capitalize mb-4 ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}>
+              {category}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {items.map((skill) => (
+                <span
+                  key={skill}
+                  className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium ${
+                    theme === 'dark'
+                      ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
+                      : 'bg-blue-50 text-blue-700'
+                  } transition-colors duration-200`}
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\skills.tsx ===
+// src/components/skills.tsx
+"use client"
+
+import { useTheme } from './themeprovider'
+import { SkillsServer } from './skills-server'
+
 export function Skills() {
   const { theme } = useTheme()
   
   return (
     <section id="skills" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-white'}`}>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:max-w-4xl">
-          <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${
-            theme === 'dark' ? 'text-white' : 'text-gray-900'
-          }`}>
-            Skills & Technologies
-          </h2>
-          
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2">
-            {Object.entries(skills).map(([category, items]) => (
-              <div key={category} className={`border rounded-lg p-6 ${
-                theme === 'dark' ? 'border-gray-800 bg-gray-900/50' : 'border-gray-200 bg-white'
-              }`}>
-                <h3 className={`text-lg font-semibold capitalize mb-4 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
-                  {category}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {items.map((skill) => (
-                    <span
-                      key={skill}
-                      className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium ${
-                        theme === 'dark'
-                          ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
-                          : 'bg-blue-50 text-blue-700'
-                      } transition-colors duration-200`}
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <SkillsServer theme={theme} />
       </div>
     </section>
   )
@@ -3316,6 +3575,110 @@ export default function TradingDashboard() {
 }
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\ui\animated-button.tsx ===
+// src/components/ui/animated-button.tsx
+"use client"
+
+import React from "react"
+import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
+
+interface AnimatedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "outline" | "secondary" | "primary" | "ghost"
+  size?: "sm" | "md" | "lg"
+  children: React.ReactNode
+  icon?: React.ReactNode
+  withArrow?: boolean
+  asChild?: boolean
+  isLoading?: boolean
+}
+
+export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
+  ({ 
+    className, 
+    variant = "default", 
+    size = "md", 
+    children, 
+    icon, 
+    withArrow = false,
+    isLoading = false,
+    ...props 
+  }, ref) => {
+    const variants = {
+      default: "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700",
+      primary: "bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500",
+      outline: "border border-gray-300 bg-transparent hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800",
+      secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
+      ghost: "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800",
+    }
+    
+    const sizes = {
+      sm: "h-9 px-3 text-sm",
+      md: "h-10 px-4",
+      lg: "h-11 px-6",
+    }
+    
+    return (
+      <motion.button
+        ref={ref as any}
+        className={cn(
+          "relative inline-flex items-center justify-center rounded-md font-medium transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+          "disabled:opacity-50 disabled:pointer-events-none",
+          variants[variant],
+          sizes[size],
+          className
+        )}
+        initial={{ scale: 1 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+        {...props as any}
+      >
+        {isLoading && (
+          <svg 
+            className="animate-spin -ml-1 mr-2 h-4 w-4" 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="none" 
+            viewBox="0 0 24 24"
+          >
+            <circle 
+              className="opacity-25" 
+              cx="12" 
+              cy="12" 
+              r="10" 
+              stroke="currentColor" 
+              strokeWidth="4"
+            ></circle>
+            <path 
+              className="opacity-75" 
+              fill="currentColor" 
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        )}
+        
+        {icon && !isLoading && <span className="mr-2">{icon}</span>}
+        
+        {children}
+        
+        {withArrow && (
+          <motion.span 
+            className="ml-2"
+            initial={{ x: 0 }}
+            whileHover={{ x: 3 }}
+          >
+            →
+          </motion.span>
+        )}
+      </motion.button>
+    )
+  }
+)
+
+AnimatedButton.displayName = "AnimatedButton"
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\ui\button.tsx ===
 // src/components/ui/button.tsx
 import * as React from "react"
@@ -3643,6 +4006,20 @@ export const contactMessages = pgTable('contact_messages', {
 // Export types
 export type ContactMessage = typeof contactMessages.$inferSelect
 export type NewContactMessage = typeof contactMessages.$inferInsert
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\lib\image-config.ts ===
+// src/lib/image-config.ts
+export const imageConfig = {
+    // Ρυθμίσεις για το Next.js Image
+    minimumCacheTTL: 86400, // 1 day
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    
+    // Lambda cache settings (Next.js 15)
+    cacheMaxAge: 31536000, // 1 year
+    staleWhileRevalidate: 60, // 1 minute
+  }
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\lib\rate-limit.ts ===
