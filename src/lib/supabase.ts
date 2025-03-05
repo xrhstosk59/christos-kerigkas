@@ -20,7 +20,48 @@ export type BlogPostRow = {
 // Δημιουργία του Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Create a singleton client for use throughout the app
+// Make sure it doesn't crash during build if environment variables are missing
+let supabase: ReturnType<typeof createClient> | null = null;
+
+try {
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+  } else {
+    // During build time or when env vars are missing, create a mock client
+    console.warn('Supabase URL or key missing, using mock client');
+    supabase = {
+      from: () => ({
+        select: () => ({
+          order: () => ({ 
+            range: () => Promise.resolve({ data: [], count: 0, error: null }),
+            contains: () => ({
+              range: () => Promise.resolve({ data: [], count: 0, error: null })
+            }),
+            single: () => Promise.resolve({ data: null, error: null })
+          })
+        })
+      })
+    } as unknown as ReturnType<typeof createClient>;
+  }
+} catch (error) {
+  console.error('Error initializing Supabase client:', error);
+  // Provide a fallback mock client
+  supabase = {
+    from: () => ({
+      select: () => ({
+        order: () => ({ 
+          range: () => Promise.resolve({ data: [], count: 0, error: null }),
+          contains: () => ({
+            range: () => Promise.resolve({ data: [], count: 0, error: null })
+          }),
+          single: () => Promise.resolve({ data: null, error: null })
+        })
+      })
+    })
+  } as unknown as ReturnType<typeof createClient>;
+}
 
 // Μετατροπή από το schema της βάσης στο type της εφαρμογής
 export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
@@ -41,6 +82,8 @@ export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
 
 // Λειτουργίες για το blog
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  if (!supabase) return [];
+  
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
@@ -51,10 +94,12 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
     return []
   }
   
-  return (data as BlogPostRow[]).map(mapBlogPostRowToBlogPost)
+  return ((data || []) as BlogPostRow[]).map(mapBlogPostRowToBlogPost)
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  if (!supabase) return null;
+  
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
@@ -66,6 +111,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
     return null
   }
   
+  if (!data) return null;
   return mapBlogPostRowToBlogPost(data as BlogPostRow)
 }
 
@@ -73,6 +119,8 @@ export async function getBlogPostsByCategory(category: string, page: number = 1,
   posts: BlogPost[],
   total: number
 }> {
+  if (!supabase) return { posts: [], total: 0 };
+  
   // Αν δεν έχει οριστεί κατηγορία ή είναι 'all', επιστρέφουμε όλα τα posts
   const query = supabase
     .from('blog_posts')
@@ -95,7 +143,7 @@ export async function getBlogPostsByCategory(category: string, page: number = 1,
   }
   
   return { 
-    posts: (data as BlogPostRow[]).map(mapBlogPostRowToBlogPost),
+    posts: ((data || []) as BlogPostRow[]).map(mapBlogPostRowToBlogPost),
     total: count || 0
   }
 }
