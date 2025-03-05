@@ -51,6 +51,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`${siteConfig.url}/profile.jpg`}
             width={60}

@@ -1,14 +1,16 @@
 
 === C:\Users\chris\Downloads\christos-kerigkas\.eslintrc.json ===
 {
-    "extends": "next/core-web-vitals",
-    "rules": {
-      "@typescript-eslint/no-unused-vars": ["error", {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
-      }]
-    }
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@next/next/no-img-element": "warn"
   }
+}
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\get-her-code.js ===
@@ -477,7 +479,24 @@ const publicOutputFile = 'paths-public.txt';
 createPathsFiles(publicFolder, publicOutputFile);
 
 
-=== C:\Users\chris\Downloads\christos-kerigkas\manifest.json ===
+=== C:\Users\chris\Downloads\christos-kerigkas\next-env.d.ts ===
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\file.svg ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\globe.svg ===
+[Image File Present]
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\public\manifest.json ===
 {
   "name": "Christos Kerigkas Portfolio",
   "short_name": "CK Portfolio",
@@ -528,23 +547,6 @@ createPathsFiles(publicFolder, publicOutputFile);
   "lang": "en",
   "dir": "ltr"
 }
-
-
-=== C:\Users\chris\Downloads\christos-kerigkas\next-env.d.ts ===
-/// <reference types="next" />
-/// <reference types="next/image-types/global" />
-
-// NOTE: This file should not be edited
-// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
-
-
-
-=== C:\Users\chris\Downloads\christos-kerigkas\public\file.svg ===
-[Image File Present]
-
-
-=== C:\Users\chris\Downloads\christos-kerigkas\public\globe.svg ===
-[Image File Present]
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\public\next.svg ===
@@ -945,6 +947,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`${siteConfig.url}/profile.jpg`}
             width={60}
@@ -2555,7 +2558,7 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  const { theme, profileImage, setProfileImage, isUploadingImage } = useTheme()
+  const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -3247,7 +3250,8 @@ import { ProjectsServer } from './projects-server'
 export function Projects() {
   const { theme } = useTheme()
 
-  const renderImage = (src: string, alt: string, index: number) => (
+  // Αφαιρέθηκε η παράμετρος _index αφού δε χρησιμοποιείται
+  const renderImage = (src: string, alt: string) => (
     <OptimizedImage
       src={src}
       alt={alt}
@@ -3367,31 +3371,35 @@ interface SkillsServerProps {
 export function SkillsServer({ theme }: SkillsServerProps) {
   return (
     <div className="mx-auto max-w-2xl lg:max-w-4xl">
-      <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${
+      <h2 className={cn(
+        "text-3xl font-bold tracking-tight sm:text-4xl",
         theme === 'dark' ? 'text-white' : 'text-gray-900'
-      }`}>
+      )}>
         Skills & Technologies
       </h2>
       
       <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2">
         {Object.entries(skills).map(([category, items]) => (
-          <div key={category} className={`border rounded-lg p-6 ${
+          <div key={category} className={cn(
+            "border rounded-lg p-6",
             theme === 'dark' ? 'border-gray-800 bg-gray-900/50' : 'border-gray-200 bg-white'
-          }`}>
-            <h3 className={`text-lg font-semibold capitalize mb-4 ${
+          )}>
+            <h3 className={cn(
+              "text-lg font-semibold capitalize mb-4",
               theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
+            )}>
               {category}
             </h3>
             <div className="flex flex-wrap gap-2">
               {items.map((skill) => (
                 <span
                   key={skill}
-                  className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium ${
+                  className={cn(
+                    "inline-flex items-center rounded-md px-3 py-1 text-sm font-medium transition-colors duration-200",
                     theme === 'dark'
                       ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
                       : 'bg-blue-50 text-blue-700'
-                  } transition-colors duration-200`}
+                  )}
                 >
                   {skill}
                 </span>
@@ -3806,9 +3814,9 @@ export default function TradingDashboard() {
 
 import React from "react"
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
+import { motion, HTMLMotionProps } from "framer-motion"
 
-interface AnimatedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface AnimatedButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag'> {
   variant?: "default" | "outline" | "secondary" | "primary" | "ghost"
   size?: "sm" | "md" | "lg"
   children: React.ReactNode
@@ -3843,9 +3851,17 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
       lg: "h-11 px-6",
     }
     
+    // Διαχωρίζουμε τα motion props από τα HTML button props
+    const motionProps: HTMLMotionProps<"button"> = {
+      initial: { scale: 1 },
+      whileHover: { scale: 1.03 },
+      whileTap: { scale: 0.98 },
+      transition: { type: "spring", stiffness: 400, damping: 10 }
+    }
+    
     return (
       <motion.button
-        ref={ref as any}
+        ref={ref}
         className={cn(
           "relative inline-flex items-center justify-center rounded-md font-medium transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
@@ -3854,11 +3870,8 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
           sizes[size],
           className
         )}
-        initial={{ scale: 1 }}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-        {...props as any}
+        {...motionProps}
+        {...props}
       >
         {isLoading && (
           <svg 

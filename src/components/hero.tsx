@@ -17,7 +17,7 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  const { theme, profileImage, setProfileImage, isUploadingImage } = useTheme()
+  const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 

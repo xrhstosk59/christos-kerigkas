@@ -1,16 +1,9 @@
 // src/middleware.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { ensureUploadsDirectory } from './lib/ensure-uploads-dir'
 
-// Server-side initialization: make sure uploads directory exists
-if (typeof process !== 'undefined') {
-  try {
-    ensureUploadsDirectory();
-  } catch (error) {
-    console.error('Failed to ensure uploads directory exists:', error);
-  }
-}
+// Αφαιρέθηκε η import και η κλήση της ensureUploadsDirectory
+// καθώς προκαλεί σφάλματα στο Edge Runtime
 
 export function middleware(request: NextRequest) {
   // Security headers

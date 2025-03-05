@@ -174,7 +174,7 @@ export async function DELETE(request: Request) {
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Μη έγκυρο αίτημα JSON' },
         { status: 400 }
@@ -223,8 +223,9 @@ export async function DELETE(request: Request) {
       if (existsSync(filepath)) {
         throw new Error('File still exists after deletion attempt')
       }
-    } catch (error) {
-      console.error('Error deleting file:', error)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
+      console.error('Error deleting file:', _error)
       return NextResponse.json(
         { error: 'Αποτυχία διαγραφής αρχείου' },
         { status: 500 }
@@ -235,8 +236,9 @@ export async function DELETE(request: Request) {
       success: true,
       message: 'Το αρχείο διαγράφηκε επιτυχώς' 
     })
-  } catch (error) {
-    console.error('Error deleting file:', error)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
+    console.error('Error deleting file:', _error)
     return NextResponse.json(
       { error: 'Σφάλμα κατά τη διαγραφή του αρχείου' },
       { status: 500 }

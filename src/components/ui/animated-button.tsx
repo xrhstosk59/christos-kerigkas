@@ -3,9 +3,9 @@
 
 import React from "react"
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
+import { motion, HTMLMotionProps } from "framer-motion"
 
-interface AnimatedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface AnimatedButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag'> {
   variant?: "default" | "outline" | "secondary" | "primary" | "ghost"
   size?: "sm" | "md" | "lg"
   children: React.ReactNode
@@ -40,9 +40,17 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
       lg: "h-11 px-6",
     }
     
+    // Διαχωρίζουμε τα motion props από τα HTML button props
+    const motionProps: HTMLMotionProps<"button"> = {
+      initial: { scale: 1 },
+      whileHover: { scale: 1.03 },
+      whileTap: { scale: 0.98 },
+      transition: { type: "spring", stiffness: 400, damping: 10 }
+    }
+    
     return (
       <motion.button
-        ref={ref as any}
+        ref={ref}
         className={cn(
           "relative inline-flex items-center justify-center rounded-md font-medium transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
@@ -51,11 +59,8 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
           sizes[size],
           className
         )}
-        initial={{ scale: 1 }}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-        {...props as any}
+        {...motionProps}
+        {...props}
       >
         {isLoading && (
           <svg 
