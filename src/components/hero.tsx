@@ -46,17 +46,17 @@ export default function Hero() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
+
     // Reset input to ensure change event fires on selecting the same file
     e.target.value = ''
-    
+
     // Validate file type and size before sending
     const validTypes = ['image/jpeg', 'image/png', 'image/webp']
     if (!validTypes.includes(file.type)) {
       alert('Μη έγκυρος τύπος αρχείου. Παρακαλώ επιλέξτε εικόνα JPG, PNG ή WebP.')
       return
     }
-    
+
     const maxSize = 5 * 1024 * 1024 // 5MB
     if (file.size > maxSize) {
       alert('Το αρχείο είναι πολύ μεγάλο. Το μέγιστο μέγεθος είναι 5MB.')
@@ -87,7 +87,7 @@ export default function Hero() {
               body: JSON.stringify({ filename: profileImage }),
               headers: { 'Content-Type': 'application/json' }
             })
-            
+
             if (!deleteResponse.ok) {
               console.warn('Failed to delete old profile image:', profileImage)
             }
@@ -95,7 +95,7 @@ export default function Hero() {
             console.error('Error during old image deletion:', deleteError)
           }
         }
-        
+
         // Update profile image with the new one
         setProfileImage(data.filename)
       } else {
@@ -111,10 +111,10 @@ export default function Hero() {
 
   const handleDeleteImage = async () => {
     if (profileImage === '/profile.jpg') return
-    
+
     try {
       setIsUploading(true)
-      
+
       const response = await fetch('/api/upload', {
         method: 'DELETE',
         body: JSON.stringify({ filename: profileImage }),
@@ -150,7 +150,7 @@ export default function Hero() {
   }
 
   return (
-    <section 
+    <section
       className={cn(
         "relative isolate px-4 sm:px-6 pt-14 lg:px-8 min-h-[calc(100vh-64px)] flex items-center",
         theme === 'dark' ? 'bg-gray-950' : 'bg-white'
@@ -159,7 +159,7 @@ export default function Hero() {
     >
       <div className="mx-auto max-w-2xl py-12 sm:py-20 lg:py-32">
         <div className="text-center">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
@@ -185,16 +185,16 @@ export default function Hero() {
                   onError={(e) => {
                     // Fallback to default image if the custom one fails to load
                     const target = e.target as HTMLImageElement;
-                    if (target.src !== '/profile.jpg') {
+                    if (target.src !== '/uploads/profile.jpg') {
                       console.warn('Profile image failed to load, falling back to default');
-                      setProfileImage('/profile.jpg');
+                      setProfileImage('/uploads/profile.jpg');
                     }
                   }}
                   unoptimized={isSupabaseUrl(profileImage)} // Απενεργοποίηση του Next.js optimization για Supabase URLs
                 />
               )}
             </div>
-            
+
             <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full">
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -215,7 +215,7 @@ export default function Hero() {
                 </button>
               )}
             </div>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -255,7 +255,7 @@ export default function Hero() {
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -269,8 +269,8 @@ export default function Hero() {
                 rel="noopener noreferrer"
                 className={cn(
                   "p-2 rounded-full transition-colors duration-200",
-                  theme === 'dark' 
-                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                  theme === 'dark'
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 )}
                 aria-label={link.label}
@@ -281,7 +281,7 @@ export default function Hero() {
             ))}
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -294,11 +294,11 @@ export default function Hero() {
               Get in Touch
             </Link>
             <Link
-              href="#projects" 
+              href="#projects"
               className={cn(
                 "group w-full sm:w-auto flex items-center justify-center gap-2 text-sm font-semibold leading-6 transition-colors duration-200",
-                theme === 'dark' 
-                  ? 'text-gray-300 hover:text-white' 
+                theme === 'dark'
+                  ? 'text-gray-300 hover:text-white'
                   : 'text-gray-900 hover:text-gray-700'
               )}
             >

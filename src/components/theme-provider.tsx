@@ -16,7 +16,7 @@ type ThemeContextType = {
   isUploadingImage: boolean
 }
 
-const DEFAULT_PROFILE_IMAGE = '/profile.jpg'
+const DEFAULT_PROFILE_IMAGE = '/uploads/profile.jpg'
 
 const ThemeContext = createContext<ThemeContextType>({ 
   theme: 'light', 
