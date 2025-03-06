@@ -4,7 +4,7 @@ import path from 'path'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { rateLimit } from '@/lib/rate-limit'
-import { uploadProfileImage, deleteProfileImage, getFilenameFromUrl } from '@/lib/storage'
+import { uploadProfileImage, deleteProfileImage } from '@/lib/storage'
 
 // Create limiter
 const limiter = rateLimit({
