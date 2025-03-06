@@ -5,6 +5,8 @@ import { useTheme } from '@/components/theme-provider'
 import { motion } from 'framer-motion'
 import { BlogCard } from '@/components/blogcard'
 import { BlogCategories } from '@/components/blog-categories'
+import { BlogSearch } from '@/components/blog-search'
+import { Newsletter } from '@/components/newsletter'
 import { useBlog } from '@/hooks/use-blog'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -41,11 +43,16 @@ export default function BlogPage() {
           className="mx-auto max-w-2xl lg:max-w-4xl"
         >
           <h1 className={cn(
-            "text-3xl font-bold tracking-tight sm:text-4xl mb-12",
+            "text-3xl font-bold tracking-tight sm:text-4xl mb-8",
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           )}>
             Blog
           </h1>
+          
+          {/* Add search component */}
+          <div className="mb-8">
+            <BlogSearch />
+          </div>
 
           <BlogCategories 
             categories={allCategories} 
@@ -113,6 +120,11 @@ export default function BlogPage() {
                   </button>
                 </div>
               )}
+              
+              {/* Newsletter Subscription */}
+              <div className="mt-16">
+                <Newsletter />
+              </div>
             </>
           ) : (
             <p className={cn(

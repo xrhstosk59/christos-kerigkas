@@ -649,6 +649,583 @@ async function migratePostsToSupabase() {
 migratePostsToSupabase()
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\layout.tsx ===
+// src/app/admin/layout.tsx
+import type { Metadata } from 'next'
+import { checkAuth } from '@/lib/auth'
+
+export const metadata: Metadata = {
+  title: 'Admin Dashboard - Christos Kerigkas',
+  description: 'Admin dashboard for managing website content',
+  // Prevent indexing of admin pages
+  robots: {
+    index: false,
+    follow: false,
+  }
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  // This will redirect to login if not authenticated
+  checkAuth();
+  
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {children}
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\login\page.tsx ===
+// src/app/admin/login/page.tsx
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTheme } from '@/components/theme-provider'
+import { cn } from '@/lib/utils'
+import { Loader2 } from 'lucide-react'
+
+export default function AdminLoginPage() {
+  const { theme } = useTheme()
+  const router = useRouter()
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  })
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+    setErrorMessage('')
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setStatus('error')
+        setErrorMessage(data.error || 'Login failed. Please try again.')
+        return
+      }
+
+      // Redirect to admin dashboard
+      router.push('/admin')
+      router.refresh()
+    } catch (error) {
+      setStatus('error')
+      setErrorMessage('An unexpected error occurred. Please try again later.')
+    }
+  }
+
+  return (
+    <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
+      <div className={cn(
+        "w-full max-w-md p-8 rounded-lg shadow-md",
+        theme === 'dark' ? 'bg-gray-900' : 'bg-white'
+      )}>
+        <h1 className={cn(
+          "text-2xl font-bold text-center mb-6",
+          theme === 'dark' ? 'text-white' : 'text-gray-900'
+        )}>
+          Admin Login
+        </h1>
+        
+        {status === 'error' && (
+          <div className="mb-4 p-3 text-sm text-white bg-red-500 rounded">
+            {errorMessage}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label 
+              htmlFor="username" 
+              className={cn(
+                "block text-sm font-medium mb-1", 
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              )}
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              className={cn(
+                "w-full px-3 py-2 border rounded-md",
+                theme === 'dark' 
+                  ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+              )}
+              required
+            />
+          </div>
+          
+          <div>
+            <label 
+              htmlFor="password" 
+              className={cn(
+                "block text-sm font-medium mb-1", 
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              )}
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className={cn(
+                "w-full px-3 py-2 border rounded-md",
+                theme === 'dark' 
+                  ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+              )}
+              required
+            />
+          </div>
+          
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className={cn(
+              "w-full py-2 px-4 rounded-md text-white font-medium flex items-center justify-center",
+              status === 'loading' 
+                ? 'bg-indigo-400 cursor-not-allowed' 
+                : 'bg-indigo-600 hover:bg-indigo-500'
+            )}
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              'Login'
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\page.tsx ===
+// src/app/admin/page.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTheme } from '@/components/theme-provider'
+import Link from 'next/link'
+import { 
+  Layout, 
+  FileText, 
+  Plus, 
+  LogOut, 
+  Edit, 
+  Trash2,
+  ChevronLeft,
+  Loader2
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { BlogPost } from '@/types/blog'
+
+export default function AdminDashboard() {
+  const { theme } = useTheme()
+  const router = useRouter()
+  const [posts, setPosts] = useState<BlogPost[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  useEffect(() => {
+    fetchPosts()
+  }, [])
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/blog?page=1&limit=100')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch blog posts')
+      }
+      
+      const data = await response.json()
+      setPosts(data.posts || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load posts')
+      console.error('Error fetching blog posts:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    // Clear the auth cookie
+    document.cookie = 'auth_token=; Max-Age=0; path=/; samesite=strict;'
+    // Redirect to login
+    router.push('/admin/login')
+  }
+
+  const handleDeletePost = async (slug: string) => {
+    if (!confirm('Are you sure you want to delete this post?')) return
+    
+    try {
+      setDeleteId(slug)
+      setDeleteLoading(true)
+      
+      const response = await fetch(`/api/blog/${slug}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete post')
+      }
+      
+      // Refresh the post list
+      fetchPosts()
+    } catch (err) {
+      alert('Error deleting post: ' + (err instanceof Error ? err.message : 'Unknown error'))
+    } finally {
+      setDeleteLoading(false)
+      setDeleteId(null)
+    }
+  }
+
+  return (
+    <div className="min-h-screen pt-20 pb-12">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <nav className={cn(
+          "flex items-center justify-between py-4 border-b mb-8",
+          theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+        )}>
+          <div className="flex items-center space-x-4">
+            <Layout className={theme === 'dark' ? 'text-white' : 'text-gray-900'} />
+            <h1 className={cn(
+              "text-xl font-bold",
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+              Admin Dashboard
+            </h1>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/"
+              className={cn(
+                "flex items-center gap-1 px-3 py-1 rounded-md text-sm",
+                theme === 'dark' 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-800' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              )}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              View Site
+            </Link>
+            
+            <button
+              onClick={handleLogout}
+              className={cn(
+                "flex items-center gap-1 px-3 py-1 rounded-md text-sm",
+                theme === 'dark' 
+                  ? 'text-red-400 hover:text-red-300 hover:bg-gray-800' 
+                  : 'text-red-600 hover:text-red-500 hover:bg-gray-100'
+              )}
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+        </nav>
+        
+        <div className="mb-8 flex justify-between items-center">
+          <h2 className={cn(
+            "text-2xl font-bold",
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          )}>
+            Blog Posts
+          </h2>
+          
+          <Link
+            href="/admin/posts/new"
+            className={cn(
+              "flex items-center gap-1 px-4 py-2 rounded-md text-white",
+              "bg-indigo-600 hover:bg-indigo-500 transition-colors"
+            )}
+          >
+            <Plus className="h-4 w-4" />
+            New Post
+          </Link>
+        </div>
+        
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          </div>
+        ) : error ? (
+          <div className={cn(
+            "p-4 rounded-md mb-6",
+            theme === 'dark' ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-600'
+          )}>
+            {error}
+          </div>
+        ) : (
+          <div className={cn(
+            "border rounded-lg overflow-hidden",
+            theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+          )}>
+            <table className="w-full">
+              <thead className={cn(
+                theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+              )}>
+                <tr>
+                  <th className={cn(
+                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  )}>
+                    Title
+                  </th>
+                  <th className={cn(
+                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  )}>
+                    Date
+                  </th>
+                  <th className={cn(
+                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  )}>
+                    Categories
+                  </th>
+                  <th className={cn(
+                    "px-6 py-3 text-right text-xs font-medium uppercase tracking-wider",
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  )}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={theme === 'dark' ? 'bg-gray-800' : 'bg-white'}>
+                {posts.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className={cn(
+                        "px-6 py-4 text-center",
+                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      )}
+                    >
+                      No blog posts found. Create your first post!
+                    </td>
+                  </tr>
+                ) : (
+                  posts.map((post, index) => (
+                    <tr 
+                      key={post.slug}
+                      className={cn(
+                        index !== posts.length - 1 && (
+                          theme === 'dark' ? 'border-b border-gray-700' : 'border-b border-gray-200'
+                        )
+                      )}
+                    >
+                      <td className={cn(
+                        "px-6 py-4 whitespace-nowrap text-sm font-medium",
+                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      )}>
+                        <Link 
+                          href={`/blog/${post.slug}`}
+                          className="hover:underline"
+                          target="_blank"
+                        >
+                          {post.title}
+                        </Link>
+                      </td>
+                      <td className={cn(
+                        "px-6 py-4 whitespace-nowrap text-sm",
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      )}>
+                        {new Date(post.date).toLocaleDateString()}
+                      </td>
+                      <td className={cn(
+                        "px-6 py-4 whitespace-nowrap text-sm",
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      )}>
+                        <div className="flex flex-wrap gap-1 max-w-sm">
+                          {post.categories.map((category, i) => (
+                            <span
+                              key={i}
+                              className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                theme === 'dark' 
+                                  ? 'bg-gray-700 text-gray-300' 
+                                  : 'bg-gray-100 text-gray-800'
+                              )}
+                            >
+                              {category}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Link
+                            href={`/admin/posts/edit/${post.slug}`}
+                            className={cn(
+                              "p-1 rounded-md",
+                              theme === 'dark' 
+                                ? 'text-indigo-400 hover:text-indigo-300 hover:bg-gray-700' 
+                                : 'text-indigo-600 hover:text-indigo-500 hover:bg-gray-100'
+                            )}
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Link>
+                          
+                          <button
+                            onClick={() => handleDeletePost(post.slug)}
+                            disabled={deleteLoading && deleteId === post.slug}
+                            className={cn(
+                              "p-1 rounded-md",
+                              theme === 'dark' 
+                                ? 'text-red-400 hover:text-red-300 hover:bg-gray-700' 
+                                : 'text-red-600 hover:text-red-500 hover:bg-gray-100',
+                              (deleteLoading && deleteId === post.slug) && 'opacity-50 cursor-not-allowed'
+                            )}
+                          >
+                            {deleteLoading && deleteId === post.slug ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">Delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\post\edit\[slug]\page.tsx ===
+// src/app/admin/posts/edit/[slug]/page.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import BlogPostForm from '@/components/admin/blog-post-form'
+import { Loader2 } from 'lucide-react'
+import { useTheme } from '@/components/theme-provider'
+import { cn } from '@/lib/utils'
+import type { BlogPost } from '@/types/blog'
+
+export default function EditBlogPostPage() {
+  const params = useParams<{ slug: string }>()
+  const { theme } = useTheme()
+  const [post, setPost] = useState<BlogPost | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch(`/api/blog/${params.slug}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch blog post')
+        }
+        
+        const data = await response.json()
+        setPost(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load post')
+        console.error('Error fetching blog post:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (params.slug) {
+      fetchPost()
+    }
+  }, [params.slug])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    )
+  }
+
+  if (error || !post) {
+    return (
+      <div className="min-h-screen pt-20 pb-12">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className={cn(
+            "p-8 rounded-lg text-center",
+            theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+          )}>
+            <h2 className={cn(
+              "text-2xl font-bold mb-2",
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+              Post Not Found
+            </h2>
+            <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+              {error || "The blog post you're trying to edit doesn't exist or couldn't be loaded."}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return <BlogPostForm initialData={post} isEditing={true} />
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\post\new\page.tsx ===
+// src/app/admin/posts/new/page.tsx
+'use client'
+
+import BlogPostForm from '@/components/admin/blog-post-form'
+
+export default function NewBlogPostPage() {
+  return <BlogPostForm isEditing={false} />
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\app\blog\layout.tsx ===
 import type { Metadata } from 'next'
 import { defaultMetadata } from '@/lib/seo'
@@ -705,6 +1282,8 @@ import { useTheme } from '@/components/theme-provider'
 import { motion } from 'framer-motion'
 import { BlogCard } from '@/components/blogcard'
 import { BlogCategories } from '@/components/blog-categories'
+import { BlogSearch } from '@/components/blog-search'
+import { Newsletter } from '@/components/newsletter'
 import { useBlog } from '@/hooks/use-blog'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -741,11 +1320,16 @@ export default function BlogPage() {
           className="mx-auto max-w-2xl lg:max-w-4xl"
         >
           <h1 className={cn(
-            "text-3xl font-bold tracking-tight sm:text-4xl mb-12",
+            "text-3xl font-bold tracking-tight sm:text-4xl mb-8",
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           )}>
             Blog
           </h1>
+          
+          {/* Add search component */}
+          <div className="mb-8">
+            <BlogSearch />
+          </div>
 
           <BlogCategories 
             categories={allCategories} 
@@ -813,6 +1397,11 @@ export default function BlogPage() {
                   </button>
                 </div>
               )}
+              
+              {/* Newsletter Subscription */}
+              <div className="mt-16">
+                <Newsletter />
+              </div>
             </>
           ) : (
             <p className={cn(
@@ -1426,6 +2015,427 @@ export function About() {
 }
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\admin\blog-post-form.tsx ===
+// src/components/admin/blog-post-form.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useTheme } from '@/components/theme-provider'
+import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { Loader2, Save, X, Plus, ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
+import type { BlogPost } from '@/types/blog'
+
+interface BlogPostFormProps {
+  initialData?: Partial<BlogPost>
+  isEditing?: boolean
+}
+
+const DEFAULT_POST: Partial<BlogPost> = {
+  title: '',
+  description: '',
+  content: '',
+  slug: '',
+  date: new Date().toISOString(),
+  image: '/blog/placeholder.jpg',
+  categories: [],
+  author: {
+    name: 'Christos Kerigkas',
+    image: '/profile.jpg'
+  }
+}
+
+export default function BlogPostForm({ initialData = {}, isEditing = false }: BlogPostFormProps) {
+  const { theme } = useTheme()
+  const router = useRouter()
+  const [formData, setFormData] = useState<Partial<BlogPost>>({ ...DEFAULT_POST, ...initialData })
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [newCategory, setNewCategory] = useState('')
+
+  // Generate slug from title
+  useEffect(() => {
+    if (!formData.title || (isEditing && initialData.slug)) return
+    
+    const slug = formData.title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+    
+    setFormData(prev => ({ ...prev, slug }))
+  }, [formData.title, isEditing, initialData.slug])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+    setErrorMessage('')
+    
+    try {
+      // Validate required fields
+      if (!formData.title || !formData.slug || !formData.content) {
+        throw new Error('Title, slug and content are required fields')
+      }
+      
+      const method = isEditing ? 'PUT' : 'POST'
+      const url = isEditing ? `/api/blog/${initialData.slug}` : '/api/blog'
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Failed to save post')
+      }
+      
+      setStatus('success')
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.push('/admin')
+        router.refresh()
+      }, 1000)
+    } catch (error) {
+      setStatus('error')
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+  }
+
+  const handleAddCategory = () => {
+    if (!newCategory.trim()) return
+    if (formData.categories?.includes(newCategory.trim())) return
+    
+    setFormData({
+      ...formData,
+      categories: [...(formData.categories || []), newCategory.trim()]
+    })
+    setNewCategory('')
+  }
+
+  const handleRemoveCategory = (category: string) => {
+    setFormData({
+      ...formData,
+      categories: formData.categories?.filter(c => c !== category) || []
+    })
+  }
+
+  return (
+    <div className="min-h-screen pt-20 pb-12">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin"
+              className={cn(
+                "flex items-center gap-1 p-2 rounded-md",
+                theme === 'dark' 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-800' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              )}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Link>
+            
+            <h1 className={cn(
+              "text-2xl font-bold",
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+              {isEditing ? 'Edit Blog Post' : 'Create New Blog Post'}
+            </h1>
+          </div>
+          
+          <button
+            type="submit"
+            form="blog-post-form"
+            disabled={status === 'loading'}
+            className={cn(
+              "flex items-center gap-1 px-4 py-2 rounded-md text-white",
+              status === 'loading' 
+                ? 'bg-indigo-400 cursor-not-allowed' 
+                : 'bg-indigo-600 hover:bg-indigo-500'
+            )}
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : status === 'success' ? (
+              <>
+                <Save className="h-4 w-4" />
+                Saved!
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Post
+              </>
+            )}
+          </button>
+        </div>
+        
+        {status === 'error' && (
+          <div className={cn(
+            "p-4 rounded-md mb-6",
+            theme === 'dark' ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-600'
+          )}>
+            {errorMessage}
+          </div>
+        )}
+        
+        <form id="blog-post-form" onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label 
+                htmlFor="title" 
+                className={cn(
+                  "block text-sm font-medium mb-1",
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                )}
+              >
+                Title *
+              </label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                value={formData.title || ''}
+                onChange={handleChange}
+                className={cn(
+                  "w-full px-3 py-2 border rounded-md",
+                  theme === 'dark' 
+                    ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+                )}
+                required
+              />
+            </div>
+            
+            <div>
+              <label 
+                htmlFor="slug" 
+                className={cn(
+                  "block text-sm font-medium mb-1",
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                )}
+              >
+                Slug *
+              </label>
+              <input
+                id="slug"
+                name="slug"
+                type="text"
+                value={formData.slug || ''}
+                onChange={handleChange}
+                className={cn(
+                  "w-full px-3 py-2 border rounded-md",
+                  theme === 'dark' 
+                    ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+                )}
+                required
+              />
+            </div>
+            
+            <div>
+              <label 
+                htmlFor="date" 
+                className={cn(
+                  "block text-sm font-medium mb-1",
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                )}
+              >
+                Date *
+              </label>
+              <input
+                id="date"
+                name="date"
+                type="date"
+                value={formData.date ? new Date(formData.date).toISOString().split('T')[0] : ''}
+                onChange={(e) => {
+                  const date = e.target.value ? new Date(e.target.value).toISOString() : new Date().toISOString()
+                  setFormData({ ...formData, date })
+                }}
+                className={cn(
+                  "w-full px-3 py-2 border rounded-md",
+                  theme === 'dark' 
+                    ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+                )}
+                required
+              />
+            </div>
+            
+            <div>
+              <label 
+                htmlFor="image" 
+                className={cn(
+                  "block text-sm font-medium mb-1",
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                )}
+              >
+                Image URL
+              </label>
+              <input
+                id="image"
+                name="image"
+                type="text"
+                value={formData.image || ''}
+                onChange={handleChange}
+                className={cn(
+                  "w-full px-3 py-2 border rounded-md",
+                  theme === 'dark' 
+                    ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+                )}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label 
+              htmlFor="description" 
+              className={cn(
+                "block text-sm font-medium mb-1",
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              )}
+            >
+              Description *
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows={2}
+              value={formData.description || ''}
+              onChange={handleChange}
+              className={cn(
+                "w-full px-3 py-2 border rounded-md",
+                theme === 'dark' 
+                  ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+              )}
+              required
+            />
+          </div>
+          
+          <div>
+            <label 
+              htmlFor="categories" 
+              className={cn(
+                "block text-sm font-medium mb-1",
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              )}
+            >
+              Categories
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {formData.categories && formData.categories.length > 0 ? (
+                formData.categories.map((category, index) => (
+                  <div 
+                    key={index}
+                    className={cn(
+                      "flex items-center gap-1 px-2 py-1 text-sm rounded-md",
+                      theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
+                    )}
+                  >
+                    {category}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCategory(category)}
+                      className={theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>
+                  No categories added
+                </span>
+              )}
+            </div>
+            <div className="flex">
+              <input
+                type="text"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                placeholder="Add a category"
+                className={cn(
+                  "flex-1 px-3 py-2 border rounded-l-md",
+                  theme === 'dark' 
+                    ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+                )}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddCategory()
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className={cn(
+                  "px-3 py-2 rounded-r-md",
+                  theme === 'dark' 
+                    ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                )}
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            <label 
+              htmlFor="content" 
+              className={cn(
+                "block text-sm font-medium mb-1",
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              )}
+            >
+              Content (Markdown) *
+            </label>
+            <textarea
+              id="content"
+              name="content"
+              rows={15}
+              value={formData.content || ''}
+              onChange={handleChange}
+              className={cn(
+                "w-full px-3 py-2 border rounded-md font-mono",
+                theme === 'dark' 
+                  ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                  : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+              )}
+              required
+            />
+            <p className={cn(
+              "mt-1 text-xs",
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            )}>
+              Markdown syntax is supported. You can use headers, lists, code blocks, etc.
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\analytics.tsx ===
 // src/components/analytics.tsx
 'use client'
@@ -1718,6 +2728,211 @@ export default function BlogPostClient({ initialData }: BlogPostClientProps) {
         </motion.div>
       </div>
     </article>
+  )
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-search.tsx ===
+// src/components/blog-search.tsx
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { useTheme } from './theme-provider'
+import { cn } from '@/lib/utils'
+import { Search, X, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import type { BlogPost } from '@/types/blog'
+
+// Custom debounce function with proper typing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+export function BlogSearch() {
+  const { theme } = useTheme()
+  const [query, setQuery] = useState('')
+  const debouncedQuery = useDebounce(query, 300)
+  const [results, setResults] = useState<BlogPost[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showResults, setShowResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  // Set up click outside listener to close results
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Perform search when debounced query changes
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+    
+    const performSearch = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch(`/api/blog/search?query=${encodeURIComponent(debouncedQuery)}&limit=5`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to search')
+        }
+        
+        const data = await response.json()
+        setResults(data.posts || [])
+        setShowResults(true)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Search failed')
+        console.error('Error searching blog posts:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    performSearch()
+  }, [debouncedQuery])
+
+  const handleClearSearch = () => {
+    setQuery('')
+    setResults([])
+    setShowResults(false)
+  }
+
+  return (
+    <div className="relative w-full max-w-lg mx-auto" ref={searchRef}>
+      <div className={cn(
+        "relative flex items-center",
+        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+      )}>
+        <Search className="absolute left-3 h-5 w-5 text-gray-400" />
+        
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search articles..."
+          className={cn(
+            "w-full py-2 pl-10 pr-10 border rounded-lg",
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500 placeholder-gray-500' 
+              : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500 placeholder-gray-400'
+          )}
+          onFocus={() => {
+            if (results.length > 0) {
+              setShowResults(true)
+            }
+          }}
+        />
+        
+        {(query || loading) && (
+          <button 
+            className="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            onClick={handleClearSearch}
+          >
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <X className="h-5 w-5" />
+            )}
+          </button>
+        )}
+      </div>
+      
+      {/* Search results dropdown */}
+      {showResults && (debouncedQuery || results.length > 0) && (
+        <div className={cn(
+          "absolute top-full left-0 right-0 mt-2 rounded-lg shadow-lg overflow-hidden z-10",
+          theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+        )}>
+          {results.length === 0 ? (
+            <div className={cn(
+              "p-4 text-center",
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            )}>
+              {loading ? (
+                <div className="flex justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+              ) : error ? (
+                <p>Error: {error}</p>
+              ) : (
+                <p>No results found for "{debouncedQuery}"</p>
+              )}
+            </div>
+          ) : (
+            <div className="max-h-[70vh] overflow-y-auto">
+              {results.map((post, index) => (
+                <Link 
+                  href={`/blog/${post.slug}`} 
+                  key={post.slug}
+                  onClick={() => setShowResults(false)}
+                >
+                  <div className={cn(
+                    "p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
+                    index !== results.length - 1 && (
+                      theme === 'dark' ? 'border-b border-gray-700' : 'border-b border-gray-200'
+                    )
+                  )}>
+                    <h3 className={cn(
+                      "text-base font-medium truncate",
+                      theme === 'dark' ? 'text-white' : 'text-gray-900'
+                    )}>
+                      {post.title}
+                    </h3>
+                    <p className={cn(
+                      "text-sm truncate mt-1",
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                    )}>
+                      {post.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {post.categories.slice(0, 3).map((category) => (
+                        <span
+                          key={category}
+                          className={cn(
+                            "text-xs px-2 py-0.5 rounded-full",
+                            theme === 'dark' 
+                              ? 'bg-gray-700 text-gray-300' 
+                              : 'bg-gray-100 text-gray-700'
+                          )}
+                        >
+                          {category}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -3083,6 +4298,140 @@ export default function Navbar() {
 }
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\components\newsletter.tsx ===
+// src/components/newsletter.tsx
+'use client'
+
+import { useState } from 'react'
+import { useTheme } from './theme-provider'
+import { cn } from '@/lib/utils'
+import { Loader2, Mail, CheckCircle, AlertCircle } from 'lucide-react'
+
+export function Newsletter() {
+  const { theme } = useTheme()
+  const [email, setEmail] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!email || !email.includes('@')) {
+      setStatus('error')
+      setErrorMessage('Please enter a valid email address')
+      return
+    }
+    
+    setStatus('loading')
+    
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to subscribe')
+      }
+      
+      setStatus('success')
+      setEmail('')
+      
+      // Reset success status after 5 seconds
+      setTimeout(() => {
+        setStatus('idle')
+      }, 5000)
+    } catch (error) {
+      setStatus('error')
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to subscribe. Please try again.')
+      
+      // Reset error status after 5 seconds
+      setTimeout(() => {
+        setStatus('idle')
+      }, 5000)
+    }
+  }
+
+  return (
+    <div className={cn(
+      "rounded-lg p-6 md:p-8",
+      theme === 'dark' ? 'bg-gray-900' : 'bg-indigo-50'
+    )}>
+      <div className="flex items-center gap-3 mb-4">
+        <Mail className={theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'} />
+        <h3 className={cn(
+          "text-xl font-bold",
+          theme === 'dark' ? 'text-white' : 'text-gray-900'
+        )}>
+          Stay Updated
+        </h3>
+      </div>
+      
+      <p className={cn(
+        "mb-4 text-sm",
+        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+      )}>
+        Subscribe to the newsletter to get the latest blog posts and updates about web development, cryptocurrency trading, and more!
+      </p>
+      
+      {status === 'success' ? (
+        <div className={cn(
+          "flex items-center gap-2 p-3 rounded-md",
+          theme === 'dark' ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-700'
+        )}>
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
+          <p>Thanks for subscribing! You'll receive updates soon.</p>
+        </div>
+      ) : status === 'error' ? (
+        <div className={cn(
+          "flex items-center gap-2 p-3 rounded-md",
+          theme === 'dark' ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-700'
+        )}>
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <p>{errorMessage}</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email address"
+            className={cn(
+              "flex-1 px-3 py-2 text-sm border rounded-md",
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' 
+                : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+            )}
+            required
+          />
+          
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-md text-white",
+              status === 'loading' 
+                ? 'bg-indigo-400 cursor-not-allowed' 
+                : 'bg-indigo-600 hover:bg-indigo-500'
+            )}
+          >
+            {status === 'loading' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              'Subscribe'
+            )}
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\optimizedimage.tsx ===
 // src/components/optimized-image.tsx
 'use client'
@@ -4164,6 +5513,63 @@ export function useBlog(initialPage = 1, initialCategory = 'all') {
 }
 
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\lib\auth.ts ===
+// src/lib/auth.ts
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+
+export const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'password123';
+
+// Simple auth token generation
+export function generateAuthToken(username: string): string {
+  const timestamp = Date.now();
+  const token = Buffer.from(`${username}:${timestamp}:${ADMIN_PASSWORD}`).toString('base64');
+  return token;
+}
+
+// Validate auth token
+export function validateAuthToken(token: string): boolean {
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const [username, timestamp, password] = decoded.split(':');
+    
+    // Check if token is expired (24 hours)
+    const now = Date.now();
+    const tokenTime = parseInt(timestamp, 10);
+    const isExpired = now - tokenTime > 24 * 60 * 60 * 1000;
+    
+    if (isExpired) return false;
+    
+    return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Server action to check authentication
+export async function checkAuth() {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth_token')?.value;
+  
+  if (!authToken || !validateAuthToken(authToken)) {
+    redirect('/admin/login');
+  }
+}
+
+// Client-side authentication check
+export function useIsAuthenticated() {
+  if (typeof window === 'undefined') return false;
+  
+  const authToken = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('auth_token='))
+    ?.split('=')[1];
+  
+  return !!authToken;
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\lib\blog.ts ===
 // src/lib/blog.ts
 import fs from 'fs/promises';
@@ -4456,46 +5862,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || ''
 
 // Create a singleton client for use throughout the app
-// Make sure it doesn't crash during build if environment variables are missing
-let supabase: ReturnType<typeof createClient> | null = null;
-
-try {
-  if (supabaseUrl && supabaseKey) {
-    supabase = createClient(supabaseUrl, supabaseKey);
-  } else {
-    // During build time or when env vars are missing, create a mock client
-    console.warn('Supabase URL or key missing, using mock client');
-    supabase = {
-      from: () => ({
-        select: () => ({
-          order: () => ({ 
-            range: () => Promise.resolve({ data: [], count: 0, error: null }),
-            contains: () => ({
-              range: () => Promise.resolve({ data: [], count: 0, error: null })
-            }),
-            single: () => Promise.resolve({ data: null, error: null })
-          })
-        })
-      })
-    } as unknown as ReturnType<typeof createClient>;
+let supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false
   }
-} catch (error) {
-  console.error('Error initializing Supabase client:', error);
-  // Provide a fallback mock client
-  supabase = {
-    from: () => ({
-      select: () => ({
-        order: () => ({ 
-          range: () => Promise.resolve({ data: [], count: 0, error: null }),
-          contains: () => ({
-            range: () => Promise.resolve({ data: [], count: 0, error: null })
-          }),
-          single: () => Promise.resolve({ data: null, error: null })
-        })
-      })
-    })
-  } as unknown as ReturnType<typeof createClient>;
-}
+});
 
 // Μετατροπή από το schema της βάσης στο type της εφαρμογής
 export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
@@ -4516,8 +5887,6 @@ export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
 
 // Λειτουργίες για το blog
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
-  if (!supabase) return [];
-  
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
@@ -4532,8 +5901,6 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  if (!supabase) return null;
-  
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
@@ -4553,8 +5920,6 @@ export async function getBlogPostsByCategory(category: string, page: number = 1,
   posts: BlogPost[],
   total: number
 }> {
-  if (!supabase) return { posts: [], total: 0 };
-  
   // Αν δεν έχει οριστεί κατηγορία ή είναι 'all', επιστρέφουμε όλα τα posts
   const query = supabase
     .from('blog_posts')

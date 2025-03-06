@@ -1,9 +1,25 @@
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\layout.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\login\page.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\page.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\post\edit\[slug]\page.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\admin\post\new\page.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\admin\login\route.ts
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\route.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\search\route.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\[slug]\route.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\contact\route.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\newsletter\route.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\api\upload\route.ts
 
@@ -39,6 +55,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\app\trading-dashboard\page.
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\about.tsx
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\admin\blog-post-form.tsx
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\analytics.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\animated-nav-link.tsx
@@ -46,6 +64,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\animated-nav-lin
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-categories.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-post-client.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blog-search.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\blogcard.tsx
 
@@ -68,6 +88,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\hero.tsx
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\markdown.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\navbar.tsx
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\newsletter.tsx
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\components\optimizedimage.tsx
 
@@ -98,6 +120,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\content\posts\crypto-tradin
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\content\posts\getting-started-with-nextjs.json
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\hooks\use-blog.ts
+
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\auth.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\blog.ts
 

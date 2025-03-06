@@ -1,25 +1,131 @@
 
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\api\admin\login\route.ts ===
+// src/app/api/admin/login/route.ts
+import { NextResponse } from 'next/server';
+import { ADMIN_USERNAME, ADMIN_PASSWORD, generateAuthToken } from '@/lib/auth';
+import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
+
+// Create limiter for login attempts
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 10,
+});
+
+// Login validation schema
+const loginSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export async function POST(req: Request) {
+  try {
+    // Get client IP for rate limiting
+    const ip = req.headers.get('x-forwarded-for') || 
+              req.headers.get('x-real-ip') || 
+              'unknown';
+    
+    // Check rate limit - 5 attempts per minute per IP
+    try {
+      await limiter.check(5, `LOGIN_${ip}`);
+    } catch {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+    
+    // Get and validate data
+    const body = await req.json();
+    const validationResult = loginSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid form data', errors: validationResult.error.flatten() },
+        { status: 400 }
+      );
+    }
+    
+    const { username, password } = validationResult.data;
+    
+    // Check credentials
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+      return NextResponse.json(
+        { error: 'Invalid username or password' },
+        { status: 401 }
+      );
+    }
+    
+    // Generate authentication token
+    const token = generateAuthToken(username);
+    
+    // Set cookie and return success
+    const response = NextResponse.json(
+      { success: true, message: 'Login successful' },
+      { status: 200 }
+    );
+    
+    // Set auth token cookie with appropriate security settings
+    response.cookies.set({
+      name: 'auth_token',
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: '/',
+      sameSite: 'strict',
+    });
+    
+    return response;
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.json(
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
+    );
+  }
+}
+
+
 === C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\route.ts ===
 // src/app/api/blog/route.ts
 import { NextResponse } from 'next/server'
-import { getBlogPostsByCategory } from '@/lib/supabase'
+import { getBlogPostsByCategory, supabase } from '@/lib/supabase'
+import { checkAuth } from '@/lib/auth'
+import { z } from 'zod'
 
 const POSTS_PER_PAGE = 6
+
+// Post validation schema for creating/updating
+const postSchema = z.object({
+  slug: z.string().min(1, 'Slug is required'),
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().min(1, 'Description is required'),
+  date: z.string().datetime({ message: 'Invalid date format' }),
+  image: z.string().url({ message: 'Image must be a valid URL' }),
+  author: z.object({
+    name: z.string(),
+    image: z.string()
+  }),
+  categories: z.array(z.string()),
+  content: z.string().min(1, 'Content is required')
+})
 
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     const page = parseInt(url.searchParams.get('page') || '1', 10)
     const category = url.searchParams.get('category') || ''
+    const limit = parseInt(url.searchParams.get('limit') || String(POSTS_PER_PAGE), 10)
     
     const { posts, total } = await getBlogPostsByCategory(
       category,
       page,
-      POSTS_PER_PAGE
+      limit
     )
     
     // Υπολογισμός pagination
-    const totalPages = Math.ceil(total / POSTS_PER_PAGE)
+    const totalPages = Math.ceil(total / limit)
     
     return NextResponse.json(
       {
@@ -28,7 +134,7 @@ export async function GET(request: Request) {
           totalPosts: total,
           totalPages,
           currentPage: page,
-          postsPerPage: POSTS_PER_PAGE,
+          postsPerPage: limit,
           hasNextPage: page < totalPages,
           hasPrevPage: page > 1,
         },
@@ -48,15 +154,185 @@ export async function GET(request: Request) {
   }
 }
 
+// Create a new blog post
+export async function POST(request: Request) {
+  try {
+    // Check if user is authenticated
+    await checkAuth()
+    
+    // Get and validate post data
+    const body = await request.json()
+    const validationResult = postSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: 'Invalid post data', errors: validationResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+    
+    const postData = validationResult.data
+    
+    // Insert the post into Supabase
+    const { error } = await supabase
+      .from('blog_posts')
+      .insert({
+        slug: postData.slug,
+        title: postData.title,
+        description: postData.description,
+        date: postData.date,
+        image: postData.image,
+        author_name: postData.author.name,
+        author_image: postData.author.image,
+        categories: postData.categories,
+        content: postData.content
+      })
+    
+    if (error) {
+      console.error('Error creating blog post:', error)
+      return NextResponse.json(
+        { message: `Failed to create blog post: ${error.message}` },
+        { status: 500 }
+      )
+    }
+    
+    return NextResponse.json(
+      { message: 'Blog post created successfully', slug: postData.slug },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Error in POST /api/blog:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    return NextResponse.json(
+      { message: 'Failed to create blog post' },
+      { status: 500 }
+    )
+  }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\search\route.ts ===
+// src/app/api/blog/search/route.ts
+import { NextResponse } from 'next/server'
+import { supabase, mapBlogPostRowToBlogPost, type BlogPostRow } from '@/lib/supabase'
+import { z } from 'zod'
+import { rateLimit } from '@/lib/rate-limit'
+
+// Create limiter
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 10,
+})
+
+// Search request validation
+const searchParamsSchema = z.object({
+  query: z.string().min(1, 'Search query is required').max(100, 'Search query is too long'),
+  limit: z.number().int().min(1).max(20).optional().default(10),
+})
+
+export async function GET(request: Request) {
+  try {
+    // Get client IP for rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown'
+    
+    // Check rate limit - 10 requests per minute per IP
+    try {
+      await limiter.check(10, `BLOG_SEARCH_${ip}`)
+    } catch {
+      return NextResponse.json(
+        { message: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
+    }
+    
+    // Parse search parameters
+    const url = new URL(request.url)
+    const query = url.searchParams.get('query') || ''
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10)
+    
+    // Validate parameters
+    const validationResult = searchParamsSchema.safeParse({ query, limit })
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: 'Invalid search parameters', errors: validationResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+    
+    const { query: validatedQuery, limit: validatedLimit } = validationResult.data
+    
+    // Perform search
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .or(`title.ilike.%${validatedQuery}%,description.ilike.%${validatedQuery}%,content.ilike.%${validatedQuery}%`)
+      .order('date', { ascending: false })
+      .limit(validatedLimit)
+    
+    if (error) {
+      console.error('Error searching blog posts:', error)
+      return NextResponse.json(
+        { message: 'Failed to search blog posts' },
+        { status: 500 }
+      )
+    }
+    
+    // Map results to BlogPost type
+    const posts = (data as BlogPostRow[]).map(mapBlogPostRowToBlogPost)
+    
+    return NextResponse.json(
+      { posts },
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=60, stale-while-revalidate=3600',
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Failed to search blog posts:', error)
+    return NextResponse.json(
+      { message: 'Failed to search blog posts' },
+      { status: 500 }
+    )
+  }
+}
+
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\app\api\blog\[slug]\route.ts ===
 // src/app/api/blog/[slug]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getBlogPostBySlug } from '@/lib/supabase'
+import { getBlogPostBySlug, supabase } from '@/lib/supabase'
+import { checkAuth } from '@/lib/auth'
+import { z } from 'zod'
 
 interface RouteContext {
   params: Promise<{ slug: string }>
 }
+
+// Post validation schema for updating
+const postSchema = z.object({
+  slug: z.string().min(1, 'Slug is required'),
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().min(1, 'Description is required'),
+  date: z.string().datetime({ message: 'Invalid date format' }),
+  image: z.string().url({ message: 'Image must be a valid URL' }),
+  author: z.object({
+    name: z.string(),
+    image: z.string()
+  }),
+  categories: z.array(z.string()),
+  content: z.string().min(1, 'Content is required')
+})
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
@@ -88,6 +364,131 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     console.error('Unexpected error in blog post route:', err)
     return NextResponse.json(
       { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// Update a blog post
+export async function PUT(request: NextRequest, context: RouteContext) {
+  try {
+    // Check if user is authenticated
+    await checkAuth()
+    
+    const resolvedParams = await context.params
+    const { slug: originalSlug } = resolvedParams
+    
+    if (!originalSlug) {
+      return NextResponse.json(
+        { message: 'Slug parameter is required' },
+        { status: 400 }
+      )
+    }
+    
+    // Get and validate post data
+    const body = await request.json()
+    const validationResult = postSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: 'Invalid post data', errors: validationResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+    
+    const postData = validationResult.data
+    
+    // Update the post in Supabase
+    const { error } = await supabase
+      .from('blog_posts')
+      .update({
+        slug: postData.slug,
+        title: postData.title,
+        description: postData.description,
+        date: postData.date,
+        image: postData.image,
+        author_name: postData.author.name,
+        author_image: postData.author.image,
+        categories: postData.categories,
+        content: postData.content
+      })
+      .eq('slug', originalSlug)
+    
+    if (error) {
+      console.error('Error updating blog post:', error)
+      return NextResponse.json(
+        { message: `Failed to update blog post: ${error.message}` },
+        { status: 500 }
+      )
+    }
+    
+    return NextResponse.json(
+      { message: 'Blog post updated successfully', slug: postData.slug },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error in PUT /api/blog/[slug]:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    return NextResponse.json(
+      { message: 'Failed to update blog post' },
+      { status: 500 }
+    )
+  }
+}
+
+// Delete a blog post
+export async function DELETE(_request: NextRequest, context: RouteContext) {
+  try {
+    // Check if user is authenticated
+    await checkAuth()
+    
+    const resolvedParams = await context.params
+    const { slug } = resolvedParams
+    
+    if (!slug) {
+      return NextResponse.json(
+        { message: 'Slug parameter is required' },
+        { status: 400 }
+      )
+    }
+    
+    // Delete the post from Supabase
+    const { error } = await supabase
+      .from('blog_posts')
+      .delete()
+      .eq('slug', slug)
+    
+    if (error) {
+      console.error('Error deleting blog post:', error)
+      return NextResponse.json(
+        { message: `Failed to delete blog post: ${error.message}` },
+        { status: 500 }
+      )
+    }
+    
+    return NextResponse.json(
+      { message: 'Blog post deleted successfully' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error in DELETE /api/blog/[slug]:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    return NextResponse.json(
+      { message: 'Failed to delete blog post' },
       { status: 500 }
     )
   }
@@ -191,6 +592,147 @@ export async function POST(req: Request) {
     console.error('Contact form error:', error)
     return NextResponse.json(
       { message: 'Failed to send message' },
+      { status: 500 }
+    )
+  }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\app\api\newsletter\route.ts ===
+// src/app/api/newsletter/route.ts
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { rateLimit } from '@/lib/rate-limit'
+import { createTransport } from 'nodemailer'
+import { supabase } from '@/lib/supabase'
+
+// Create limiter
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 10,
+})
+
+// Form validation schema
+const subscribeSchema = z.object({
+  email: z.string().email('Invalid email address'),
+})
+
+export async function POST(req: Request) {
+  try {
+    // Get client IP for rate limiting
+    const ip = req.headers.get('x-forwarded-for') || 
+               req.headers.get('x-real-ip') || 
+               'unknown'
+    
+    // Check rate limit
+    try {
+      await limiter.check(3, `NEWSLETTER_${ip}`) // 3 requests per minute per IP
+    } catch {
+      return NextResponse.json(
+        { message: 'Rate limit exceeded. Please try again later.' },
+        { status: 429 }
+      )
+    }
+    
+    // Get and validate data
+    const body = await req.json()
+    const validationResult = subscribeSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: 'Invalid form data', errors: validationResult.error.flatten() },
+        { status: 400 }
+      )
+    }
+    
+    const { email } = validationResult.data
+
+    // Check if email already exists
+    const { data: existingSubscriber, error: queryError } = await supabase
+      .from('newsletter_subscribers')
+      .select('id')
+      .eq('email', email)
+      .single()
+    
+    if (queryError && queryError.code !== 'PGRST116') { // PGRST116 is "not found" error
+      console.error('Error checking if subscriber exists:', queryError)
+      return NextResponse.json(
+        { message: 'Failed to process subscription' },
+        { status: 500 }
+      )
+    }
+    
+    // If email already exists, return success (to prevent email harvesting)
+    if (existingSubscriber) {
+      return NextResponse.json(
+        { message: 'Subscription successful' },
+        { status: 200 }
+      )
+    }
+
+    // Store in database
+    const { error: insertError } = await supabase
+      .from('newsletter_subscribers')
+      .insert({
+        email,
+        subscribed_at: new Date().toISOString(),
+        ip_address: typeof ip === 'string' ? ip : ip[0]
+      })
+    
+    if (insertError) {
+      console.error('Error inserting subscriber:', insertError)
+      return NextResponse.json(
+        { message: 'Failed to process subscription' },
+        { status: 500 }
+      )
+    }
+
+    // Send confirmation email if SMTP is configured
+    if (process.env.SMTP_HOST) {
+      try {
+        // Create email transporter
+        const transporter = createTransport({
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT),
+          secure: true,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        })
+
+        // Send confirmation email
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM,
+          to: email,
+          subject: 'Newsletter Subscription Confirmation',
+          text: `
+            Thank you for subscribing to the newsletter!
+            
+            You'll receive updates about new blog posts and other announcements.
+            
+            If you didn't subscribe, please ignore this email.
+          `,
+          html: `
+            <h3>Thank you for subscribing!</h3>
+            <p>You'll receive updates about new blog posts and other announcements.</p>
+            <p>If you didn't subscribe, please ignore this email.</p>
+          `,
+        })
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError)
+        // Don't return an error to the client since the subscription was successful
+      }
+    }
+
+    return NextResponse.json(
+      { message: 'Subscription successful' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Newsletter subscription error:', error)
+    return NextResponse.json(
+      { message: 'Failed to process subscription' },
       { status: 500 }
     )
   }
