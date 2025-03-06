@@ -1,4 +1,4 @@
-// src/components/hero.tsx
+// src/components/hero.tsx - Με τροποποιήσεις για το Supabase Storage
 'use client'
 
 import { useState, useRef } from 'react'
@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { isSupabaseUrl } from '@/lib/storage'
 
 interface SocialLink {
   icon: React.ComponentType<{ className?: string }>
@@ -17,7 +18,6 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  // Αφαιρέθηκε το isUploadingImage από το destructuring αφού δεν χρησιμοποιείται
   const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -80,7 +80,7 @@ export default function Hero() {
       const data = await response.json()
       if (data.success) {
         // Delete old profile image if it's not the default
-        if (profileImage !== '/profile.jpg') {
+        if (profileImage !== '/profile.jpg' && isSupabaseUrl(profileImage)) {
           try {
             const deleteResponse = await fetch('/api/upload', {
               method: 'DELETE',
@@ -139,6 +139,16 @@ export default function Hero() {
     }
   }
 
+  // Προσθήκη loader για χειρισμό εξωτερικών URLs του Supabase
+  const imageLoader = ({ src }: { src: string }) => {
+    // Αν είναι Supabase URL, επέστρεψέ το ως έχει
+    if (isSupabaseUrl(src)) {
+      return src
+    }
+    // Αλλιώς χρησιμοποίησε το κανονικό path
+    return src
+  }
+
   return (
     <section 
       className={cn(
@@ -165,6 +175,7 @@ export default function Hero() {
                 </div>
               ) : (
                 <Image
+                  loader={imageLoader}
                   src={profileImage}
                   alt="Christos Kerigkas Profile Picture"
                   width={128}
@@ -179,6 +190,7 @@ export default function Hero() {
                       setProfileImage('/profile.jpg');
                     }
                   }}
+                  unoptimized={isSupabaseUrl(profileImage)} // Απενεργοποίηση του Next.js optimization για Supabase URLs
                 />
               )}
             </div>
@@ -214,6 +226,7 @@ export default function Hero() {
             />
           </motion.div>
 
+          {/* Το υπόλοιπο του component παραμένει ίδιο */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

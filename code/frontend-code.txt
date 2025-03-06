@@ -2539,7 +2539,7 @@ export function Footer() {
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\hero.tsx ===
-// src/components/hero.tsx
+// src/components/hero.tsx - Με τροποποιήσεις για το Supabase Storage
 'use client'
 
 import { useState, useRef } from 'react'
@@ -2549,6 +2549,7 @@ import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { isSupabaseUrl } from '@/lib/storage'
 
 interface SocialLink {
   icon: React.ComponentType<{ className?: string }>
@@ -2558,7 +2559,6 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  // Αφαιρέθηκε το isUploadingImage από το destructuring αφού δεν χρησιμοποιείται
   const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -2621,7 +2621,7 @@ export default function Hero() {
       const data = await response.json()
       if (data.success) {
         // Delete old profile image if it's not the default
-        if (profileImage !== '/profile.jpg') {
+        if (profileImage !== '/profile.jpg' && isSupabaseUrl(profileImage)) {
           try {
             const deleteResponse = await fetch('/api/upload', {
               method: 'DELETE',
@@ -2680,6 +2680,16 @@ export default function Hero() {
     }
   }
 
+  // Προσθήκη loader για χειρισμό εξωτερικών URLs του Supabase
+  const imageLoader = ({ src }: { src: string }) => {
+    // Αν είναι Supabase URL, επέστρεψέ το ως έχει
+    if (isSupabaseUrl(src)) {
+      return src
+    }
+    // Αλλιώς χρησιμοποίησε το κανονικό path
+    return src
+  }
+
   return (
     <section 
       className={cn(
@@ -2706,6 +2716,7 @@ export default function Hero() {
                 </div>
               ) : (
                 <Image
+                  loader={imageLoader}
                   src={profileImage}
                   alt="Christos Kerigkas Profile Picture"
                   width={128}
@@ -2720,6 +2731,7 @@ export default function Hero() {
                       setProfileImage('/profile.jpg');
                     }
                   }}
+                  unoptimized={isSupabaseUrl(profileImage)} // Απενεργοποίηση του Next.js optimization για Supabase URLs
                 />
               )}
             </div>
@@ -2755,6 +2767,7 @@ export default function Hero() {
             />
           </motion.div>
 
+          {/* Το υπόλοιπο του component παραμένει ίδιο */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -3435,13 +3448,14 @@ export function Skills() {
 
 
 === C:\Users\chris\Downloads\christos-kerigkas\src\components\theme-provider.tsx ===
-// src/components/themeprovider.tsx
+// src/components/theme-provider.tsx
 
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, memo } from 'react'
 import { Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isSupabaseUrl } from '@/lib/storage'
 
 type Theme = 'light' | 'dark'
 type ThemeContextType = { 
@@ -3492,6 +3506,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return
     }
     
+    // Αποθήκευση του πλήρους URL από το Supabase
     setProfileImageState(path)
     
     // If mounted, update localStorage immediately
@@ -3520,8 +3535,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
       
       if (savedProfileImage) {
-        // Simple validation to ensure we have a valid path
-        if (savedProfileImage.startsWith('/') && !savedProfileImage.includes('..')) {
+        // Έλεγχος εγκυρότητας για Supabase URLs και τοπικά paths
+        if (
+          (savedProfileImage.startsWith('/') && !savedProfileImage.includes('..')) || 
+          isSupabaseUrl(savedProfileImage)
+        ) {
           setProfileImageState(savedProfileImage)
         } else {
           console.warn('Invalid profile image path found in localStorage')
@@ -4314,6 +4332,102 @@ export function rateLimit(options: RateLimitOptions): RateLimitRes {
       })
     },
   }
+}
+
+
+=== C:\Users\chris\Downloads\christos-kerigkas\src\lib\storage.ts ===
+// src/lib/storage.ts
+import { supabase } from './supabase'
+
+const BUCKET_NAME = 'profiles'
+
+export async function uploadProfileImage(file: Buffer, filename: string): Promise<string> {
+  try {
+    // Έλεγχος ότι το supabase client υπάρχει
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+    
+    // Ανέβασμα του αρχείου στο Supabase Storage
+    const { data, error } = await supabase
+      .storage
+      .from(BUCKET_NAME)
+      .upload(filename, file, {
+        contentType: 'image/jpeg', // Adjust based on file type if needed
+        upsert: true // Overwrite if exists
+      })
+
+    if (error) {
+      console.error('Error uploading to Supabase:', error)
+      throw new Error(`Failed to upload image: ${error.message}`)
+    }
+
+    // Λήψη του public URL
+    const { data: publicUrlData } = supabase
+      .storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(data?.path || filename)
+
+    return publicUrlData.publicUrl
+  } catch (error) {
+    console.error('Error in uploadProfileImage:', error)
+    throw error
+  }
+}
+
+export async function deleteProfileImage(filepath: string): Promise<void> {
+  try {
+    // Έλεγχος ότι το supabase client υπάρχει
+    if (!supabase) {
+      throw new Error('Supabase client is not initialized')
+    }
+    
+    // Εξαγωγή του ονόματος αρχείου από το πλήρες URL ή διαδρομή
+    const filename = filepath.split('/').pop()
+    
+    if (!filename) {
+      throw new Error('Invalid file path')
+    }
+
+    // Διαγραφή του αρχείου από το Supabase Storage
+    const { error } = await supabase
+      .storage
+      .from(BUCKET_NAME)
+      .remove([filename])
+
+    if (error) {
+      console.error('Error deleting from Supabase:', error)
+      throw new Error(`Failed to delete image: ${error.message}`)
+    }
+  } catch (error) {
+    console.error('Error in deleteProfileImage:', error)
+    throw error
+  }
+}
+
+// Μετατροπή URL σε filename για χρήση με το Supabase Storage
+export function getFilenameFromUrl(url: string): string | null {
+  try {
+    // Handle full Supabase URLs
+    if (url.includes(BUCKET_NAME)) {
+      const filename = url.split('/').pop() || null;
+      return filename;
+    }
+    // Handle relative paths
+    if (url.startsWith('/')) {
+      const filename = url.split('/').pop() || null;
+      return filename;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting filename:', error)
+    return null
+  }
+}
+
+// Έλεγχος αν ένα URL είναι Supabase URL
+export function isSupabaseUrl(url: string): boolean {
+  return url.includes('supabase') || url.includes(BUCKET_NAME)
 }
 
 

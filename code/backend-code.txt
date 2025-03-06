@@ -200,12 +200,11 @@ export async function POST(req: Request) {
 === C:\Users\chris\Downloads\christos-kerigkas\src\app\api\upload\route.ts ===
 // src/app/api/upload/route.ts
 import { NextResponse } from 'next/server'
-import { writeFile, unlink, mkdir, stat } from 'fs/promises'
 import path from 'path'
-import { existsSync } from 'fs'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { rateLimit } from '@/lib/rate-limit'
+import { uploadProfileImage, deleteProfileImage, getFilenameFromUrl } from '@/lib/storage'
 
 // Create limiter
 const limiter = rateLimit({
@@ -308,42 +307,23 @@ export async function POST(request: Request) {
 
     // Generate a safe filename to prevent path traversal
     const safeFilename = getSafeFilename(file.name)
-    const uploadsDir = path.join(process.cwd(), 'public/uploads')
-
-    // Create uploads directory if it doesn't exist
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
-
-    const filepath = path.join(uploadsDir, safeFilename)
 
     try {
-      // Write the file to disk
-      await writeFile(filepath, buffer)
-      
-      // Verify the file was written correctly by checking if it exists
-      if (!existsSync(filepath)) {
-        throw new Error('File verification failed: File does not exist after writing')
-      }
-      
-      // Optional: Check file size matches expected size
-      const stats = await stat(filepath)
-      if (stats.size !== buffer.length) {
-        throw new Error(`File verification failed: Size mismatch (expected ${buffer.length}, got ${stats.size})`)
-      }
+      // Upload the file to Supabase Storage
+      const fileUrl = await uploadProfileImage(buffer, safeFilename)
+
+      // Return success response with the filename
+      return NextResponse.json({ 
+        success: true,
+        filename: fileUrl
+      })
     } catch (error) {
-      console.error('Error writing file:', error)
+      console.error('Error uploading file to Supabase:', error)
       return NextResponse.json(
         { error: 'Αποτυχία αποθήκευσης αρχείου' },
         { status: 500 }
       )
     }
-
-    // Return success response with the filename
-    return NextResponse.json({ 
-      success: true,
-      filename: `/uploads/${safeFilename}`
-    })
   } catch (error) {
     console.error('Error uploading file:', error)
     return NextResponse.json(
@@ -391,39 +371,22 @@ export async function DELETE(request: Request) {
       )
     }
 
-    // Security checks to prevent directory traversal
-    const normalizedFilename = path.normalize(filename).replace(/^\/+/, '')
-    
-    // Extra security: ensure the file is in the uploads directory and has a valid format
-    // Only allow profile images with our specific naming pattern
-    if (!normalizedFilename.startsWith('uploads/') || 
-        !normalizedFilename.match(/^uploads\/profile-\d+-[a-f0-9]+\.(jpg|jpeg|png|webp)$/i)) {
-      console.warn('Invalid file deletion attempt:', normalizedFilename)
-      return NextResponse.json(
-        { error: 'Μη έγκυρη διαδρομή αρχείου' },
-        { status: 400 }
-      )
-    }
-
-    const filepath = path.join(process.cwd(), 'public', normalizedFilename)
-
-    // Check if file exists before attempting to delete
-    if (!existsSync(filepath)) {
-      return NextResponse.json(
-        { error: 'Το αρχείο δεν βρέθηκε' },
-        { status: 404 }
-      )
+    // Skip deletion for default profile
+    if (filename === '/profile.jpg') {
+      return NextResponse.json({ 
+        success: true,
+        message: 'Default profile image cannot be deleted' 
+      })
     }
 
     try {
-      // Delete the file
-      await unlink(filepath)
+      // Delete the file from Supabase Storage
+      await deleteProfileImage(filename)
       
-      // Verify the file was actually deleted
-      if (existsSync(filepath)) {
-        throw new Error('File still exists after deletion attempt')
-      }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      return NextResponse.json({ 
+        success: true,
+        message: 'Το αρχείο διαγράφηκε επιτυχώς' 
+      })
     } catch (deleteError) {
       console.error('Error deleting file:', deleteError)
       return NextResponse.json(
@@ -431,12 +394,6 @@ export async function DELETE(request: Request) {
         { status: 500 }
       )
     }
-
-    return NextResponse.json({ 
-      success: true,
-      message: 'Το αρχείο διαγράφηκε επιτυχώς' 
-    })
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (catchError) {
     console.error('Error deleting file:', catchError)
     return NextResponse.json(

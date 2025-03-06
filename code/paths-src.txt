@@ -117,6 +117,8 @@ FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\rate-limit.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\seo.ts
 
+FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\storage.ts
+
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\supabase.ts
 
 FILE: C:\Users\chris\Downloads\christos-kerigkas\src\lib\utils.ts

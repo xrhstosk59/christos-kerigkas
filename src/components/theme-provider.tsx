@@ -1,10 +1,11 @@
-// src/components/themeprovider.tsx
+// src/components/theme-provider.tsx
 
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, memo } from 'react'
 import { Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isSupabaseUrl } from '@/lib/storage'
 
 type Theme = 'light' | 'dark'
 type ThemeContextType = { 
@@ -55,6 +56,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return
     }
     
+    // Αποθήκευση του πλήρους URL από το Supabase
     setProfileImageState(path)
     
     // If mounted, update localStorage immediately
@@ -83,8 +85,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
       
       if (savedProfileImage) {
-        // Simple validation to ensure we have a valid path
-        if (savedProfileImage.startsWith('/') && !savedProfileImage.includes('..')) {
+        // Έλεγχος εγκυρότητας για Supabase URLs και τοπικά paths
+        if (
+          (savedProfileImage.startsWith('/') && !savedProfileImage.includes('..')) || 
+          isSupabaseUrl(savedProfileImage)
+        ) {
           setProfileImageState(savedProfileImage)
         } else {
           console.warn('Invalid profile image path found in localStorage')
