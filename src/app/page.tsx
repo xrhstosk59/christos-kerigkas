@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 
 const Navbar = dynamic(() => import('@/components/navbar'), { ssr: false })
 const Hero = dynamic(() => import('@/components/hero'), { ssr: false })
+const Certifications = dynamic(() => import('@/components/certifications'), { ssr: false })
 import { About } from '@/components/about'
 import { Experience } from '@/components/experience'
 import { Skills } from '@/components/skills'
@@ -22,6 +23,7 @@ export default function Home() {
       <About />
       <Experience />
       <Skills />
+      <Certifications />
       <Projects />
       <CryptoProjects />
       <Contact />
