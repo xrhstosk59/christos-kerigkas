@@ -3,88 +3,11 @@
 
 import { useTheme } from './theme-provider'
 import { motion } from 'framer-motion'
-import { LineChart, Cpu, Bot, TrendingUp, Eye, BrainCircuit } from 'lucide-react'
+import { Cpu } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-
-const cryptoProjects = [
-  {
-    title: 'Sniper4Crypto',
-    icon: Eye,
-    description: 'Advanced crypto token detection tool using data mining and machine learning to identify trending meme tokens before they gain mainstream attention.',
-    features: [
-      'Real-time token detection on DEX platforms',
-      'Social media trend analysis integration',
-      'Machine learning-based price prediction',
-      'Automated buy/sell signal generation',
-      'Telegram notifications with detailed metrics'
-    ],
-    tech: ['Python', 'TensorFlow', 'MongoDB', 'Telegram API', 'Web3.py', 'Data Mining'],
-    github: 'https://github.com/yourusername/sniper4crypto',
-    status: 'Active Development'
-  },
-  {
-    title: 'Smart Trading Bot',
-    icon: Bot,
-    description: 'Fully automated trading system with comprehensive market analysis, multi-timeframe strategy implementation, and risk management features.',
-    features: [
-      'Multiple configurable trading strategies',
-      'Custom technical indicator calculations',
-      'Real-time market data analysis',
-      'Position sizing and risk management',
-      'Performance analytics dashboard'
-    ],
-    tech: ['Python', 'CCXT', 'PostgreSQL', 'RESTful APIs', 'Technical Analysis', 'Statistics'],
-    github: 'https://github.com/yourusername/trading-bot',
-    status: 'Production'
-  },
-  {
-    title: 'Market Analyzer',
-    icon: LineChart,
-    description: 'Data-driven market analysis tool that processes historical cryptocurrency data to identify patterns and generate trading opportunities.',
-    features: [
-      'Historical data backtesting framework',
-      'Custom indicator development environment',
-      'Statistical analysis of market conditions',
-      'Correlation finder between assets',
-      'CSV/JSON export for further analysis'
-    ],
-    tech: ['Python', 'Pandas', 'NumPy', 'Matplotlib', 'Scikit-learn', 'Jupyter'],
-    github: 'https://github.com/yourusername/market-analyzer',
-    status: 'Beta'
-  },
-  {
-    title: 'Crypto Portfolio Manager',
-    icon: TrendingUp,
-    description: 'Full-featured portfolio management application for cryptocurrency investors to track, analyze, and optimize their holdings across exchanges.',
-    features: [
-      'Multi-exchange API integration',
-      'Portfolio performance tracking',
-      'Tax reporting and transaction history',
-      'Rebalancing recommendations',
-      'Mobile-responsive web dashboard'
-    ],
-    tech: ['Next.js', 'TypeScript', 'Supabase', 'Chart.js', 'CCXT', 'TailwindCSS'],
-    github: 'https://github.com/yourusername/crypto-portfolio',
-    status: 'Concept'
-  },
-  {
-    title: 'AI Trading Predictor',
-    icon: BrainCircuit,
-    description: 'Experimental project using deep learning and neural networks to predict short-term price movements in major cryptocurrency pairs.',
-    features: [
-      'LSTM neural network implementation',
-      'Multiple timeframe prediction models',
-      'Feature engineering pipeline',
-      'Accuracy and error measurement',
-      'Model persistence and versioning'
-    ],
-    tech: ['Python', 'TensorFlow', 'Keras', 'Scikit-learn', 'PyTorch', 'Pandas'],
-    github: 'https://github.com/yourusername/ai-trading-predictor',
-    status: 'Research'
-  }
-]
+import { filteredCryptoProjects } from '@/content/projects'
 
 export function CryptoProjects() {
   const { theme } = useTheme()
@@ -119,8 +42,8 @@ export function CryptoProjects() {
             trading systems, market analysis tools, and cryptocurrency applications.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {cryptoProjects.map((project, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {filteredCryptoProjects.map((project, index) => (
               <motion.div
                 key={project.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -145,12 +68,12 @@ export function CryptoProjects() {
                       </div>
                       <span className={cn(
                         "text-xs font-medium px-2.5 py-1 rounded",
-                        project.status === 'Production' 
+                        project.status === 'Completed' 
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                          : project.status === 'Active Development'
+                          : project.status === 'Active'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                          : project.status === 'In Development'
                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                          : project.status === 'Beta'
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
                           : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                       )}>
                         {project.status}

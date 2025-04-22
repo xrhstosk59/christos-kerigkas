@@ -38,7 +38,7 @@ const projects = [
             'Telegram notifications'
         ],
         tech: ['Python', 'Scikit-learn', 'Telegram Bot API', 'MongoDB', 'PostgreSQL'],
-        status: 'Active',
+        status: 'In Development',
         link: 'https://github.com/yourusername/sniper4crypto'
     },
     {
@@ -57,7 +57,7 @@ const projects = [
             'Backtesting framework'
         ],
         tech: ['Python', 'Exchange APIs', 'Telegram Bot API', 'Technical Analysis', 'Data Science'],
-        status: 'Active',
+        status: 'In Development',
         link: 'https://github.com/yourusername/trading-bot'
     }
 ]
@@ -104,9 +104,7 @@ export function ExperienceServer({ theme, renderIcon }: ExperienceServerProps) {
                                     </h3>
                                     <span className={cn(
                                         "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
-                                        project.status === 'Active'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-blue-100 text-blue-700'
+                                        'bg-blue-100 text-blue-700'
                                     )}>
                                         {project.status}
                                     </span>
