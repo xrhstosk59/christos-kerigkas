@@ -82,7 +82,7 @@ export function Newsletter() {
           theme === 'dark' ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-700'
         )}>
           <CheckCircle className="h-5 w-5 flex-shrink-0" />
-          <p>Thanks for subscribing! You'll receive updates soon.</p>
+          <p>Thanks for subscribing! You&apos;ll receive updates soon.</p>
         </div>
       ) : status === 'error' ? (
         <div className={cn(

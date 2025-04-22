@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
       // Redirect to admin dashboard
       router.push('/admin')
       router.refresh()
-    } catch (error) {
+    } catch {
       setStatus('error')
       setErrorMessage('An unexpected error occurred. Please try again later.')
     }

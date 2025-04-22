@@ -7,7 +7,6 @@ import { useTheme } from '@/components/theme-provider'
 import Link from 'next/link'
 import { 
   Layout, 
-  FileText, 
   Plus, 
   LogOut, 
   Edit, 

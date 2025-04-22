@@ -146,7 +146,7 @@ export function BlogSearch() {
               ) : error ? (
                 <p>Error: {error}</p>
               ) : (
-                <p>No results found for "{debouncedQuery}"</p>
+                <p>No results found for &quot;{debouncedQuery}&quot;</p>
               )}
             </div>
           ) : (

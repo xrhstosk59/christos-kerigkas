@@ -68,7 +68,6 @@ export async function deleteProfileImage(filepath: string): Promise<void> {
 }
 
 // Μετατροπή URL σε filename για χρήση με το Supabase Storage
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getFilenameFromUrl(url: string): string | null {
   try {
     // Handle full Supabase URLs

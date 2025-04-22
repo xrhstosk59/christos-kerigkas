@@ -26,7 +26,7 @@ export function validateAuthToken(token: string): boolean {
     if (isExpired) return false;
     
     return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
