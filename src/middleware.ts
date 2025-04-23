@@ -1,11 +1,9 @@
 // src/middleware.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
-// Αφαιρέθηκε η import και η κλήση της ensureUploadsDirectory
-// καθώς προκαλεί σφάλματα στο Edge Runtime
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Security headers
   const headers = new Headers(request.headers)
   
@@ -32,19 +30,30 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
   
+  // For admin routes, check authentication
+  if (url.pathname.startsWith('/admin') && url.pathname !== '/admin/login') {
+    // Initialize Supabase client
+    const supabase = createMiddlewareClient({ req: request, res: response })
+    
+    // Check if user is authenticated
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    // If user is not authenticated, redirect to login page
+    if (!session) {
+      const redirectUrl = new URL('/admin/login', request.url)
+      redirectUrl.searchParams.set('from', url.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+  
   return response
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
+    // Ταιριάζει όλα τα paths εκτός από συγκεκριμένα στατικά αρχεία
     '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    // Προστατεύει όλα τα admin paths
+    '/admin/:path*'
   ],
 }

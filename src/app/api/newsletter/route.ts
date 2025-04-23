@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { rateLimit } from '@/lib/rate-limit'
 import { createTransport } from 'nodemailer'
-import { supabase } from '@/lib/supabase'
+import { newsletterRepository } from '@/lib/db/repositories/newsletter-repository'
 
 // Create limiter
 const limiter = rateLimit({
@@ -46,45 +46,25 @@ export async function POST(req: Request) {
     
     const { email } = validationResult.data
 
-    // Check if email already exists
-    const { data: existingSubscriber, error: queryError } = await supabase
-      .from('newsletter_subscribers')
-      .select('id')
-      .eq('email', email)
-      .single()
-    
-    if (queryError && queryError.code !== 'PGRST116') { // PGRST116 is "not found" error
-      console.error('Error checking if subscriber exists:', queryError)
-      return NextResponse.json(
-        { message: 'Failed to process subscription' },
-        { status: 500 }
-      )
-    }
+    // Check if email already exists using repository
+    const isSubscribed = await newsletterRepository.isSubscribed(email)
     
     // If email already exists, return success (to prevent email harvesting)
-    if (existingSubscriber) {
+    if (isSubscribed) {
       return NextResponse.json(
         { message: 'Subscription successful' },
         { status: 200 }
       )
     }
 
-    // Store in database
-    const { error: insertError } = await supabase
-      .from('newsletter_subscribers')
-      .insert({
-        email,
-        subscribed_at: new Date().toISOString(),
-        ip_address: typeof ip === 'string' ? ip : ip[0]
-      })
-    
-    if (insertError) {
-      console.error('Error inserting subscriber:', insertError)
-      return NextResponse.json(
-        { message: 'Failed to process subscription' },
-        { status: 500 }
-      )
-    }
+    // Store in database using repository
+    const ipAddress = typeof ip === 'string' ? ip : ip[0]
+    await newsletterRepository.subscribe({
+      email,
+      subscribedAt: new Date(),
+      ipAddress,
+      isActive: true
+    })
 
     // Send confirmation email if SMTP is configured
     if (process.env.SMTP_HOST) {
@@ -132,6 +112,35 @@ export async function POST(req: Request) {
     console.error('Newsletter subscription error:', error)
     return NextResponse.json(
       { message: 'Failed to process subscription' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    // Get and validate data
+    const body = await req.json()
+    const { email } = body
+    
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return NextResponse.json(
+        { message: 'Invalid email address' },
+        { status: 400 }
+      )
+    }
+    
+    // Update subscription status using repository
+    await newsletterRepository.unsubscribe(email)
+    
+    return NextResponse.json(
+      { message: 'Unsubscribed successfully' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Newsletter unsubscribe error:', error)
+    return NextResponse.json(
+      { message: 'Failed to process unsubscription' },
       { status: 500 }
     )
   }

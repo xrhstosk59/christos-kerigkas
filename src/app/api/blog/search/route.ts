@@ -1,6 +1,6 @@
 // src/app/api/blog/search/route.ts
 import { NextResponse } from 'next/server'
-import { supabase, mapBlogPostRowToBlogPost, type BlogPostRow } from '@/lib/supabase'
+import { blogRepository } from '@/lib/db/repositories/blog-repository'
 import { z } from 'zod'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -50,24 +50,23 @@ export async function GET(request: Request) {
     
     const { query: validatedQuery, limit: validatedLimit } = validationResult.data
     
-    // Perform search
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .or(`title.ilike.%${validatedQuery}%,description.ilike.%${validatedQuery}%,content.ilike.%${validatedQuery}%`)
-      .order('date', { ascending: false })
-      .limit(validatedLimit)
+    // Perform search using repository
+    const dbPosts = await blogRepository.search(validatedQuery, validatedLimit)
     
-    if (error) {
-      console.error('Error searching blog posts:', error)
-      return NextResponse.json(
-        { message: 'Failed to search blog posts' },
-        { status: 500 }
-      )
-    }
-    
-    // Map results to BlogPost type
-    const posts = (data as BlogPostRow[]).map(mapBlogPostRowToBlogPost)
+    // Μετατροπή από το schema του database στο schema του frontend
+    const posts = dbPosts.map(post => ({
+      slug: post.slug,
+      title: post.title,
+      description: post.description,
+      date: post.date.toISOString(),
+      image: post.image,
+      author: {
+        name: post.authorName,
+        image: post.authorImage
+      },
+      categories: post.categories,
+      content: post.content
+    }))
     
     return NextResponse.json(
       { posts },

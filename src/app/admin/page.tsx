@@ -2,8 +2,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/theme-provider'
+import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
 import { 
   Layout, 
@@ -19,7 +19,8 @@ import type { BlogPost } from '@/types/blog'
 
 export default function AdminDashboard() {
   const { theme } = useTheme()
-  const router = useRouter()
+  const { user, signOut } = useAuth()
+  // Αφαιρούμε την αχρησιμοποίητη μεταβλητή router
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -52,10 +53,11 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = async () => {
-    // Clear the auth cookie
-    document.cookie = 'auth_token=; Max-Age=0; path=/; samesite=strict;'
-    // Redirect to login
-    router.push('/admin/login')
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   const handleDeletePost = async (slug: string) => {
@@ -98,6 +100,14 @@ export default function AdminDashboard() {
             )}>
               Admin Dashboard
             </h1>
+            {user && (
+              <span className={cn(
+                "text-sm px-2 py-1 rounded-md",
+                theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
+              )}>
+                {user.email}
+              </span>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
@@ -138,7 +148,7 @@ export default function AdminDashboard() {
           </h2>
           
           <Link
-            href="/admin/posts/new"
+            href="/admin/post/new"
             className={cn(
               "flex items-center gap-1 px-4 py-2 rounded-md text-white",
               "bg-indigo-600 hover:bg-indigo-500 transition-colors"
@@ -260,7 +270,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           <Link
-                            href={`/admin/posts/edit/${post.slug}`}
+                            href={`/admin/post/edit/${post.slug}`}
                             className={cn(
                               "p-1 rounded-md",
                               theme === 'dark' 

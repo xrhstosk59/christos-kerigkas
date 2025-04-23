@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { createTransport } from 'nodemailer'
 import { z } from 'zod'
 import { rateLimit } from '@/lib/rate-limit'
-import { contactMessagesRepository } from '@/lib/db'
+import { contactRepository } from '@/lib/db/repositories/contact-repository'
 
 // Create limiter
 const limiter = rateLimit({
@@ -47,13 +47,14 @@ export async function POST(req: Request) {
     }
     
     const { name, email, message } = validationResult.data
+    const ipAddress = typeof ip === 'string' ? ip : ip[0]
 
-    // Store in database
-    await contactMessagesRepository.create({
+    // Store in database using repository
+    await contactRepository.create({
       name,
       email,
       message,
-      ipAddress: typeof ip === 'string' ? ip : ip[0]
+      ipAddress
     })
 
     // Create email transporter

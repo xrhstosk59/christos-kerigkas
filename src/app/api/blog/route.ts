@@ -1,12 +1,12 @@
 // src/app/api/blog/route.ts
 import { NextResponse } from 'next/server'
-import { getBlogPostsByCategory, supabase } from '@/lib/supabase'
+import { blogRepository } from '@/lib/db/repositories/blog-repository'
 import { checkAuth } from '@/lib/auth'
 import { z } from 'zod'
 
 const POSTS_PER_PAGE = 6
 
-// Post validation schema for creating/updating
+// Post validation schema για δημιουργία/ενημέρωση
 const postSchema = z.object({
   slug: z.string().min(1, 'Slug is required'),
   title: z.string().min(1, 'Title is required'),
@@ -14,11 +14,11 @@ const postSchema = z.object({
   date: z.string().datetime({ message: 'Invalid date format' }),
   image: z.string().url({ message: 'Image must be a valid URL' }),
   author: z.object({
-    name: z.string(),
-    image: z.string()
+    name: z.string().min(1, 'Author name is required'),
+    image: z.string().url({ message: 'Author image must be a valid URL' }),
   }),
   categories: z.array(z.string()),
-  content: z.string().min(1, 'Content is required')
+  content: z.string().min(1, 'Content is required'),
 })
 
 export async function GET(request: Request) {
@@ -28,25 +28,39 @@ export async function GET(request: Request) {
     const category = url.searchParams.get('category') || ''
     const limit = parseInt(url.searchParams.get('limit') || String(POSTS_PER_PAGE), 10)
     
-    const { posts, total } = await getBlogPostsByCategory(
-      category,
-      page,
-      limit
-    )
+    let result
     
-    // Υπολογισμός pagination
-    const totalPages = Math.ceil(total / limit)
+    if (category && category !== 'all') {
+      result = await blogRepository.findByCategory(category, page, limit)
+    } else {
+      result = await blogRepository.findAll(page, limit)
+    }
+    
+    // Μετατροπή των posts στο format του frontend
+    const posts = result.posts.map(post => ({
+      slug: post.slug,
+      title: post.title,
+      description: post.description,
+      date: post.date.toISOString(),
+      image: post.image,
+      author: {
+        name: post.authorName,
+        image: post.authorImage
+      },
+      categories: post.categories,
+      content: post.content
+    }))
     
     return NextResponse.json(
       {
         posts,
         pagination: {
-          totalPosts: total,
-          totalPages,
-          currentPage: page,
+          totalPosts: result.total,
+          totalPages: result.totalPages,
+          currentPage: result.currentPage,
           postsPerPage: limit,
-          hasNextPage: page < totalPages,
-          hasPrevPage: page > 1,
+          hasNextPage: result.hasNextPage,
+          hasPrevPage: result.hasPrevPage,
         },
       },
       {
@@ -64,13 +78,13 @@ export async function GET(request: Request) {
   }
 }
 
-// Create a new blog post
+// Δημιουργία νέου blog post
 export async function POST(request: Request) {
   try {
-    // Check if user is authenticated
+    // Έλεγχος αν ο χρήστης είναι authenticated
     await checkAuth()
     
-    // Get and validate post data
+    // Λήψη και επικύρωση δεδομένων
     const body = await request.json()
     const validationResult = postSchema.safeParse(body)
     
@@ -83,31 +97,21 @@ export async function POST(request: Request) {
     
     const postData = validationResult.data
     
-    // Insert the post into Supabase
-    const { error } = await supabase
-      .from('blog_posts')
-      .insert({
-        slug: postData.slug,
-        title: postData.title,
-        description: postData.description,
-        date: postData.date,
-        image: postData.image,
-        author_name: postData.author.name,
-        author_image: postData.author.image,
-        categories: postData.categories,
-        content: postData.content
-      })
-    
-    if (error) {
-      console.error('Error creating blog post:', error)
-      return NextResponse.json(
-        { message: `Failed to create blog post: ${error.message}` },
-        { status: 500 }
-      )
-    }
+    // Μετατροπή από το schema του frontend στο schema του database
+    const newPost = await blogRepository.create({
+      slug: postData.slug,
+      title: postData.title,
+      description: postData.description,
+      date: new Date(postData.date),
+      image: postData.image,
+      authorName: postData.author.name,
+      authorImage: postData.author.image,
+      categories: postData.categories,
+      content: postData.content,
+    })
     
     return NextResponse.json(
-      { message: 'Blog post created successfully', slug: postData.slug },
+      { message: 'Blog post created successfully', post: newPost },
       { status: 201 }
     )
   } catch (error) {

@@ -2,16 +2,21 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTheme } from '@/components/theme-provider'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from '@/components/auth-provider'
 
 export default function AdminLoginPage() {
   const { theme } = useTheme()
+  const { signIn } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const from = searchParams.get('from') || '/admin'
+  
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: ''
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
@@ -23,26 +28,19 @@ export default function AdminLoginPage() {
     setErrorMessage('')
 
     try {
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setStatus('error')
-        setErrorMessage(data.error || 'Login failed. Please try again.')
-        return
-      }
-
-      // Redirect to admin dashboard
-      router.push('/admin')
-      router.refresh()
-    } catch {
+      await signIn(formData.email, formData.password)
+      
+      // Redirect to admin dashboard or the page they were trying to access
+      router.push(from)
+    } catch (error) {
       setStatus('error')
-      setErrorMessage('An unexpected error occurred. Please try again later.')
+      setErrorMessage(
+        error instanceof Error 
+          ? error.message 
+          : 'Login failed. Please check your credentials and try again.'
+      )
+    } finally {
+      setStatus('idle')
     }
   }
 
@@ -68,19 +66,19 @@ export default function AdminLoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label 
-              htmlFor="username" 
+              htmlFor="email" 
               className={cn(
                 "block text-sm font-medium mb-1", 
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               )}
             >
-              Username
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className={cn(
                 "w-full px-3 py-2 border rounded-md",
                 theme === 'dark' 

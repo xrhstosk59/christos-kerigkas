@@ -1,14 +1,14 @@
 // src/app/api/blog/[slug]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getBlogPostBySlug, supabase } from '@/lib/supabase'
+import { blogRepository } from '@/lib/db/repositories/blog-repository'
 import { checkAuth } from '@/lib/auth'
 import { z } from 'zod'
 
 interface RouteContext {
-  params: Promise<{ slug: string }>
+  params: { slug: string }
 }
 
-// Post validation schema for updating
+// Post validation schema
 const postSchema = z.object({
   slug: z.string().min(1, 'Slug is required'),
   title: z.string().min(1, 'Title is required'),
@@ -16,17 +16,16 @@ const postSchema = z.object({
   date: z.string().datetime({ message: 'Invalid date format' }),
   image: z.string().url({ message: 'Image must be a valid URL' }),
   author: z.object({
-    name: z.string(),
-    image: z.string()
+    name: z.string().min(1, 'Author name is required'),
+    image: z.string().url({ message: 'Author image must be a valid URL' }),
   }),
   categories: z.array(z.string()),
-  content: z.string().min(1, 'Content is required')
+  content: z.string().min(1, 'Content is required'),
 })
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const resolvedParams = await context.params
-    const { slug } = resolvedParams
+    const { slug } = context.params
 
     if (!slug) {
       return NextResponse.json(
@@ -35,7 +34,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       )
     }
 
-    const post = await getBlogPostBySlug(slug)
+    const post = await blogRepository.findBySlug(slug)
     
     if (!post) {
       return NextResponse.json(
@@ -44,7 +43,22 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       )
     }
     
-    return NextResponse.json(post, {
+    // Μετατροπή από το schema του database στο schema του frontend
+    const formattedPost = {
+      slug: post.slug,
+      title: post.title,
+      description: post.description,
+      date: post.date.toISOString(),
+      image: post.image,
+      author: {
+        name: post.authorName,
+        image: post.authorImage
+      },
+      categories: post.categories,
+      content: post.content
+    }
+    
+    return NextResponse.json(formattedPost, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
       }
@@ -58,14 +72,13 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   }
 }
 
-// Update a blog post
+// Ενημέρωση blog post
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    // Check if user is authenticated
+    // Έλεγχος αν ο χρήστης είναι authenticated
     await checkAuth()
     
-    const resolvedParams = await context.params
-    const { slug: originalSlug } = resolvedParams
+    const { slug: originalSlug } = context.params
     
     if (!originalSlug) {
       return NextResponse.json(
@@ -74,7 +87,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       )
     }
     
-    // Get and validate post data
+    // Λήψη και επικύρωση δεδομένων
     const body = await request.json()
     const validationResult = postSchema.safeParse(body)
     
@@ -87,32 +100,28 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     
     const postData = validationResult.data
     
-    // Update the post in Supabase
-    const { error } = await supabase
-      .from('blog_posts')
-      .update({
-        slug: postData.slug,
-        title: postData.title,
-        description: postData.description,
-        date: postData.date,
-        image: postData.image,
-        author_name: postData.author.name,
-        author_image: postData.author.image,
-        categories: postData.categories,
-        content: postData.content
-      })
-      .eq('slug', originalSlug)
+    // Μετατροπή από το schema του frontend στο schema του database
+    const updatedPost = await blogRepository.update(originalSlug, {
+      slug: postData.slug,
+      title: postData.title,
+      description: postData.description,
+      date: new Date(postData.date),
+      image: postData.image,
+      authorName: postData.author.name,
+      authorImage: postData.author.image,
+      categories: postData.categories,
+      content: postData.content,
+    })
     
-    if (error) {
-      console.error('Error updating blog post:', error)
+    if (!updatedPost) {
       return NextResponse.json(
-        { message: `Failed to update blog post: ${error.message}` },
-        { status: 500 }
+        { message: 'Post not found' },
+        { status: 404 }
       )
     }
     
     return NextResponse.json(
-      { message: 'Blog post updated successfully', slug: postData.slug },
+      { message: 'Blog post updated successfully', post: updatedPost },
       { status: 200 }
     )
   } catch (error) {
@@ -132,14 +141,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 }
 
-// Delete a blog post
+// Διαγραφή blog post
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
-    // Check if user is authenticated
+    // Έλεγχος αν ο χρήστης είναι authenticated
     await checkAuth()
     
-    const resolvedParams = await context.params
-    const { slug } = resolvedParams
+    const { slug } = context.params
     
     if (!slug) {
       return NextResponse.json(
@@ -148,19 +156,8 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       )
     }
     
-    // Delete the post from Supabase
-    const { error } = await supabase
-      .from('blog_posts')
-      .delete()
-      .eq('slug', slug)
-    
-    if (error) {
-      console.error('Error deleting blog post:', error)
-      return NextResponse.json(
-        { message: `Failed to delete blog post: ${error.message}` },
-        { status: 500 }
-      )
-    }
+    // Διαγραφή του post
+    await blogRepository.delete(slug)
     
     return NextResponse.json(
       { message: 'Blog post deleted successfully' },

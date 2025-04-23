@@ -33,7 +33,7 @@ export function Projects() {
     </span>
   )
 
-  const renderProjectLinks = (project: { github: string; demo: string }, currentTheme: 'light' | 'dark') => (
+  const renderProjectLinks = (project: { github: string; demo?: string }, currentTheme: 'light' | 'dark') => (
     <>
       <motion.a
         href={project.github}
@@ -48,19 +48,22 @@ export function Projects() {
         <Github className="h-5 w-5" />
         <span>Code</span>
       </motion.a>
-      <motion.a
-        href={project.demo}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={cn("inline-flex items-center gap-1 transition-colors duration-200",
-          currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-        )}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <ExternalLink className="h-5 w-5" />
-        <span>Live Demo</span>
-      </motion.a>
+      
+      {project.demo && (
+        <motion.a
+          href={project.demo}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn("inline-flex items-center gap-1 transition-colors duration-200",
+            currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+          )}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ExternalLink className="h-5 w-5" />
+          <span>Live Demo</span>
+        </motion.a>
+      )}
     </>
   )
   

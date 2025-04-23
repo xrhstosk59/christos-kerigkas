@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@/components/analytics";
 import PageTransition from "@/components/page-transition";
 import ScrollProgress from "@/components/scroll-progress";
+import { AuthProvider } from "@/components/auth-provider";
 import { defaultMetadata } from "@/lib/seo";
 import "./globals.css";
 
@@ -49,13 +50,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider>
-          <ScrollProgress />
-          <PageTransition>
-            {children}
-          </PageTransition>
-          <Analytics />
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <ScrollProgress />
+            <PageTransition>
+              {children}
+            </PageTransition>
+            <Analytics />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

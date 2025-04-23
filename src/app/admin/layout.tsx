@@ -1,6 +1,6 @@
 // src/app/admin/layout.tsx
 import type { Metadata } from 'next'
-import { checkAuth } from '@/lib/auth'
+import AdminNavbar from '@/components/admin/navbar'
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard - Christos Kerigkas',
@@ -17,11 +17,9 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  // This will redirect to login if not authenticated
-  checkAuth();
-  
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <AdminNavbar />
       {children}
     </div>
   )
