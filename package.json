@@ -37,6 +37,7 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.1",
     "framer-motion": "^12.0.1",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.473.0",
     "next": "^15.1.6",
     "nodemailer": "^6.10.0",

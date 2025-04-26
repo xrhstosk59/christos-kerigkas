@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Experience', href: '#experience' },
   { name: 'Skills', href: '#skills' },
   { name: 'Projects', href: '#projects' },
+  { name: 'CV', href: '/cv' },  
   { name: 'Blog', href: '/blog' },  
   { name: 'Contact', href: '#contact' },
 ] as const
