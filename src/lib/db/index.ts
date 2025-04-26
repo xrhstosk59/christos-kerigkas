@@ -2,19 +2,69 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
+import { sql } from 'drizzle-orm'
 
-// Το connection string από τις μεταβλητές περιβάλλοντος
-const connectionString = process.env.DATABASE_URL || ''
+// Ελέγχουμε αν βρισκόμαστε σε server-side περιβάλλον
+const isServer = typeof window === 'undefined'
 
-// Δημιουργία του postgres client με πλήρες configuration
-const client = postgres(connectionString, {
-  max: 10, // Μέγιστος αριθμός connections
-  idle_timeout: 20, // Χρόνος αδράνειας σε δευτερόλεπτα
-  prepare: false, // απενεργοποίηση prepared statements για καλύτερη συμβατότητα με Supabase
-  ssl: true, // Ενεργοποίηση SSL
-  connect_timeout: 30, // Αύξηση του timeout
-  // Δεν ορίζουμε user/pass εδώ, αφήνουμε τα στοιχεία να προέρχονται από το connection string
-})
+// Δημιουργούμε σύνδεση με τη βάση μόνο στο server-side περιβάλλον
+let dbClient = null
 
-// Δημιουργία του drizzle client
-export const db = drizzle(client, { schema })
+if (isServer) {
+  try {
+    // Το connection string από τις μεταβλητές περιβάλλοντος
+    const connectionString = process.env.DATABASE_URL
+
+    if (!connectionString) {
+      console.error('DATABASE_URL is not defined in environment variables')
+    } else {
+      // Δημιουργία του postgres client με πλήρες configuration
+      const client = postgres(connectionString, {
+        max: 10, // Μέγιστος αριθμός connections
+        idle_timeout: 20, // Χρόνος αδράνειας σε δευτερόλεπτα
+        prepare: false, // απενεργοποίηση prepared statements για καλύτερη συμβατότητα με Supabase
+        ssl: { 
+          rejectUnauthorized: false // Επιτρέπουμε self-signed πιστοποιητικά
+        }, 
+        connect_timeout: 30, // Αύξηση του timeout
+      })
+
+      // Δημιουργία του drizzle client
+      dbClient = drizzle(client, { schema })
+      console.log('Database client initialized successfully')
+    }
+  } catch (error) {
+    console.error('Failed to initialize database client:', error)
+  }
+}
+
+// Εξαγωγή του db client
+export const db = dbClient
+
+// Βοηθητικές λειτουργίες για έλεγχο της κατάστασης της βάσης
+export const checkDatabaseConnection = async () => {
+  if (!db) {
+    return {
+      connected: false,
+      message: 'Database client not initialized. Make sure DATABASE_URL is set and you are in server-side environment.'
+    }
+  }
+  
+  try {
+    // Προσπαθούμε να εκτελέσουμε ένα απλό ερώτημα
+    await db.execute(sql`SELECT 1`)
+    return {
+      connected: true,
+      message: 'Database connection successful'
+    }
+  } catch (error) {
+    console.error('Database connection test failed:', error)
+    return {
+      connected: false,
+      message: `Database connection failed: ${error instanceof Error ? error.message : String(error)}`
+    }
+  }
+}
+
+// Εξαγωγή του SQL tag για raw queries
+export { sql }

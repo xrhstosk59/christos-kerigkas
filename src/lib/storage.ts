@@ -89,5 +89,7 @@ export function getFilenameFromUrl(url: string): string | null {
 
 // Έλεγχος αν ένα URL είναι Supabase URL
 export function isSupabaseUrl(url: string): boolean {
+  // Προσθέτουμε έλεγχο για το αν το url είναι string
+  if (typeof url !== 'string') return false
   return url.includes('supabase') || url.includes(BUCKET_NAME)
 }

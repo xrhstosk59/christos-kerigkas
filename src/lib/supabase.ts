@@ -18,15 +18,39 @@ export type BlogPostRow = {
 }
 
 // Δημιουργία του Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || ''
+// Server-side Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Create a singleton client for use throughout the app
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false
-  }
-});
+// Ελέγχουμε για server-side περιβάλλον
+const isServer = typeof window === 'undefined'
+
+// Θα χρησιμοποιήσουμε διαφορετικές μεταβλητές για το client-side
+const clientSideUrl = typeof window !== 'undefined' 
+  ? process.env.NEXT_PUBLIC_SUPABASE_URL 
+  : null
+const clientSideKey = typeof window !== 'undefined' 
+  ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY 
+  : null
+
+// Create a singleton client depending on environment
+const supabase = isServer
+  ? (supabaseUrl && supabaseKey 
+      ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } })
+      : null)
+  : (clientSideUrl && clientSideKey
+      ? createClient(clientSideUrl, clientSideKey, { auth: { persistSession: true } })
+      : null)
+
+// Βεβαιωνόμαστε ότι το client υπάρχει
+if (!supabase) {
+  console.error(
+    'Supabase client initialization failed. ' +
+    'Please check your environment variables: ' +
+    `${isServer ? 'NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY' 
+               : 'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'}`
+  )
+}
 
 // Μετατροπή από το schema της βάσης στο type της εφαρμογής
 export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
@@ -47,6 +71,11 @@ export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
 
 // Λειτουργίες για το blog
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  if (!supabase) {
+    console.error('Supabase client not initialized')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
@@ -61,6 +90,11 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  if (!supabase) {
+    console.error('Supabase client not initialized')
+    return null
+  }
+
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
@@ -80,6 +114,11 @@ export async function getBlogPostsByCategory(category: string, page: number = 1,
   posts: BlogPost[],
   total: number
 }> {
+  if (!supabase) {
+    console.error('Supabase client not initialized')
+    return { posts: [], total: 0 }
+  }
+
   // Αν δεν έχει οριστεί κατηγορία ή είναι 'all', επιστρέφουμε όλα τα posts
   const query = supabase
     .from('blog_posts')
