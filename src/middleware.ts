@@ -30,16 +30,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
   
-  // For admin routes, check authentication
+  // Για admin routes, έλεγχος authentication
   if (url.pathname.startsWith('/admin') && url.pathname !== '/admin/login') {
-    // Initialize Supabase client
-    const supabase = createMiddlewareClient({ req: request, res: response })
-    
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    // If user is not authenticated, redirect to login page
-    if (!session) {
+    try {
+      // Έλεγχος αν οι απαραίτητες μεταβλητές περιβάλλοντος υπάρχουν
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        console.warn('Supabase authentication is not available in middleware. Redirecting to login page.')
+        const redirectUrl = new URL('/admin/login', request.url)
+        redirectUrl.searchParams.set('from', url.pathname)
+        return NextResponse.redirect(redirectUrl)
+      }
+      
+      // Initialize Supabase client
+      const supabase = createMiddlewareClient({ req: request, res: response })
+      
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      // If user is not authenticated, redirect to login page
+      if (!session) {
+        const redirectUrl = new URL('/admin/login', request.url)
+        redirectUrl.searchParams.set('from', url.pathname)
+        return NextResponse.redirect(redirectUrl)
+      }
+    } catch (error) {
+      console.error('Error in middleware auth check:', error)
+      // In case of any error, redirect to login
       const redirectUrl = new URL('/admin/login', request.url)
       redirectUrl.searchParams.set('from', url.pathname)
       return NextResponse.redirect(redirectUrl)

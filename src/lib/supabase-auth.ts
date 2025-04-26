@@ -1,14 +1,12 @@
 // src/lib/supabase-auth.ts
 import { createClient } from '@supabase/supabase-js'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
-// Χρησιμοποιούμε διαφορετικό όνομα για το εισαγόμενο τύπο για να αποφύγουμε τη σύγκρουση
 import { type Database as SupabaseDatabase } from './database.types'
 
-// Βεβαιωνόμαστε ότι χρησιμοποιούμε μόνο τις μεταβλητές περιβάλλοντος και όχι hardcoded τιμές
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// Έλεγχος για την ύπαρξη των απαραίτητων μεταβλητών
+// Βελτιωμένος χειρισμός για την περίπτωση που λείπουν οι μεταβλητές
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
     'Supabase authentication client initialization may fail. ' + 
@@ -17,36 +15,64 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-// Create a single supabase client for interacting with authentication
-export const supabaseAuth = createClient<SupabaseDatabase>(
-  supabaseUrl || '', 
-  supabaseAnonKey || '', 
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      storageKey: 'supabase.auth.token'
-    }
-  }
-)
+// Δημιουργία του client με conditional λογική
+const isBrowser = typeof window !== 'undefined'
+const shouldInitClient = isBrowser || (process.env.NODE_ENV === 'production' && !!supabaseUrl && !!supabaseAnonKey)
 
-// Λειτουργίες για το authentication
+// Ορισμός τύπου για το Supabase client
+type SupabaseClient = ReturnType<typeof createClient<SupabaseDatabase>>;
+
+// Δημιουργία του client μόνο αν είμαστε σε browser ή αν έχουμε τις απαραίτητες μεταβλητές σε production
+export const supabaseAuth: SupabaseClient | null = shouldInitClient 
+  ? createClient<SupabaseDatabase>(
+      supabaseUrl, 
+      supabaseAnonKey, 
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          storageKey: 'supabase.auth.token'
+        }
+      }
+    )
+  : null;
+
+// Helper για έλεγχο αν το client είναι έγκυρο
+export const isAuthClientValid = () => !!supabaseAuth
+
+// Λειτουργίες για το authentication με έλεγχο εγκυρότητας
 export async function signInWithEmailAndPassword(email: string, password: string) {
-  return supabaseAuth.auth.signInWithPassword({ email, password })
+  if (!isAuthClientValid()) {
+    throw new Error('Supabase auth client is not initialized')
+  }
+  return supabaseAuth!.auth.signInWithPassword({ email, password })
 }
 
 export async function signOut() {
-  return supabaseAuth.auth.signOut()
+  if (!isAuthClientValid()) {
+    return { error: new Error('Supabase auth client is not initialized') }
+  }
+  return supabaseAuth!.auth.signOut()
 }
 
 export function getUser() {
-  return supabaseAuth.auth.getUser()
+  if (!isAuthClientValid()) {
+    return Promise.resolve({ data: { user: null }, error: new Error('Supabase auth client is not initialized') })
+  }
+  return supabaseAuth!.auth.getUser()
 }
 
 export function getSession() {
-  return supabaseAuth.auth.getSession()
+  if (!isAuthClientValid()) {
+    return Promise.resolve({ data: { session: null }, error: new Error('Supabase auth client is not initialized') })
+  }
+  return supabaseAuth!.auth.getSession()
 }
 
 export function onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
-  return supabaseAuth.auth.onAuthStateChange(callback)
+  if (!isAuthClientValid()) {
+    console.warn('Supabase auth client is not initialized, cannot listen for auth changes')
+    return { data: { subscription: { unsubscribe: () => {} } } }
+  }
+  return supabaseAuth!.auth.onAuthStateChange(callback)
 }

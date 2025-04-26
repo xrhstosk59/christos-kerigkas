@@ -2,8 +2,8 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabaseAuth } from '@/lib/supabase-auth'
-import { Session, User } from '@supabase/supabase-js'
+import { supabaseAuth, isAuthClientValid } from '@/lib/supabase-auth'
+import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
 type AuthContextType = {
@@ -31,22 +31,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
+    // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
+    if (!isAuthClientValid()) {
+      console.warn('AuthProvider: Supabase Auth client is not initialized')
+      setIsLoading(false)
+      return
+    }
+
     // Αρχικοποίηση της κατάστασης από το τρέχον session
     const initializeAuth = async () => {
-      const { data: { session } } = await supabaseAuth.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      setIsLoading(false)
+      try {
+        const { data: { session } } = await supabaseAuth!.auth.getSession()
+        setSession(session)
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.error('Error getting session:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     // Ακρόαση για αλλαγές στην κατάσταση αυθεντικοποίησης
-    const { data: { subscription } } = supabaseAuth.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setIsLoading(false)
-      }
-    )
+    let subscription: { unsubscribe: () => void } = { unsubscribe: () => {} }
+    
+    try {
+      const { data } = supabaseAuth!.auth.onAuthStateChange(
+        (_event: AuthChangeEvent, session: Session | null) => {
+          setSession(session)
+          setUser(session?.user ?? null)
+          setIsLoading(false)
+        }
+      )
+      
+      subscription = data.subscription
+    } catch (error) {
+      console.error('Error setting up auth state change listener:', error)
+      setIsLoading(false)
+    }
 
     initializeAuth()
 
@@ -58,7 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Σύνδεση με email και κωδικό
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabaseAuth.auth.signInWithPassword({
+    if (!isAuthClientValid()) {
+      throw new Error('Authentication system is not available')
+    }
+    
+    const { error } = await supabaseAuth!.auth.signInWithPassword({
       email,
       password,
     })
@@ -73,7 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Αποσύνδεση
   const signOut = async () => {
-    await supabaseAuth.auth.signOut()
+    if (isAuthClientValid()) {
+      await supabaseAuth!.auth.signOut()
+    }
     router.push('/admin/login')
     router.refresh()
   }
