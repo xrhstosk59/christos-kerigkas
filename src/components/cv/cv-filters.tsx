@@ -23,23 +23,23 @@ interface CVFiltersProps {
 export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('')
   
-  // Συλλογή όλων των μοναδικών δεξιοτήτων
+  // Collect all unique skills
   const allSkills = useMemo(() => {
     const skillsSet = new Set<string>()
     
-    // Από δεξιότητες
+    // From skills
     cvData.skills.forEach(skill => {
       skillsSet.add(skill.name)
     })
     
-    // Από εμπειρία
+    // From experience
     cvData.experience.forEach(exp => {
       exp.technologies.forEach(tech => {
         skillsSet.add(tech)
       })
     })
     
-    // Από πιστοποιήσεις
+    // From certifications
     cvData.certifications.forEach(cert => {
       if (cert.skills) {
         cert.skills.forEach(skill => {
@@ -48,7 +48,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
       }
     })
     
-    // Από projects
+    // From projects
     cvData.projects.forEach(project => {
       project.tech.forEach(tech => {
         skillsSet.add(tech)
@@ -58,7 +58,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
     return Array.from(skillsSet).sort()
   }, [cvData])
   
-  // Φιλτραρισμένες δεξιότητες βάσει αναζήτησης
+  // Filter skills based on search
   const filteredSkills = useMemo(() => {
     if (!searchQuery) return allSkills
     
@@ -68,7 +68,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
     )
   }, [allSkills, searchQuery])
   
-  // Προσθήκη/αφαίρεση δεξιότητας από τα φίλτρα
+  // Add/remove skill from filters
   const toggleSkill = (skill: string) => {
     setFilters(prev => {
       if (prev.skills.includes(skill)) {
@@ -85,7 +85,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
     })
   }
   
-  // Ενημέρωση φίλτρων για τα έτη εμπειρίας
+  // Update years filter
   const handleYearsChange = (type: 'min' | 'max', value: number) => {
     setFilters(prev => ({
       ...prev,
@@ -96,7 +96,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
     }))
   }
   
-  // Επαναφορά όλων των φίλτρων
+  // Reset all filters
   const resetFilters = () => {
     setFilters({
       skills: [],
@@ -106,7 +106,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
     setSearchQuery('')
   }
   
-  // Υπολογισμός μέγιστου αριθμού ετών εμπειρίας
+  // Calculate maximum years of experience
   const maxYearsOfExperience = useMemo(() => {
     let max = 0
     
@@ -116,7 +116,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
       }
     })
     
-    // Στρογγυλοποίηση προς τα πάνω στο επόμενο πολλαπλάσιο του 5
+    // Round up to the next multiple of 5
     return Math.ceil(max / 5) * 5
   }, [cvData])
   
@@ -125,10 +125,10 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
         <div className="flex-grow">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Φίλτρα
+            Filters
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Επιλέξτε τις δεξιότητες και τα χαρακτηριστικά που σας ενδιαφέρουν
+            Select the skills and characteristics you&#39;re interested in
           </p>
         </div>
         <div>
@@ -139,16 +139,16 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
             disabled={filters.skills.length === 0 && filters.years.min === 0 && filters.years.max === maxYearsOfExperience}
           >
             <X className="h-4 w-4 mr-1" />
-            <span>Επαναφορά φίλτρων</span>
+            <span>Reset filters</span>
           </Button>
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Αναζήτηση δεξιοτήτων */}
+        {/* Skills search */}
         <div>
           <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-            Δεξιότητες
+            Skills
           </h4>
           
           <div className="relative mb-3">
@@ -158,7 +158,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
             <input
               type="text"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-              placeholder="Αναζήτηση δεξιοτήτων..."
+              placeholder="Search skills..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -172,11 +172,11 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
             )}
           </div>
           
-          {/* Επιλεγμένες δεξιότητες */}
+          {/* Selected skills */}
           {filters.skills.length > 0 && (
             <div className="mb-3">
               <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Επιλεγμένες δεξιότητες
+                Selected skills
               </h5>
               <div className="flex flex-wrap gap-2">
                 {filters.skills.map(skill => (
@@ -200,7 +200,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
             </div>
           )}
           
-          {/* Λίστα δεξιοτήτων */}
+          {/* Skills list */}
           <div className="max-h-72 overflow-y-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
             {filteredSkills.length > 0 ? (
               <div className="grid grid-cols-2 gap-2">
@@ -228,16 +228,16 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
               </div>
             ) : (
               <p className="text-gray-500 dark:text-gray-400 text-sm p-2">
-                Δε βρέθηκαν δεξιότητες με βάση την αναζήτησή σας.
+                No skills found matching your search criteria.
               </p>
             )}
           </div>
         </div>
         
-        {/* Έτη εμπειρίας */}
+        {/* Years of experience */}
         <div>
           <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-4">
-            Έτη εμπειρίας
+            Years of experience
           </h4>
           
           <div className="space-y-6">
@@ -245,7 +245,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label htmlFor="min-years" className="text-xs text-gray-700 dark:text-gray-300">
-                  Ελάχιστα έτη: <span className="font-medium">{filters.years.min}</span>
+                  Minimum years: <span className="font-medium">{filters.years.min}</span>
                 </label>
               </div>
               <input
@@ -269,7 +269,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label htmlFor="max-years" className="text-xs text-gray-700 dark:text-gray-300">
-                  Μέγιστα έτη: <span className="font-medium">{filters.years.max}</span>
+                  Maximum years: <span className="font-medium">{filters.years.max}</span>
                 </label>
               </div>
               <input
@@ -290,10 +290,10 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
             </div>
           </div>
           
-          {/* Προεπιλεγμένα φίλτρα ετών */}
+          {/* Preset filters */}
           <div className="mt-6">
             <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Προεπιλεγμένα φίλτρα
+              Preset filters
             </h5>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -304,7 +304,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
                   years: { min: 0, max: maxYearsOfExperience }
                 }))}
               >
-                Όλα τα έτη
+                All years
               </Button>
               <Button
                 variant="outline"
@@ -314,7 +314,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
                   years: { min: 3, max: maxYearsOfExperience }
                 }))}
               >
-                3+ έτη
+                3+ years
               </Button>
               <Button
                 variant="outline"
@@ -324,7 +324,7 @@ export default function CVFilters({ filters, setFilters, cvData }: CVFiltersProp
                   years: { min: 5, max: maxYearsOfExperience }
                 }))}
               >
-                5+ έτη
+                5+ years
               </Button>
             </div>
           </div>

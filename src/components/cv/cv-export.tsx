@@ -16,7 +16,7 @@ interface CVExportProps {
 export default function CVExport({ exportOptions, setExportOptions, onExport }: CVExportProps) {
   const { theme } = useTheme()
   
-  // Χειρισμός αλλαγής επιλογών
+  // Handle option changes
   const handleToggleOption = (option: keyof ExportOptions) => {
     if (typeof exportOptions[option] === 'boolean') {
       setExportOptions(prev => ({
@@ -26,7 +26,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
     }
   }
   
-  // Χειρισμός αλλαγής template
+  // Handle template change
   const handleTemplateChange = (template: 'minimal' | 'standard' | 'detailed') => {
     setExportOptions(prev => ({
       ...prev,
@@ -34,7 +34,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
     }))
   }
   
-  // Χειρισμός αλλαγής χρωματικού σχήματος
+  // Handle color scheme change
   const handleColorSchemeChange = (colorScheme: 'light' | 'dark' | 'colorful') => {
     setExportOptions(prev => ({
       ...prev,
@@ -46,18 +46,18 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
     <div className="space-y-8">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Εξαγωγή βιογραφικού σε PDF
+          Export CV to PDF
         </h3>
         
         <p className="text-gray-600 dark:text-gray-300 mb-6">
-          Επιλέξτε τις ενότητες που θέλετε να συμπεριλάβετε στο βιογραφικό σας και προσαρμόστε την εμφάνισή του.
+          Select the sections you want to include in your CV and customize its appearance.
         </p>
         
         <div className="space-y-6">
-          {/* Επιλογές ενοτήτων */}
+          {/* Section options */}
           <div>
             <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-              Ενότητες
+              Sections
             </h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -78,7 +78,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   onChange={() => handleToggleOption('includePersonalInfo')}
                 />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Προσωπικές Πληροφορίες
+                  Personal Information
                 </span>
               </motion.div>
               
@@ -99,7 +99,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   onChange={() => handleToggleOption('includeExperience')}
                 />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Επαγγελματική Εμπειρία
+                  Professional Experience
                 </span>
               </motion.div>
               
@@ -120,7 +120,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   onChange={() => handleToggleOption('includeEducation')}
                 />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Εκπαίδευση
+                  Education
                 </span>
               </motion.div>
               
@@ -141,7 +141,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   onChange={() => handleToggleOption('includeSkills')}
                 />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Δεξιότητες
+                  Skills
                 </span>
               </motion.div>
               
@@ -162,7 +162,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   onChange={() => handleToggleOption('includeCertifications')}
                 />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Πιστοποιήσεις
+                  Certifications
                 </span>
               </motion.div>
               
@@ -183,13 +183,13 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   onChange={() => handleToggleOption('includeProjects')}
                 />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Έργα
+                  Projects
                 </span>
               </motion.div>
             </div>
           </div>
           
-          {/* Επιλογές template */}
+          {/* Template options */}
           <div>
             <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
               Template
@@ -229,7 +229,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   <div className="h-4 w-6/12 bg-gray-200 dark:bg-gray-700 rounded" />
                 </div>
                 <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                  Συνοπτικό, μινιμαλιστικό βιογραφικό με λιγότερες λεπτομέρειες.
+                  Concise, minimalist resume with fewer details.
                 </p>
               </motion.div>
               
@@ -267,7 +267,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   <div className="h-4 w-9/12 bg-gray-200 dark:bg-gray-700 rounded" />
                 </div>
                 <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                  Ισορροπημένο βιογραφικό με τις σημαντικότερες πληροφορίες.
+                  Balanced resume with most important information.
                 </p>
               </motion.div>
               
@@ -309,16 +309,16 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
                   <div className="h-4 w-9/12 bg-gray-200 dark:bg-gray-700 rounded" />
                 </div>
                 <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                  Αναλυτικό βιογραφικό με όλες τις λεπτομέρειες και περιγραφές.
+                  Comprehensive resume with all details and descriptions.
                 </p>
               </motion.div>
             </div>
           </div>
           
-          {/* Επιλογές χρωματικού σχήματος */}
+          {/* Color scheme options */}
           <div>
             <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-              Χρωματικό Σχήμα
+              Color Scheme
             </h4>
             
             <div className="flex flex-wrap gap-3">
@@ -374,14 +374,14 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
         </div>
       </div>
       
-      {/* Preview και κουμπί εξαγωγής */}
+      {/* Preview and export button */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Έτοιμοι για εξαγωγή;
+            Ready to export?
           </h3>
           <p className="text-gray-600 dark:text-gray-300">
-            Το βιογραφικό σας θα εξαχθεί σε μορφή PDF με βάση τις επιλογές σας.
+            Your CV will be exported as a PDF based on your selections.
           </p>
         </div>
         
@@ -390,7 +390,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
             variant="outline"
             className="flex items-center gap-2"
             onClick={() => {
-              // Επαναφορά επιλογών στις προεπιλεγμένες τιμές
+              // Reset options to default values
               setExportOptions({
                 includePersonalInfo: true,
                 includeExperience: true,
@@ -404,7 +404,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
             }}
           >
             <FileText className="h-4 w-4" />
-            <span>Επαναφορά</span>
+            <span>Reset</span>
           </Button>
           
           <Button 
@@ -413,7 +413,7 @@ export default function CVExport({ exportOptions, setExportOptions, onExport }: 
             onClick={onExport}
           >
             <Download className="h-4 w-4" />
-            <span>Εξαγωγή PDF</span>
+            <span>Export PDF</span>
           </Button>
         </div>
       </div>

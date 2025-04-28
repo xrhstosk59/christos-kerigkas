@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Filter, Eye, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CVData, ExportOptions } from '@/types/cv'
+import { getCVData } from '@/lib/cv-data'
 import { downloadCV } from '@/lib/pdf-generator'
 import CVTimeline from './cv-timeline'
 import CVSkillsChart from './cv-skills-chart'
@@ -16,14 +17,10 @@ import CVExport from './cv-export'
 import CVFilters from './cv-filters'
 import Image from 'next/image'
 
-// Σημαντικό: Τα props θα έρχονται από το Server Component
-interface InteractiveCVProps {
-  cvData: CVData;
-}
-
-export default function InteractiveCV({ cvData }: InteractiveCVProps) {
+export default function InteractiveCV() {
   const { theme } = useTheme()
-  const [loading, setLoading] = useState(false)
+  const [cvData, setCVData] = useState<CVData | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeView, setActiveView] = useState<'compact' | 'detailed'>('detailed')
   const [showFilters, setShowFilters] = useState(false)
@@ -43,7 +40,25 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
     colorScheme: theme === 'dark' ? 'dark' : 'light'
   })
 
-  // Ενημέρωση του colorScheme όταν αλλάζει το theme
+  // Load data during initialization
+  useEffect(() => {
+    const loadCVData = async () => {
+      try {
+        setLoading(true)
+        const data = await getCVData()
+        setCVData(data)
+      } catch (err) {
+        console.error('Error loading CV data:', err)
+        setError('Error loading data. Please try again later.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCVData()
+  }, [])
+
+  // Update colorScheme when theme changes
   useEffect(() => {
     setExportOptions(prev => ({
       ...prev,
@@ -51,22 +66,19 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
     }))
   }, [theme])
 
-  // Χειρισμός εξαγωγής PDF
+  // Handle PDF export
   const handleExport = async () => {
     if (!cvData) return
 
     try {
-      setLoading(true)
       await downloadCV(cvData, exportOptions, `CV_${cvData.personalInfo.name.replace(/\s+/g, '_')}.pdf`)
     } catch (err) {
       console.error('Error exporting CV:', err)
-      setError('Σφάλμα κατά την εξαγωγή του βιογραφικού. Παρακαλώ προσπαθήστε ξανά αργότερα.')
-    } finally {
-      setLoading(false)
+      setError('Error exporting CV. Please try again later.')
     }
   }
 
-  // Εάν φορτώνει, εμφανίζουμε spinner
+  // If loading, show spinner
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -75,21 +87,21 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
     )
   }
 
-  // Εάν υπάρχει σφάλμα, το εμφανίζουμε
+  // If there's an error, show it
   if (error) {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg text-red-600 dark:text-red-400">
-        <h3 className="text-lg font-medium">Σφάλμα</h3>
+        <h3 className="text-lg font-medium">Error</h3>
         <p>{error}</p>
       </div>
     )
   }
 
-  // Εάν δεν υπάρχουν δεδομένα
+  // If no data
   if (!cvData) {
     return (
       <div className="text-center py-10">
-        <p className="text-gray-600 dark:text-gray-400">Δεν βρέθηκαν δεδομένα βιογραφικού.</p>
+        <p className="text-gray-600 dark:text-gray-400">No CV data found.</p>
       </div>
     )
   }
@@ -100,10 +112,10 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Διαδραστικό Βιογραφικό
+            Interactive CV
           </h1>
           <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-            Περιηγηθείτε στην επαγγελματική μου πορεία, τις δεξιότητες και τα έργα μου.
+            Browse through my professional journey, skills, and projects.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -113,7 +125,7 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
             onClick={() => setShowFilters(!showFilters)}
           >
             {showFilters ? <X size={16} /> : <Filter size={16} />}
-            <span>{showFilters ? 'Κλείσιμο φίλτρων' : 'Φίλτρα'}</span>
+            <span>{showFilters ? 'Close filters' : 'Filters'}</span>
           </Button>
           <Button 
             variant="outline" 
@@ -121,7 +133,7 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
             onClick={() => setActiveView(activeView === 'compact' ? 'detailed' : 'compact')}
           >
             <Eye size={16} />
-            <span>{activeView === 'compact' ? 'Αναλυτική προβολή' : 'Συνοπτική προβολή'}</span>
+            <span>{activeView === 'compact' ? 'Detailed view' : 'Compact view'}</span>
           </Button>
           <Button 
             variant="default" 
@@ -129,7 +141,7 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
             onClick={handleExport}
           >
             <Download size={16} />
-            <span>Εξαγωγή PDF</span>
+            <span>Export PDF</span>
           </Button>
         </div>
       </div>
@@ -236,11 +248,11 @@ export default function InteractiveCV({ cvData }: InteractiveCVProps) {
       {/* Main content with tabs */}
       <Tabs defaultValue="experience" className="w-full">
         <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-8">
-          <TabsTrigger value="experience">Εμπειρία</TabsTrigger>
-          <TabsTrigger value="skills">Δεξιότητες</TabsTrigger>
-          <TabsTrigger value="certifications">Πιστοποιήσεις</TabsTrigger>
-          <TabsTrigger value="projects">Έργα</TabsTrigger>
-          <TabsTrigger value="export">Εξαγωγή</TabsTrigger>
+          <TabsTrigger value="experience">Experience</TabsTrigger>
+          <TabsTrigger value="skills">Skills</TabsTrigger>
+          <TabsTrigger value="certifications">Certifications</TabsTrigger>
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="export">Export</TabsTrigger>
         </TabsList>
         
         <TabsContent value="experience" className="mt-0">

@@ -17,7 +17,7 @@ interface CVSkillsChartProps {
   }
 }
 
-// Τύποι για τα tooltips
+// Types for tooltips
 interface BarTooltipProps {
   active?: boolean;
   payload?: Array<{
@@ -40,26 +40,26 @@ interface RadarTooltipProps {
   }>;
 }
 
-// Μετατροπή κατηγορίας σε ελληνικά
+// Convert category to friendly name
 const getCategoryLabel = (category: SkillCategory): string => {
   const categoryMap: Record<SkillCategory, string> = {
     'frontend': 'Frontend',
     'backend': 'Backend',
-    'database': 'Βάσεις Δεδομένων',
+    'database': 'Databases',
     'devops': 'DevOps',
     'mobile': 'Mobile',
-    'design': 'Σχεδιασμός',
-    'languages': 'Γλώσσες Προγραμματισμού',
+    'design': 'Design',
+    'languages': 'Programming Languages',
     'frameworks': 'Frameworks',
-    'tools': 'Εργαλεία',
+    'tools': 'Tools',
     'soft-skills': 'Soft Skills',
-    'other': 'Άλλα'
+    'other': 'Other'
   }
   
   return categoryMap[category] || category
 }
 
-// Χρώματα για τις διάφορες κατηγορίες δεξιοτήτων
+// Colors for different skill categories
 const getCategoryColor = (category: SkillCategory, isDark: boolean): string => {
   const categoryColors: Record<SkillCategory, { light: string, dark: string }> = {
     'frontend': { light: '#4F46E5', dark: '#818CF8' },
@@ -84,7 +84,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
   const [chartType, setChartType] = useState<'bar' | 'radar'>('bar')
   const [selectedCategory, setSelectedCategory] = useState<SkillCategory | 'all'>('all')
   
-  // Ομαδοποίηση δεξιοτήτων ανά κατηγορία
+  // Group skills by category
   const skillsByCategory = useMemo(() => {
     return skills.reduce<Record<SkillCategory, Skill[]>>((acc, skill) => {
       if (!acc[skill.category]) {
@@ -96,25 +96,25 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
     }, {} as Record<SkillCategory, Skill[]>)
   }, [skills])
   
-  // Μοναδικές κατηγορίες
+  // Unique categories
   const categories = useMemo(() => {
     return Object.keys(skillsByCategory) as SkillCategory[]
   }, [skillsByCategory])
   
-  // Φιλτραρισμένες δεξιότητες
+  // Filtered skills
   const filteredSkills = useMemo(() => {
     return skills.filter(skill => {
-      // Φιλτράρισμα με βάση την επιλεγμένη κατηγορία
+      // Filter by selected category
       if (selectedCategory !== 'all' && skill.category !== selectedCategory) {
         return false
       }
       
-      // Φιλτράρισμα με βάση τα επιλεγμένα skills
+      // Filter by selected skills
       if (filters.skills.length > 0 && !filters.skills.includes(skill.name)) {
         return false
       }
       
-      // Φιλτράρισμα με βάση τα έτη εμπειρίας
+      // Filter by years of experience
       if (skill.yearsOfExperience !== undefined && 
           (skill.yearsOfExperience < filters.years.min || 
            skill.yearsOfExperience > filters.years.max)) {
@@ -125,11 +125,11 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
     })
   }, [skills, selectedCategory, filters])
   
-  // Ταξινομημένες δεξιότητες για το bar chart
+  // Sorted skills for bar chart
   const sortedSkillsForBarChart = useMemo(() => {
     return [...filteredSkills]
       .sort((a, b) => b.level - a.level)
-      .slice(0, 15) // Περιορισμός για καλύτερη αναγνωσιμότητα
+      .slice(0, 15) // Limit for better readability
       .map(skill => ({
         name: skill.name,
         level: skill.level,
@@ -139,9 +139,9 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
       }))
   }, [filteredSkills, isDark])
   
-  // Δεδομένα για το radar chart
+  // Data for radar chart
   const radarChartData = useMemo(() => {
-    // Ομαδοποίηση και υπολογισμός μέσου όρου ανά κατηγορία
+    // Group and calculate average by category
     const categoryAverages: Record<string, number> = {}
     const categoryCounts: Record<string, number> = {}
     
@@ -156,7 +156,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
       categoryCounts[category] += 1
     })
     
-    // Υπολογισμός μέσου όρου
+    // Calculate average
     const data = Object.keys(categoryAverages).map(category => ({
       category: getCategoryLabel(category as SkillCategory),
       value: Math.round(categoryAverages[category] / categoryCounts[category]),
@@ -167,18 +167,18 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
     return data
   }, [filteredSkills, isDark])
   
-  // Custom tooltip για το bar chart
+  // Custom tooltip for bar chart
   const CustomBarTooltip = ({ active, payload }: BarTooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
         <div className="bg-white dark:bg-gray-800 p-2 shadow-md rounded-md border border-gray-200 dark:border-gray-700">
           <p className="font-medium">{data.name}</p>
-          <p className="text-sm">Επίπεδο: <span className="font-medium">{data.level}/100</span></p>
+          <p className="text-sm">Level: <span className="font-medium">{data.level}/100</span></p>
           {data.yearsOfExperience !== undefined && (
-            <p className="text-sm">Εμπειρία: <span className="font-medium">{data.yearsOfExperience} έτη</span></p>
+            <p className="text-sm">Experience: <span className="font-medium">{data.yearsOfExperience} years</span></p>
           )}
-          <p className="text-sm">Κατηγορία: <span className="font-medium">{getCategoryLabel(data.category)}</span></p>
+          <p className="text-sm">Category: <span className="font-medium">{getCategoryLabel(data.category)}</span></p>
         </div>
       )
     }
@@ -186,14 +186,14 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
     return null
   }
   
-  // Custom tooltip για το radar chart
+  // Custom tooltip for radar chart
   const CustomRadarTooltip = ({ active, payload }: RadarTooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
         <div className="bg-white dark:bg-gray-800 p-2 shadow-md rounded-md border border-gray-200 dark:border-gray-700">
           <p className="font-medium">{data.category}</p>
-          <p className="text-sm">Μέσο επίπεδο: <span className="font-medium">{data.value}/100</span></p>
+          <p className="text-sm">Average level: <span className="font-medium">{data.value}/100</span></p>
         </div>
       )
     }
@@ -203,7 +203,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
   
   return (
     <div className="space-y-6">
-      {/* Επιλογές γραφήματος και κατηγοριών */}
+      {/* Chart and category options */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 justify-between">
         <div className="flex flex-wrap gap-2">
           <Button 
@@ -228,7 +228,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
             onClick={() => setSelectedCategory('all')}
             className={selectedCategory === 'all' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
           >
-            Όλες
+            All
           </Button>
           
           {categories.map(category => (
@@ -244,7 +244,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
         </div>
       </div>
       
-      {/* Γραφήματα */}
+      {/* Charts */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
         {filteredSkills.length > 0 ? (
           <div className="h-96 w-full">
@@ -270,7 +270,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
                   <Tooltip content={<CustomBarTooltip />} />
                   <Bar 
                     dataKey="level" 
-                    name="Επίπεδο" 
+                    name="Level" 
                     radius={[0, 4, 4, 0]} 
                     barSize={20}
                   >
@@ -300,7 +300,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
                     tick={{ fill: isDark ? '#D1D5DB' : '#4B5563' }} 
                   />
                   <Radar
-                    name="Μέσο επίπεδο"
+                    name="Average level"
                     dataKey="value"
                     stroke={isDark ? '#818CF8' : '#4F46E5'}
                     fill={isDark ? '#818CF8' : '#4F46E5'}
@@ -315,13 +315,13 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
         ) : (
           <div className="h-96 w-full flex items-center justify-center">
             <p className="text-gray-600 dark:text-gray-400">
-              Δεν βρέθηκαν δεξιότητες που να ταιριάζουν με τα επιλεγμένα φίλτρα.
+              No skills found matching your selected filters.
             </p>
           </div>
         )}
       </div>
       
-      {/* Λίστα δεξιοτήτων */}
+      {/* Skills list */}
       {viewMode === 'detailed' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories
@@ -358,7 +358,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
                               {skill.name}
                             </span>
                             <span className="text-gray-600 dark:text-gray-400">
-                              {skill.yearsOfExperience !== undefined && `${skill.yearsOfExperience} έτη`}
+                              {skill.yearsOfExperience !== undefined && `${skill.yearsOfExperience} years`}
                             </span>
                           </div>
                           <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">

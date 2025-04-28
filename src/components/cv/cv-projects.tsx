@@ -19,12 +19,11 @@ interface CVProjectsProps {
 }
 
 export default function CVProjects({ projects, viewMode, filters }: CVProjectsProps) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  useTheme()
   const [currentProject, setCurrentProject] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   
-  // Συλλογή όλων των μοναδικών κατηγοριών από τα projects
+  // Collect all unique categories from projects
   const allCategories = useMemo(() => {
     const categories = new Set<string>()
     
@@ -37,15 +36,15 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
     return Array.from(categories).sort()
   }, [projects])
   
-  // Φιλτράρισμα projects με βάση τα επιλεγμένα φίλτρα
+  // Filter projects based on selected filters
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
-      // Φιλτράρισμα με βάση την κατηγορία
+      // Filter by category
       if (selectedCategory && !project.categories.some(cat => (cat as unknown as string) === selectedCategory)) {
         return false
       }
       
-      // Φιλτράρισμα με βάση τις τεχνολογίες
+      // Filter by technologies
       if (filters.skills.length > 0 && !project.tech.some(tech => filters.skills.includes(tech))) {
         return false
       }
@@ -54,49 +53,49 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
     })
   }, [projects, selectedCategory, filters])
   
-  // Μετατροπή του ProjectCategory σε πιο φιλικό προς τον χρήστη όνομα
+  // Convert ProjectCategory to user-friendly name
   const getCategoryLabel = (category: ProjectCategory): string => {
     const categoryMap: Record<string, string> = {
       'web-development': 'Web Development',
       'mobile': 'Mobile',
       'crypto': 'Crypto',
-      'education': 'Εκπαίδευση',
-      'data-analysis': 'Ανάλυση Δεδομένων',
+      'education': 'Education',
+      'data-analysis': 'Data Analysis',
       'real-estate': 'Real Estate',
-      'animals': 'Ζώα',
+      'animals': 'Animals',
       'portfolio': 'Portfolio'
     }
     
     return categoryMap[category as unknown as string] || (category as unknown as string)
   }
   
-  // Χειρισμός προηγούμενου project
+  // Handle previous project
   const handlePrevious = () => {
     setCurrentProject(prev => 
       prev === 0 ? filteredProjects.length - 1 : prev - 1
     )
   }
   
-  // Χειρισμός επόμενου project
+  // Handle next project
   const handleNext = () => {
     setCurrentProject(prev => 
       prev === filteredProjects.length - 1 ? 0 : prev + 1
     )
   }
   
-  // Εμφάνιση μηνύματος όταν δεν υπάρχουν projects που ταιριάζουν με τα φίλτρα
+  // Show message when no projects match filters
   if (filteredProjects.length === 0) {
     return (
       <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
         <p className="text-gray-600 dark:text-gray-400">
-          Δεν βρέθηκαν έργα που να ταιριάζουν με τα επιλεγμένα φίλτρα.
+          No projects found matching your selected filters.
         </p>
         <Button 
           variant="outline" 
           className="mt-4"
           onClick={() => setSelectedCategory(null)}
         >
-          Επαναφορά φίλτρων
+          Reset filters
         </Button>
       </div>
     )
@@ -104,14 +103,14 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
   
   return (
     <div className="space-y-6">
-      {/* Φίλτρα κατηγοριών */}
+      {/* Category filters */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Button 
           variant={selectedCategory === null ? 'default' : 'outline'} 
           onClick={() => setSelectedCategory(null)}
           className={selectedCategory === null ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
         >
-          Όλα
+          All
         </Button>
         
         {allCategories.map(category => (
@@ -129,9 +128,7 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
       {viewMode === 'compact' ? (
         /* Carousel view for compact mode */
         <div className="relative">
-          <div className={`overflow-hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm ${
-            isDark ? 'border border-gray-700' : 'border border-gray-200'
-          }`}>
+          <div className="overflow-hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm">
             {filteredProjects.length > 0 && (
               <div className="relative">
                 {/* Project image */}
@@ -235,11 +232,7 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
               <Button
                 variant="outline"
                 size="icon"
-                className={`absolute left-2 top-1/2 -translate-y-1/2 ${
-                  isDark 
-                    ? 'bg-gray-800/80 hover:bg-gray-800 border-gray-700' 
-                    : 'bg-white/80 hover:bg-white border-gray-200'
-                } z-10 rounded-full h-10 w-10`}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 z-10 rounded-full h-10 w-10"
                 onClick={handlePrevious}
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -248,11 +241,7 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
               <Button
                 variant="outline"
                 size="icon"
-                className={`absolute right-2 top-1/2 -translate-y-1/2 ${
-                  isDark 
-                    ? 'bg-gray-800/80 hover:bg-gray-800 border-gray-700' 
-                    : 'bg-white/80 hover:bg-white border-gray-200'
-                } z-10 rounded-full h-10 w-10`}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 z-10 rounded-full h-10 w-10"
                 onClick={handleNext}
               >
                 <ChevronRight className="h-5 w-5" />
@@ -287,9 +276,7 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
-              className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden ${
-                isDark ? 'border border-gray-700' : 'border border-gray-200'
-              }`}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
             >
               {/* Project image */}
               <div className="relative h-48">

@@ -22,13 +22,13 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
   const [expandedEducation, setExpandedEducation] = useState<string[]>([])
   const [view, setView] = useState<'all' | 'experience' | 'education'>('all')
 
-  // Φιλτράρισμα εμπειρίας με βάση τις τεχνολογίες
+  // Filter experience based on technologies
   const filteredExperience = experience.filter(exp => {
     if (filters.skills.length === 0) return true
     return exp.technologies.some(tech => filters.skills.includes(tech))
   })
 
-  // Άνοιγμα/κλείσιμο καρτών εμπειρίας
+  // Toggle experience cards open/close
   const toggleExperience = (id: string) => {
     setExpandedExperience(prev => 
       prev.includes(id) 
@@ -37,7 +37,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
     )
   }
 
-  // Άνοιγμα/κλείσιμο καρτών εκπαίδευσης
+  // Toggle education cards open/close
   const toggleEducation = (id: string) => {
     setExpandedEducation(prev => 
       prev.includes(id) 
@@ -46,7 +46,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
     )
   }
 
-  // Μετατροπή ημερομηνίας από string σε αντικείμενο Date
+  // Convert date string to Date object
   const parseDate = (dateString: string | null): Date | null => {
     if (!dateString) return null
     return new Date(dateString)
@@ -54,14 +54,14 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
 
   return (
     <div className="space-y-6">
-      {/* Κουμπιά φιλτραρίσματος περιεχομένου */}
+      {/* Content filtering buttons */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Button 
           variant={view === 'all' ? 'default' : 'outline'} 
           onClick={() => setView('all')}
           className={view === 'all' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
         >
-          Όλα
+          All
         </Button>
         <Button 
           variant={view === 'experience' ? 'default' : 'outline'} 
@@ -69,7 +69,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
           className={view === 'experience' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
         >
           <Briefcase className="w-4 h-4 mr-2" />
-          Επαγγελματική Εμπειρία
+          Professional Experience
         </Button>
         <Button 
           variant={view === 'education' ? 'default' : 'outline'} 
@@ -77,7 +77,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
           className={view === 'education' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
         >
           <GraduationCap className="w-4 h-4 mr-2" />
-          Εκπαίδευση
+          Education
         </Button>
       </div>
 
@@ -89,13 +89,13 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
           style={{ transform: 'translateX(-50%)' }}
         ></div>
 
-        {/* Επαγγελματική Εμπειρία */}
+        {/* Professional Experience */}
         {(view === 'all' || view === 'experience') && (
           <div className="mb-10">
             {view === 'all' && (
               <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
                 <Briefcase className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
-                Επαγγελματική Εμπειρία
+                Professional Experience
               </h2>
             )}
             
@@ -129,15 +129,15 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                             </h3>
                             <p className="text-indigo-600 dark:text-indigo-400">{exp.company}</p>
                             
-                            {/* Ημερομηνία και τοποθεσία */}
+                            {/* Date and location */}
                             <div className="mt-2 flex flex-wrap gap-x-4 text-sm text-gray-600 dark:text-gray-400">
                               <div className="flex items-center">
                                 <Calendar className="w-4 h-4 mr-1" />
                                 <span>
-                                  {parseDate(exp.startDate)?.toLocaleDateString('el-GR', { month: 'short', year: 'numeric' })} - {' '}
+                                  {parseDate(exp.startDate)?.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - {' '}
                                   {exp.endDate 
-                                    ? parseDate(exp.endDate)?.toLocaleDateString('el-GR', { month: 'short', year: 'numeric' })
-                                    : 'Σήμερα'
+                                    ? parseDate(exp.endDate)?.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                                    : 'Present'
                                   }
                                 </span>
                               </div>
@@ -161,14 +161,14 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                           </div>
                         </div>
                         
-                        {/* Συνοπτική περιγραφή (για compact view) */}
+                        {/* Brief description (for compact view) */}
                         {!expandedExperience.includes(exp.id) && viewMode === 'compact' && (
                           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                             {exp.description}
                           </p>
                         )}
                         
-                        {/* Τεχνολογίες (πάντα ορατές) */}
+                        {/* Technologies (always visible) */}
                         <div className="mt-3 flex flex-wrap gap-2">
                           {exp.technologies.map(tech => (
                             <span 
@@ -192,16 +192,16 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                             className="overflow-hidden"
                           >
                             <div className="p-4 pt-2">
-                              {/* Περιγραφή */}
+                              {/* Description */}
                               <p className="text-gray-600 dark:text-gray-300 mb-4">
                                 {exp.description}
                               </p>
                               
-                              {/* Αρμοδιότητες */}
+                              {/* Responsibilities */}
                               {exp.responsibilities && exp.responsibilities.length > 0 && (
                                 <div className="mb-4">
                                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                    Αρμοδιότητες
+                                    Responsibilities
                                   </h4>
                                   <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
                                     {exp.responsibilities.map((resp, idx) => (
@@ -211,11 +211,11 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                                 </div>
                               )}
                               
-                              {/* Επιτεύγματα */}
+                              {/* Achievements */}
                               {exp.achievements && exp.achievements.length > 0 && (
                                 <div className="mb-4">
                                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                    Επιτεύγματα
+                                    Achievements
                                   </h4>
                                   <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
                                     {exp.achievements.map((achievement, idx) => (
@@ -225,7 +225,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                                 </div>
                               )}
                               
-                              {/* Σύνδεσμος εταιρείας */}
+                              {/* Company website */}
                               {exp.companyUrl && (
                                 <a 
                                   href={exp.companyUrl}
@@ -233,7 +233,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:underline mt-2"
                                 >
-                                  Επισκεφθείτε την ιστοσελίδα
+                                  Visit website
                                   <ExternalLink className="w-3.5 h-3.5 ml-1" />
                                 </a>
                               )}
@@ -246,20 +246,20 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                 ))
               ) : (
                 <p className="text-gray-600 dark:text-gray-400 pl-14">
-                  Δεν βρέθηκαν αποτελέσματα με βάση τα φίλτρα που έχετε επιλέξει.
+                  No results found based on your selected filters.
                 </p>
               )}
             </div>
           </div>
         )}
         
-        {/* Εκπαίδευση */}
+        {/* Education */}
         {(view === 'all' || view === 'education') && (
           <div>
             {view === 'all' && (
               <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
                 <GraduationCap className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
-                Εκπαίδευση
+                Education
               </h2>
             )}
             
@@ -292,7 +292,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                           </h3>
                           <p className="text-indigo-600 dark:text-indigo-400">{edu.institution}</p>
                           
-                          {/* Ημερομηνία και τοποθεσία */}
+                          {/* Date and location */}
                           <div className="mt-2 flex flex-wrap gap-x-4 text-sm text-gray-600 dark:text-gray-400">
                             <div className="flex items-center">
                               <Calendar className="w-4 h-4 mr-1" />
@@ -300,7 +300,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                                 {parseDate(edu.startDate)?.getFullYear()} - {' '}
                                 {edu.endDate 
                                   ? parseDate(edu.endDate)?.getFullYear()
-                                  : 'Σήμερα'
+                                  : 'Present'
                                 }
                               </span>
                             </div>
@@ -324,7 +324,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                         </div>
                       </div>
                       
-                      {/* Συνοπτική περιγραφή (για compact view) */}
+                      {/* Brief description (for compact view) */}
                       {!expandedEducation.includes(edu.id) && viewMode === 'compact' && edu.description && (
                         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                           {edu.description}
@@ -343,27 +343,27 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                           className="overflow-hidden"
                         >
                           <div className="p-4 pt-2">
-                            {/* Περιγραφή */}
+                            {/* Description */}
                             {edu.description && (
                               <p className="text-gray-600 dark:text-gray-300 mb-4">
                                 {edu.description}
                               </p>
                             )}
                             
-                            {/* Βαθμός */}
+                            {/* GPA */}
                             {edu.gpa && (
                               <div className="mb-4">
                                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                                  <strong>Βαθμός:</strong> {edu.gpa.toFixed(1)}/10
+                                  <strong>GPA:</strong> {edu.gpa.toFixed(1)}/20
                                 </span>
                               </div>
                             )}
                             
-                            {/* Επιτεύγματα */}
+                            {/* Achievements */}
                             {edu.achievements && edu.achievements.length > 0 && (
                               <div className="mb-4">
                                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                  Επιτεύγματα
+                                  Achievements
                                 </h4>
                                 <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
                                   {edu.achievements.map((achievement, idx) => (

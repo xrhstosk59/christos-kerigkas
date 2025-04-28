@@ -2,7 +2,7 @@
 import { CVData, ExportOptions } from '@/types/cv';
 import { jsPDF } from 'jspdf';
 
-// Βοηθητική συνάρτηση για προσθήκη κειμένου με αναδίπλωση
+// Helper function for adding wrapped text
 const addWrappedText = (
   doc: jsPDF, 
   text: string, 
@@ -16,7 +16,7 @@ const addWrappedText = (
   return y + (textLines.length * lineHeight);
 };
 
-// Βοηθητική συνάρτηση για προσθήκη τίτλου ενότητας
+// Helper function for adding section title
 const addSectionTitle = (
   doc: jsPDF,
   title: string,
@@ -24,48 +24,51 @@ const addSectionTitle = (
   y: number,
   options: { isDark: boolean }
 ): number => {
-  // Προσθήκη γραμμής
-  doc.setDrawColor(options.isDark ? '#6366F1' : '#4F46E5');
+  const { isDark } = options;
+  
+  // Add line
+  doc.setDrawColor(isDark ? '#6366F1' : '#4F46E5');
   doc.setLineWidth(0.5);
   doc.line(x, y, x + 190, y);
   
-  // Προσθήκη τίτλου
+  // Add title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.setTextColor(options.isDark ? '#6366F1' : '#4F46E5');
+  doc.setTextColor(isDark ? '#6366F1' : '#4F46E5');
   doc.text(title, x, y + 6);
   
-  // Επαναφορά χρωμάτων και γραμματοσειράς για το υπόλοιπο περιεχόμενο
-  doc.setTextColor(options.isDark ? '#E5E7EB' : '#1F2937');
+  // Reset colors and font for the rest of the content
+  doc.setTextColor(isDark ? '#E5E7EB' : '#1F2937');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
-  return y + 12; // Επιστροφή της νέας συντεταγμένης y
+  return y + 12; // Return the new y coordinate
 };
 
-// Συνάρτηση για προσθήκη της ενότητας προσωπικών πληροφοριών
+// Function to add personal information section
 const addPersonalInfo = (
   doc: jsPDF,
   data: CVData,
   startY: number,
   options: { isDark: boolean }
 ): number => {
+  const { isDark } = options;
   const { personalInfo } = data;
   
-  // Όνομα και τίτλος
+  // Name and title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.setTextColor(options.isDark ? '#F9FAFB' : '#111827');
+  doc.setTextColor(isDark ? '#F9FAFB' : '#111827');
   doc.text(personalInfo.name, 10, startY);
   
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(14);
-  doc.setTextColor(options.isDark ? '#D1D5DB' : '#4B5563');
+  doc.setTextColor(isDark ? '#D1D5DB' : '#4B5563');
   doc.text(personalInfo.title, 10, startY + 7);
   
-  // Στοιχεία επικοινωνίας
+  // Contact information
   doc.setFontSize(10);
-  doc.setTextColor(options.isDark ? '#E5E7EB' : '#1F2937');
+  doc.setTextColor(isDark ? '#E5E7EB' : '#1F2937');
   
   let contactY = startY + 15;
   if (personalInfo.email) {
@@ -74,12 +77,12 @@ const addPersonalInfo = (
   }
   
   if (personalInfo.phone) {
-    doc.text(`Τηλέφωνο: ${personalInfo.phone}`, 10, contactY);
+    doc.text(`Phone: ${personalInfo.phone}`, 10, contactY);
     contactY += 5;
   }
   
   if (personalInfo.location) {
-    doc.text(`Τοποθεσία: ${personalInfo.location}`, 10, contactY);
+    doc.text(`Location: ${personalInfo.location}`, 10, contactY);
     contactY += 5;
   }
   
@@ -88,7 +91,7 @@ const addPersonalInfo = (
     contactY += 5;
   }
   
-  // Κοινωνικά δίκτυα
+  // Social links
   if (personalInfo.socialLinks) {
     if (personalInfo.socialLinks.linkedin) {
       doc.text(`LinkedIn: ${personalInfo.socialLinks.linkedin}`, 10, contactY);
@@ -101,57 +104,56 @@ const addPersonalInfo = (
     }
   }
   
-  // Bio (εάν υπάρχει)
+  // Bio (if available)
   if (personalInfo.bio) {
     contactY += 5;
     doc.setFontSize(11);
     return addWrappedText(doc, personalInfo.bio, 10, contactY, 190, 5);
   }
   
-  return contactY + 10; // Επιστροφή της νέας συντεταγμένης y
+  return contactY + 10; // Return the new y coordinate
 };
 
-// Συνάρτηση για προσθήκη της ενότητας επαγγελματικής εμπειρίας
+// Function to add professional experience section
 const addExperience = (
   doc: jsPDF,
   data: CVData,
   startY: number,
   options: { isDark: boolean }
 ): number => {
-  // Χρησιμοποιούμε το options.isDark απευθείας για να αποφύγουμε το ESLint warning
-  let currentY = addSectionTitle(doc, 'ΕΠΑΓΓΕΛΜΑΤΙΚΗ ΕΜΠΕΙΡΙΑ', 10, startY, options);
+  let currentY = addSectionTitle(doc, 'PROFESSIONAL EXPERIENCE', 10, startY, options);
   
   data.experience.forEach((exp) => {
-    // Θέση και εταιρεία
+    // Position and company
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text(exp.position, 10, currentY);
     
-    // Ημερομηνίες στα δεξιά
+    // Dates on the right
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    const dateText = `${new Date(exp.startDate).toLocaleDateString('el-GR', { year: 'numeric', month: 'short' })} - ${exp.endDate ? new Date(exp.endDate).toLocaleDateString('el-GR', { year: 'numeric', month: 'short' }) : 'Σήμερα'}`;
+    const dateText = `${new Date(exp.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })} - ${exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : 'Present'}`;
     const dateWidth = doc.getTextWidth(dateText);
     doc.text(dateText, 200 - dateWidth, currentY);
     
     currentY += 5;
     
-    // Εταιρεία και τοποθεσία
+    // Company and location
     doc.setFont('helvetica', 'italic');
     doc.text(`${exp.company}${exp.location ? `, ${exp.location}` : ''}`, 10, currentY);
     
     currentY += 7;
     
-    // Περιγραφή
+    // Description
     doc.setFont('helvetica', 'normal');
     currentY = addWrappedText(doc, exp.description, 10, currentY, 190, 5);
     
     currentY += 5;
     
-    // Αρμοδιότητες
+    // Responsibilities
     if (exp.responsibilities && exp.responsibilities.length > 0) {
       doc.setFont('helvetica', 'bold');
-      doc.text('Αρμοδιότητες:', 10, currentY);
+      doc.text('Responsibilities:', 10, currentY);
       doc.setFont('helvetica', 'normal');
       currentY += 5;
       
@@ -162,10 +164,10 @@ const addExperience = (
       });
     }
     
-    // Τεχνολογίες
+    // Technologies
     if (exp.technologies && exp.technologies.length > 0) {
       doc.setFont('helvetica', 'bold');
-      doc.text('Τεχνολογίες:', 10, currentY);
+      doc.text('Technologies:', 10, currentY);
       doc.setFont('helvetica', 'normal');
       
       const techText = exp.technologies.join(', ');
@@ -173,11 +175,11 @@ const addExperience = (
       currentY = addWrappedText(doc, techText, 10, currentY, 190, 5);
     }
     
-    // Επιτεύγματα
+    // Achievements
     if (exp.achievements && exp.achievements.length > 0) {
       currentY += 5;
       doc.setFont('helvetica', 'bold');
-      doc.text('Επιτεύγματα:', 10, currentY);
+      doc.text('Achievements:', 10, currentY);
       doc.setFont('helvetica', 'normal');
       currentY += 5;
       
@@ -188,43 +190,43 @@ const addExperience = (
       });
     }
     
-    currentY += 7; // Κενό μεταξύ εμπειριών
+    currentY += 7; // Space between experiences
   });
   
   return currentY;
 };
 
-// Συνάρτηση για προσθήκη της ενότητας εκπαίδευσης
+// Function to add education section
 const addEducation = (
   doc: jsPDF,
   data: CVData,
   startY: number,
   options: { isDark: boolean }
 ): number => {
-  let currentY = addSectionTitle(doc, 'ΕΚΠΑΙΔΕΥΣΗ', 10, startY, options);
+  let currentY = addSectionTitle(doc, 'EDUCATION', 10, startY, options);
   
   data.education.forEach((edu) => {
-    // Πτυχίο και πεδίο
+    // Degree and field
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text(`${edu.degree} ${edu.field}`, 10, currentY);
     
-    // Ημερομηνίες στα δεξιά
+    // Dates on the right
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    const dateText = `${new Date(edu.startDate).toLocaleDateString('el-GR', { year: 'numeric' })} - ${edu.endDate ? new Date(edu.endDate).toLocaleDateString('el-GR', { year: 'numeric' }) : 'Σήμερα'}`;
+    const dateText = `${new Date(edu.startDate).toLocaleDateString('en-US', { year: 'numeric' })} - ${edu.endDate ? new Date(edu.endDate).toLocaleDateString('en-US', { year: 'numeric' }) : 'Present'}`;
     const dateWidth = doc.getTextWidth(dateText);
     doc.text(dateText, 200 - dateWidth, currentY);
     
     currentY += 5;
     
-    // Ίδρυμα και τοποθεσία
+    // Institution and location
     doc.setFont('helvetica', 'italic');
     doc.text(`${edu.institution}${edu.location ? `, ${edu.location}` : ''}`, 10, currentY);
     
     currentY += 7;
     
-    // Περιγραφή
+    // Description
     if (edu.description) {
       doc.setFont('helvetica', 'normal');
       currentY = addWrappedText(doc, edu.description, 10, currentY, 190, 5);
@@ -233,14 +235,14 @@ const addEducation = (
     
     // GPA
     if (edu.gpa) {
-      doc.text(`Βαθμός: ${edu.gpa.toFixed(1)}/10`, 10, currentY);
+      doc.text(`GPA: ${edu.gpa.toFixed(1)}/20`, 10, currentY);
       currentY += 5;
     }
     
-    // Επιτεύγματα
+    // Achievements
     if (edu.achievements && edu.achievements.length > 0) {
       doc.setFont('helvetica', 'bold');
-      doc.text('Επιτεύγματα:', 10, currentY);
+      doc.text('Achievements:', 10, currentY);
       doc.setFont('helvetica', 'normal');
       currentY += 5;
       
@@ -251,31 +253,31 @@ const addEducation = (
       });
     }
     
-    currentY += 7; // Κενό μεταξύ εκπαιδεύσεων
+    currentY += 7; // Space between educations
   });
   
   return currentY;
 };
 
-// Συνάρτηση για προσθήκη της ενότητας δεξιοτήτων
+// Function to add skills section
 const addSkills = (
   doc: jsPDF,
   data: CVData,
   startY: number,
   options: { isDark: boolean }
 ): number => {
-  let currentY = addSectionTitle(doc, 'ΔΕΞΙΟΤΗΤΕΣ', 10, startY, options);
+  let currentY = addSectionTitle(doc, 'SKILLS', 10, startY, options);
   
-  // Ομαδοποίηση δεξιοτήτων ανά κατηγορία
+  // Group skills by category
   const skillsByCategory = data.skills.reduce<Record<string, typeof data.skills>>((acc, skill) => {
     if (!acc[skill.category]) {
       acc[skill.category] = [];
     }
     acc[skill.category].push(skill);
     return acc;
-  }, {});
+  }, {} as Record<string, typeof data.skills>);
   
-  // Μετατροπή των κατηγοριών σε πιο φιλικά ονόματα
+  // Convert categories to more friendly names
   const categoryNames: Record<string, string> = {
     'frontend': 'Frontend',
     'backend': 'Backend',
@@ -290,7 +292,7 @@ const addSkills = (
     'other': 'Other'
   };
   
-  // Προσθήκη των δεξιοτήτων ανά κατηγορία
+  // Add skills by category
   Object.entries(skillsByCategory).forEach(([category, skills]) => {
     const categoryName = categoryNames[category] || category;
     
@@ -302,21 +304,21 @@ const addSkills = (
     
     currentY += 5;
     
-    // Προσθήκη των δεξιοτήτων της κατηγορίας
+    // Add category skills
     const skillsText = skills
       .sort((a, b) => b.level - a.level)
-      .map(skill => `${skill.name}${skill.yearsOfExperience ? ` (${skill.yearsOfExperience} έτη)` : ''}`)
+      .map(skill => `${skill.name}${skill.yearsOfExperience ? ` (${skill.yearsOfExperience} years)` : ''}`)
       .join(', ');
     
     currentY = addWrappedText(doc, skillsText, 10, currentY, 190, 5);
     currentY += 7;
   });
   
-  // Προσθήκη γλωσσών
+  // Add languages
   if (data.languages && data.languages.length > 0) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text('Γλώσσες', 10, currentY);
+    doc.text('Languages', 10, currentY);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     
@@ -333,42 +335,42 @@ const addSkills = (
   return currentY;
 };
 
-// Συνάρτηση για προσθήκη της ενότητας πιστοποιήσεων
+// Function to add certifications section
 const addCertifications = (
   doc: jsPDF,
   data: CVData,
   startY: number,
   options: { isDark: boolean }
 ): number => {
-  let currentY = addSectionTitle(doc, 'ΠΙΣΤΟΠΟΙΗΣΕΙΣ', 10, startY, options);
+  let currentY = addSectionTitle(doc, 'CERTIFICATIONS', 10, startY, options);
   
   data.certifications.forEach((cert) => {
     doc.setFont('helvetica', 'bold');
     doc.text(cert.title, 10, currentY);
     
-    // Ημερομηνία έκδοσης
+    // Issue date
     const issueDate = new Date(cert.issueDate);
     doc.setFont('helvetica', 'normal');
-    const dateText = issueDate.toLocaleDateString('el-GR', { year: 'numeric', month: 'short' });
+    const dateText = issueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
     const dateWidth = doc.getTextWidth(dateText);
     doc.text(dateText, 200 - dateWidth, currentY);
     
     currentY += 5;
     
-    // Εκδότης
+    // Issuer
     doc.setFont('helvetica', 'italic');
     doc.text(cert.issuer, 10, currentY);
     
     currentY += 5;
     
-    // ID πιστοποίησης
+    // Credential ID
     if (cert.credentialId) {
       doc.setFont('helvetica', 'normal');
       doc.text(`ID: ${cert.credentialId}`, 10, currentY);
       currentY += 5;
     }
     
-    // Περιγραφή
+    // Description
     if (cert.description) {
       doc.setFont('helvetica', 'normal');
       currentY = addWrappedText(doc, cert.description, 10, currentY, 190, 5);
@@ -383,20 +385,20 @@ const addCertifications = (
       doc.setFontSize(10);
     }
     
-    currentY += 7; // Κενό μεταξύ πιστοποιήσεων
+    currentY += 7; // Space between certifications
   });
   
   return currentY;
 };
 
-// Συνάρτηση για προσθήκη της ενότητας projects
+// Function to add projects section
 const addProjects = (
   doc: jsPDF,
   data: CVData,
   startY: number,
   options: { isDark: boolean }
 ): number => {
-  let currentY = addSectionTitle(doc, 'ΕΡΓΑ', 10, startY, options);
+  let currentY = addSectionTitle(doc, 'PROJECTS', 10, startY, options);
   
   data.projects.forEach((project) => {
     doc.setFont('helvetica', 'bold');
@@ -404,15 +406,15 @@ const addProjects = (
     
     currentY += 5;
     
-    // Περιγραφή
+    // Description
     doc.setFont('helvetica', 'normal');
     currentY = addWrappedText(doc, project.description, 10, currentY, 190, 5);
     
     currentY += 3;
     
-    // Τεχνολογίες
+    // Technologies
     if (project.tech && project.tech.length > 0) {
-      const techText = `Τεχνολογίες: ${project.tech.join(', ')}`;
+      const techText = `Technologies: ${project.tech.join(', ')}`;
       doc.setFontSize(9);
       currentY = addWrappedText(doc, techText, 10, currentY, 190, 4);
       doc.setFontSize(10);
@@ -427,13 +429,13 @@ const addProjects = (
       doc.text(`Demo: ${project.demo}`, 10, currentY);
     }
     
-    currentY += 7; // Κενό μεταξύ projects
+    currentY += 7; // Space between projects
   });
   
   return currentY;
 };
 
-// Συνάρτηση για προσθήκη της ενότητας ενδιαφερόντων
+// Function to add interests section
 const addInterests = (
   doc: jsPDF,
   data: CVData,
@@ -444,7 +446,7 @@ const addInterests = (
     return startY;
   }
   
-  let currentY = addSectionTitle(doc, 'ΕΝΔΙΑΦΕΡΟΝΤΑ', 10, startY, options);
+  let currentY = addSectionTitle(doc, 'INTERESTS', 10, startY, options);
   
   const interestsText = data.interests.join(', ');
   currentY = addWrappedText(doc, interestsText, 10, currentY, 190, 5);
@@ -452,18 +454,18 @@ const addInterests = (
   return currentY + 7;
 };
 
-// Κύρια συνάρτηση για τη δημιουργία του PDF
+// Main function for creating the PDF
 export const generateCV = (data: CVData, options: ExportOptions): jsPDF => {
   const isDark = options.colorScheme === 'dark';
   
-  // Δημιουργία του PDF
+  // Create PDF
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
   });
   
-  // Ρύθμιση του background color ανάλογα με το colorScheme
+  // Set background color based on colorScheme
   if (isDark) {
     doc.setFillColor('#111827');
     doc.rect(0, 0, 210, 297, 'F');
@@ -472,9 +474,9 @@ export const generateCV = (data: CVData, options: ExportOptions): jsPDF => {
     doc.setTextColor('#1F2937');
   }
   
-  let currentY = 10; // Αρχική συντεταγμένη Y
+  let currentY = 10; // Initial Y coordinate
   
-  // Προσθήκη των ενοτήτων ανάλογα με τις επιλογές του χρήστη
+  // Add sections based on user options
   if (options.includePersonalInfo) {
     currentY = addPersonalInfo(doc, data, currentY, { isDark });
     currentY += 10;
@@ -505,17 +507,13 @@ export const generateCV = (data: CVData, options: ExportOptions): jsPDF => {
     currentY += 10;
   }
   
-  // Προσθήκη ενδιαφερόντων (αν υπάρχουν)
-  if (data.interests && data.interests.length > 0) {
-    // Αποφεύγουμε να αποθηκεύσουμε το αποτέλεσμα στo currentY
-    // για να μην έχουμε το ESLint warning
-    addInterests(doc, data, currentY, { isDark });
-  }
+  // Add interests (if available)
+  addInterests(doc, data, currentY, { isDark });
   
   return doc;
 };
 
-// Συνάρτηση για τη δημιουργία και το download του PDF
+// Function for creating and downloading the PDF
 export const downloadCV = async (data: CVData, options: ExportOptions, filename: string = 'cv.pdf'): Promise<void> => {
   const doc = generateCV(data, options);
   doc.save(filename);

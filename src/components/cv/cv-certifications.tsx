@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from '../theme-provider'
 import { Certification } from '@/types/certifications'
 import { Calendar, Award, ExternalLink, X, Eye, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,25 +18,23 @@ interface CVCertificationsProps {
 }
 
 export default function CVCertifications({ certifications, viewMode, filters }: CVCertificationsProps) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
   const [selectedCertification, setSelectedCertification] = useState<Certification | null>(null)
   const [openPreview, setOpenPreview] = useState(false)
   const [filterType, setFilterType] = useState<string | null>(null)
   
-  // Ανάκτηση μοναδικών τύπων πιστοποιήσεων
+  // Get unique certification types
   const certificationTypes = Array.from(
     new Set(certifications.map(cert => cert.type))
   ).sort()
   
-  // Φιλτράρισμα πιστοποιήσεων
+  // Filter certifications
   const filteredCertifications = certifications.filter(cert => {
-    // Φιλτράρισμα με βάση τον τύπο
+    // Filter by type
     if (filterType && cert.type !== filterType) {
       return false
     }
     
-    // Φιλτράρισμα με βάση τα skills
+    // Filter by skills
     if (filters.skills.length > 0 && (!cert.skills || 
         !cert.skills.some((skill: string) => filters.skills.includes(skill)))) {
       return false
@@ -46,44 +43,44 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
     return true
   })
   
-  // Ταξινόμηση πιστοποιήσεων (πιο πρόσφατα πρώτα)
+  // Sort certifications (most recent first)
   const sortedCertifications = [...filteredCertifications].sort((a, b) => 
     new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
   )
   
-  // Τύπος πιστοποίησης σε ελληνικά
+  // Certification type label
   const getCertificationTypeLabel = (type: string): string => {
     const typeMap: Record<string, string> = {
-      'course': 'Μάθημα',
+      'course': 'Course',
       'badge': 'Badge',
-      'seminar': 'Σεμινάριο',
-      'conference': 'Συνέδριο'
+      'seminar': 'Seminar',
+      'conference': 'Conference'
     }
     
     return typeMap[type] || type
   }
   
-  // Άνοιγμα προεπισκόπησης πιστοποιητικού
+  // Open certification preview
   const handleOpenPreview = (cert: Certification) => {
     setSelectedCertification(cert)
     setOpenPreview(true)
   }
   
-  // Κλείσιμο προεπισκόπησης
+  // Close preview
   const handleClosePreview = () => {
     setOpenPreview(false)
   }
   
   return (
     <div className="space-y-6">
-      {/* Φίλτρα τύπων πιστοποιήσεων */}
+      {/* Filter by certification type */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Button 
           variant={filterType === null ? 'default' : 'outline'} 
           onClick={() => setFilterType(null)}
           className={filterType === null ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
         >
-          Όλα
+          All
         </Button>
         
         {certificationTypes.map(type => (
@@ -98,7 +95,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
         ))}
       </div>
       
-      {/* Πιστοποιήσεις */}
+      {/* Certifications */}
       {sortedCertifications.length > 0 ? (
         <div className={`grid grid-cols-1 ${viewMode === 'compact' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1'} gap-4`}>
           {sortedCertifications.map(cert => (
@@ -106,9 +103,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
               key={cert.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden ${
-                isDark ? 'border border-gray-700' : 'border border-gray-200'
-              }`}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
             >
               <div className="p-4">
                 <div className="flex justify-between items-start">
@@ -118,12 +113,12 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                     </h3>
                     <p className="text-indigo-600 dark:text-indigo-400">{cert.issuer}</p>
                     
-                    {/* Ημερομηνία και τύπος πιστοποίησης */}
+                    {/* Date and certification type */}
                     <div className="mt-2 flex flex-wrap gap-x-4 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
                         <span>
-                          {new Date(cert.issueDate).toLocaleDateString('el-GR', { month: 'short', year: 'numeric' })}
+                          {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                         </span>
                       </div>
                       
@@ -135,14 +130,14 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                   </div>
                 </div>
                 
-                {/* Περιγραφή */}
+                {/* Description */}
                 {viewMode === 'detailed' && cert.description && (
                   <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
                     {cert.description}
                   </p>
                 )}
                 
-                {/* Δεξιότητες */}
+                {/* Skills */}
                 {cert.skills && cert.skills.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {cert.skills.map((skill: string) => (
@@ -156,7 +151,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                   </div>
                 )}
                 
-                {/* Κουμπιά ενεργειών */}
+                {/* Action buttons */}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button 
                     variant="outline" 
@@ -165,7 +160,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                     onClick={() => handleOpenPreview(cert)}
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>Προεπισκόπηση</span>
+                    <span>Preview</span>
                   </Button>
                   
                   {cert.credentialUrl && (
@@ -181,7 +176,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                         rel="noopener noreferrer"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Επαλήθευση</span>
+                        <span>Verify</span>
                       </a>
                     </Button>
                   )}
@@ -192,11 +187,11 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
         </div>
       ) : (
         <p className="text-gray-600 dark:text-gray-400">
-          Δεν βρέθηκαν πιστοποιήσεις που να ταιριάζουν με τα επιλεγμένα φίλτρα.
+          No certifications found matching your selected filters.
         </p>
       )}
       
-      {/* Dialog προεπισκόπησης πιστοποιητικού */}
+      {/* Certification preview dialog */}
       <Dialog open={openPreview} onOpenChange={setOpenPreview}>
         <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
@@ -213,7 +208,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
               </Button>
             </DialogTitle>
             <DialogDescription>
-              {selectedCertification?.issuer} • {selectedCertification && new Date(selectedCertification.issueDate).toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {selectedCertification?.issuer} • {selectedCertification && new Date(selectedCertification.issueDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
             </DialogDescription>
           </DialogHeader>
           
@@ -240,7 +235,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                   rel="noopener noreferrer"
                 >
                   <FileText className="h-4 w-4" />
-                  <span>Άνοιγμα σε νέα καρτέλα</span>
+                  <span>Open in new tab</span>
                 </a>
               </Button>
             )}
