@@ -4,12 +4,12 @@ import InteractiveCV from '@/components/cv/interactive-cv';
 import { getMockCVData } from '@/lib/cv-data';
 
 export const metadata: Metadata = {
-  title: 'Διαδραστικό Βιογραφικό - Χρήστος Κέριγκας',
-  description: 'Εξερευνήστε τις επαγγελματικές μου εμπειρίες, δεξιότητες, έργα και πιστοποιήσεις μέσω ενός διαδραστικού βιογραφικού.',
+  title: 'Interactive CV - Christos Kerigkas',
+  description: 'Explore my professional experiences, skills, projects, and certifications through an interactive CV.',
 };
 
 export default async function CVPage() {
-  // Φόρτωση δεδομένων στο server
+  // Load data on the server
   const cvData = await getMockCVData();
   
   return (

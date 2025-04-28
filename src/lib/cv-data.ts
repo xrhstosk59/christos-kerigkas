@@ -1,5 +1,5 @@
 // src/lib/cv-data.ts
-// Προσθήκη 'use server' directive για να εξασφαλίσουμε ότι αυτό το αρχείο τρέχει μόνο στον server
+// Add 'use server' directive to ensure this file runs only on the server
 'use server';
 
 import { projectsRepository } from './db/repositories/projects-repository';
@@ -10,41 +10,41 @@ import { Certification, CertificationType } from '@/types/certifications';
 import { studentProjects } from './mock-projects';
 import { studentCertifications } from './mock-certifications';
 
-// Mock δεδομένα για την επαγγελματική εμπειρία - προσαρμοσμένα για φοιτητή
+// Mock data for professional experience - tailored for a student
 const mockExperience: Experience[] = [
   {
     id: "exp1",
     company: "Uni Web Projects",
     position: "Freelance Web Developer",
     startDate: "2023-06-01",
-    endDate: null, // Τρέχουσα απασχόληση
-    description: "Ανάπτυξη web εφαρμογών για μικρές επιχειρήσεις και ιδιώτες.",
+    endDate: null, // Current employment
+    description: "Development of web applications for small businesses and individuals.",
     responsibilities: [
-      "Σχεδιασμός και υλοποίηση responsive websites",
-      "Ανάπτυξη custom WordPress themes",
-      "Δημιουργία απλών e-commerce λύσεων"
+      "Design and implementation of responsive websites",
+      "Development of custom WordPress themes",
+      "Creation of simple e-commerce solutions"
     ],
     technologies: ["HTML", "CSS", "JavaScript", "React", "WordPress", "PHP"],
     achievements: [
-      "Ολοκλήρωση 5+ projects για τοπικές επιχειρήσεις",
-      "Θετικά feedback και επαναλαμβανόμενοι πελάτες"
+      "Completion of 5+ projects for local businesses",
+      "Positive feedback and recurring clients"
     ],
-    location: "Καβάλα/Χαλκιδική"
+    location: "Kavala/Chalkidiki"
   },
   {
     id: "exp2",
     company: "DigitalLab DUTh",
-    position: "Research Assistant (Μερική απασχόληση)",
+    position: "Research Assistant (Part-time)",
     startDate: "2022-09-01",
     endDate: "2023-06-30",
-    description: "Συμμετοχή σε ερευνητικό project του τμήματος Πληροφορικής.",
+    description: "Participation in a research project of the Department of Computer Science.",
     responsibilities: [
-      "Ανάπτυξη web-based εφαρμογών για ερευνητικούς σκοπούς",
-      "Συλλογή και ανάλυση δεδομένων",
-      "Συνεργασία με την ερευνητική ομάδα"
+      "Development of web-based applications for research purposes",
+      "Data collection and analysis",
+      "Collaboration with the research team"
     ],
     technologies: ["React", "Node.js", "Express", "MongoDB", "Data Analysis"],
-    location: "Καβάλα"
+    location: "Kavala"
   },
   {
     id: "exp3",
@@ -52,48 +52,48 @@ const mockExperience: Experience[] = [
     position: "Web Development Intern",
     startDate: "2021-07-01",
     endDate: "2021-08-31",
-    description: "Πρακτική άσκηση σε τοπική εταιρεία web development.",
+    description: "Internship at a local web development company.",
     responsibilities: [
-      "Υποστήριξη front-end development",
-      "Δημιουργία και βελτιστοποίηση ιστοσελίδων",
-      "Εκμάθηση επαγγελματικών εργαλείων και μεθοδολογιών"
+      "Support for front-end development",
+      "Creation and optimization of websites",
+      "Learning professional tools and methodologies"
     ],
     technologies: ["HTML", "CSS", "JavaScript", "jQuery", "Bootstrap"],
-    location: "Χαλκιδική"
+    location: "Chalkidiki"
   }
 ];
 
-// Mock δεδομένα για την εκπαίδευση - προσαρμοσμένα στην πραγματική κατάσταση
+// Mock data for education - adapted to the actual situation
 const mockEducation: Education[] = [
-    {
-      id: "edu1",
-      institution: "Δημοκρίτειο Πανεπιστήμιο Θράκης",
-      degree: "Πτυχίο",
-      field: "Πληροφορική",
-      startDate: "2020-09-01",
-      endDate: null, // Σε εξέλιξη
-      description: "4ο έτος σπουδών με εξειδίκευση σε τεχνολογίες Web και ανάπτυξη εφαρμογών.",
-      location: "Καβάλα",
-      achievements: [
-        "Υποτροφία αριστείας 2ου έτους",
-        "Συμμετοχή σε φοιτητικό διαγωνισμό προγραμματισμού",
-        "Ανάπτυξη εφαρμογής web στα πλαίσια εργασίας μαθήματος"
-      ]
-    },
-    {
-      id: "edu2",
-      institution: "Γενικό Λύκειο Σημάντρων Χαλκιδικής",
-      degree: "Απολυτήριο",
-      field: "Θετικών Επιστημών",
-      startDate: "2017-09-01",
-      endDate: "2020-06-30",
-      description: "Αποφοίτηση με άριστα.",
-      location: "Σήμαντρα, Χαλκιδική",
-      gpa: 19.2
-    }
-  ];
+  {
+    id: "edu1",
+    institution: "Democritus University of Thrace",
+    degree: "Bachelor's Degree",
+    field: "Computer Science",
+    startDate: "2020-09-01",
+    endDate: null, // In progress
+    description: "4th year of studies specializing in Web technologies and application development.",
+    location: "Kavala",
+    achievements: [
+      "2nd year scholarship for excellence",
+      "Participation in a student programming competition",
+      "Development of a web application as part of a course project"
+    ]
+  },
+  {
+    id: "edu2",
+    institution: "General High School of Simantron, Chalkidiki",
+    degree: "High School Diploma",
+    field: "Science Track",
+    startDate: "2017-09-01",
+    endDate: "2020-06-30",
+    description: "Graduated with honors.",
+    location: "Simantra, Chalkidiki",
+    gpa: 19.2
+  }
+];
 
-// Mock δεδομένα για τις δεξιότητες - προσαρμοσμένα για φοιτητή
+// Mock data for skills - tailored for a student
 const mockSkills: Skill[] = [
   // Frontend
   { name: "HTML5", level: 90, category: "frontend", yearsOfExperience: 3 },
@@ -121,27 +121,27 @@ const mockSkills: Skill[] = [
   { name: "WordPress", level: 80, category: "frameworks", yearsOfExperience: 2 },
   { name: "Next.js", level: 60, category: "frameworks", yearsOfExperience: 1 },
   
-  // Γλώσσες Προγραμματισμού
+  // Programming Languages
   { name: "Java", level: 70, category: "languages", yearsOfExperience: 3 },
   { name: "Python", level: 65, category: "languages", yearsOfExperience: 2 },
   { name: "C/C++", level: 60, category: "languages", yearsOfExperience: 3 },
   
   // Soft Skills
-  { name: "Ομαδική Εργασία", level: 85, category: "soft-skills", yearsOfExperience: 4 },
-  { name: "Επίλυση Προβλημάτων", level: 80, category: "soft-skills", yearsOfExperience: 4 },
-  { name: "Διαχείριση Χρόνου", level: 75, category: "soft-skills", yearsOfExperience: 4 }
+  { name: "Teamwork", level: 85, category: "soft-skills", yearsOfExperience: 4 },
+  { name: "Problem Solving", level: 80, category: "soft-skills", yearsOfExperience: 4 },
+  { name: "Time Management", level: 75, category: "soft-skills", yearsOfExperience: 4 }
 ];
 
-// Επιστρέφει τα δεδομένα CV χωρίς να προσπαθεί να τα λάβει από τη βάση
+// Returns CV data without trying to retrieve from the database
 export async function getMockCVData(): Promise<CVData> {
   return {
     personalInfo: {
-      name: "Χρήστος Κέριγκας",
-      title: "Φοιτητής Πληροφορικής | Επίδοξος Full-Stack Web Developer",
+      name: "Christos Kerigkas",
+      title: "Computer Science Student | Aspiring Full-Stack Web Developer",
       email: "contact@christoskerigkas.com",
-      location: "Καβάλα (Σπουδές) / Χαλκιδική (Μόνιμη)",
+      location: "Kavala (Studies) / Chalkidiki (Permanent)",
       website: "https://christoskerigkas.com",
-      bio: "Φοιτητής 4ου έτους στο τμήμα Πληροφορικής του Δημοκρίτειου Πανεπιστημίου Θράκης, με πάθος για την ανάπτυξη web εφαρμογών. Επιδιώκω να εξελιχθώ ως Full-Stack Developer, συνδυάζοντας τις γνώσεις από τις σπουδές μου με προσωπικά projects και εργασιακή εμπειρία.",
+      bio: "4th-year student in the Computer Science department at Democritus University of Thrace, passionate about web application development. I aim to grow as a Full-Stack Developer, combining knowledge from my studies with personal projects and work experience.",
       profileImage: "/uploads/profile.jpg",
       socialLinks: {
         linkedin: "https://linkedin.com/in/christoskerigkas",
@@ -154,8 +154,8 @@ export async function getMockCVData(): Promise<CVData> {
     certifications: studentCertifications,
     projects: studentProjects,
     languages: [
-      { language: "Ελληνικά", proficiency: "Μητρική γλώσσα" },
-      { language: "Αγγλικά", proficiency: "Άριστα (C2)" }
+      { language: "Greek", proficiency: "Native" },
+      { language: "English", proficiency: "Excellent (C2)" }
     ],
     interests: [
       "Web Development",
@@ -167,16 +167,16 @@ export async function getMockCVData(): Promise<CVData> {
   };
 }
 
-// Συνάρτηση που συγκεντρώνει όλα τα δεδομένα του CV
+// Function that collects all CV data
 export async function getCVData(): Promise<CVData> {
   try {
-    // Προσπάθησε να πάρεις δεδομένα από τη βάση
+    // Try to get data from the database
     const projectsFromDb = await projectsRepository.findAll();
     const certificationsFromDb = await certificationsRepository.findAll();
     
-    // Αν υπάρχουν δεδομένα στη βάση, χρησιμοποίησέ τα
+    // If there is data in the database, use it
     if (projectsFromDb.length > 0 || certificationsFromDb.length > 0) {
-      // Μετατροπή των certifications που έρχονται από τη βάση
+      // Convert certifications coming from the database
       const certifications: Certification[] = certificationsFromDb.map(cert => ({
         id: cert.id,
         title: cert.title,
@@ -193,7 +193,7 @@ export async function getCVData(): Promise<CVData> {
         featured: cert.featured === null ? undefined : cert.featured
       }));
       
-      // Μετατροπή των projects που έρχονται από τη βάση
+      // Convert projects coming from the database
       const projects: Project[] = projectsFromDb.map(project => ({
         title: project.title,
         slug: project.slug,
@@ -207,22 +207,22 @@ export async function getCVData(): Promise<CVData> {
         status: 'Active' as ProjectStatus
       }));
       
-      // Βασικά δεδομένα CV
+      // Basic CV data
       const baseData = await getMockCVData();
       
-      // Επιστροφή με τα δεδομένα από τη βάση
+      // Return with data from the database
       return {
         ...baseData,
         certifications: certificationsFromDb.length > 0 ? certifications : studentCertifications,
         projects: projectsFromDb.length > 0 ? projects : studentProjects
       };
     } else {
-      // Αν δεν υπάρχουν δεδομένα στη βάση, χρησιμοποίησε τα mock δεδομένα
+      // If there is no data in the database, use mock data
       return getMockCVData();
     }
   } catch (error) {
     console.error("Error in getCVData:", error);
-    // Σε περίπτωση σφάλματος, επιστρέφουμε τα mock data
+    // In case of error, return mock data
     return getMockCVData();
   }
 }
