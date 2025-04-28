@@ -1,15 +1,27 @@
 // src/lib/ensure-uploads-dir.ts
-// Edge compatible version
+import fs from 'fs';
+import path from 'path';
 
 /**
- * Ensures that the uploads directory exists in the public folder
- * This is important for storing and retrieving user uploads like profile images
- * 
- * Note: This functionality has been moved to package.json scripts
- * to avoid Node.js APIs in Edge Runtime.
+ * Δημιουργεί τον φάκελο για τα uploads αν δεν υπάρχει
+ * @param {string} dir - Η διαδρομή του φακέλου που θέλουμε να δημιουργήσουμε
  */
-export function ensureUploadsDirectory(): void {
-  // This is now a no-op function since the directory creation
-  // is handled by the prebuild and predev scripts in package.json
-  console.log('Uploads directory check is handled by package.json scripts');
+export function ensureUploadsDir(dir: string): void {
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`Ο φάκελος δημιουργήθηκε επιτυχώς: ${dir}`);
+    }
+  } catch (error) {
+    console.error(`Σφάλμα κατά τη δημιουργία του φακέλου: ${dir}`, error);
+    throw error;
+  }
+}
+
+/**
+ * Δημιουργεί τον φάκελο για τα πιστοποιητικά
+ */
+export function ensureCertificatesDir(): void {
+  const certificatesDir = path.join(process.cwd(), 'public', 'uploads', 'certificates');
+  ensureUploadsDir(certificatesDir);
 }
