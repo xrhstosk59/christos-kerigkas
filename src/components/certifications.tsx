@@ -1,7 +1,10 @@
 // src/components/certifications.tsx
+// Το αρχείο αυτό πρέπει να είναι Client Component γιατί χρησιμοποιεί το useTheme hook
+'use client'
+
 import { useTheme } from './theme-provider'
-import { CertificationsServer } from './certifications-server'
 import { Suspense } from 'react'
+import { CertificationsServer } from './certifications-server'
 
 export default function Certifications() {
   const { theme } = useTheme()

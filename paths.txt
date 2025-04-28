@@ -19,6 +19,15 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/manifest.json
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/next.svg
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/.gitkeep
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/ΚΕΡΙΓΚΑΣ ΧΡΗΣΤΟΣ.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/Certificate-of-Completion-24C014989-Univators-Skilling-Future-Digital-Innovators-CHRISTOS-KERIGKAS.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/Introduction_to_Cybersecurity_Badge20241109-27-40xb2m.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/LTLO-15-Certificate-of-Completion.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/LTLO-15-Certificate-of-Participation.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/Network_Addressing_and_Basic_Troubleshooting_Badge20240113-34-hs7vyr.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/Network_Support_and_Security_Badge20240113-29-1n54sk.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/Networking_Basics_Badge20240113-29-5ou4ck.pdf
+/Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/certificates/Networking_Devices_and_Initial_Configuration_Badge20240113-29-6lb7yw.pdf
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/uploads/profile.jpg
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/vercel.svg
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/window.svg
@@ -69,6 +78,7 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/blog-post-client.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/blog-search.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/blogcard.tsx
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/components/certifications-client.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/certifications-server.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/certifications.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/contact.tsx
@@ -144,5 +154,8 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/types/cv.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/types/gtag.d.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/types/projects.ts
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/client.ts
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/middleware.ts
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/server.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/tailwind.config.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/tsconfig.json

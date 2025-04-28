@@ -4,13 +4,16 @@ import postgres from 'postgres'
 import * as schema from './schema'
 import { sql } from 'drizzle-orm'
 
-// Ελέγχουμε αν βρισκόμαστε σε server-side περιβάλλον
-const isServer = typeof window === 'undefined'
+// Χρησιμοποιούμε διαφορετικό έλεγχο για server-side code
+// Ελέγχουμε αν τρέχουμε σε Node.js περιβάλλον
+const isNode = typeof process !== 'undefined' && 
+              process.versions != null && 
+              process.versions.node != null
 
-// Δημιουργούμε σύνδεση με τη βάση μόνο στο server-side περιβάλλον
+// Δημιουργούμε σύνδεση με τη βάση μόνο αν είμαστε σε Node περιβάλλον
 let dbClient = null
 
-if (isServer) {
+if (isNode) {
   try {
     // Το connection string από τις μεταβλητές περιβάλλοντος
     const connectionString = process.env.DATABASE_URL
@@ -46,7 +49,7 @@ export const checkDatabaseConnection = async () => {
   if (!db) {
     return {
       connected: false,
-      message: 'Database client not initialized. Make sure DATABASE_URL is set and you are in server-side environment.'
+      message: 'Database client not initialized. Make sure DATABASE_URL is set and you are in a server environment.'
     }
   }
   

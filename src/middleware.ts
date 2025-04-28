@@ -1,75 +1,42 @@
 // src/middleware.ts
-import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { updateSession } from './utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // Security headers
-  const headers = new Headers(request.headers)
+  // Ανανέωση του session χρησιμοποιώντας το supabase middleware
+  const updatedResponse = await updateSession(request)
   
-  // Create response with security headers
-  const response = NextResponse.next({
-    request: {
-      headers,
-    },
+  // Προσθήκη security headers στο updatedResponse
+  const securityHeaders = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+  }
+  
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    updatedResponse.headers.set(key, value)
   })
-  
-  // Add security headers
-  response.headers.set('X-DNS-Prefetch-Control', 'on')
-  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
-  response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN')
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()')
-  
-  // Handle redirects for old paths
-  const url = request.nextUrl.clone()
-  if (url.pathname === '/projects' || url.pathname === '/projects/') {
-    url.pathname = '/#projects'
-    return NextResponse.redirect(url)
+
+  // Έλεγχος εξουσιοδότησης για τις προστατευμένες διαδρομές
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // Το authentication ελέγχεται στο updateSession
+    // που ανανεώνει τα cookies
   }
-  
-  // Για admin routes, έλεγχος authentication
-  if (url.pathname.startsWith('/admin') && url.pathname !== '/admin/login') {
-    try {
-      // Έλεγχος αν οι απαραίτητες μεταβλητές περιβάλλοντος υπάρχουν
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        console.warn('Supabase authentication is not available in middleware. Redirecting to login page.')
-        const redirectUrl = new URL('/admin/login', request.url)
-        redirectUrl.searchParams.set('from', url.pathname)
-        return NextResponse.redirect(redirectUrl)
-      }
-      
-      // Initialize Supabase client
-      const supabase = createMiddlewareClient({ req: request, res: response })
-      
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      // If user is not authenticated, redirect to login page
-      if (!session) {
-        const redirectUrl = new URL('/admin/login', request.url)
-        redirectUrl.searchParams.set('from', url.pathname)
-        return NextResponse.redirect(redirectUrl)
-      }
-    } catch (error) {
-      console.error('Error in middleware auth check:', error)
-      // In case of any error, redirect to login
-      const redirectUrl = new URL('/admin/login', request.url)
-      redirectUrl.searchParams.set('from', url.pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
-  }
-  
-  return response
+
+  return updatedResponse
 }
 
 export const config = {
   matcher: [
-    // Ταιριάζει όλα τα paths εκτός από συγκεκριμένα στατικά αρχεία
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
-    // Προστατεύει όλα τα admin paths
-    '/admin/:path*'
+    /*
+     * Αντιστοίχιση όλων των request paths εκτός από:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public directory
+     * - api routes που δεν χρειάζονται αυθεντικοποίηση
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/|api/contact|api/newsletter).*)',
   ],
 }

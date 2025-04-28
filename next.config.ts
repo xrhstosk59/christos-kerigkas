@@ -28,6 +28,21 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   },
+  // Προσθήκη webpack configuration για να αποκλείσουμε modules που είναι μόνο για server
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Δεν συμπεριλαμβάνουμε αυτά τα packages στο client-side bundle
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        net: false,
+        tls: false,
+        fs: false,
+        perf_hooks: false,
+        'pg-native': false,
+      };
+    }
+    return config;
+  },
   headers: async () => [
     {
       source: '/:all*(svg|jpg|png|webp|avif)',
