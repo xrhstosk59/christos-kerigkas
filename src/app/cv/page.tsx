@@ -1,23 +1,20 @@
 // src/app/cv/page.tsx
-import { Suspense } from 'react'
-import { getCVData } from '@/lib/cv-data'
-import InteractiveCV from '@/components/cv/interactive-cv'
+import { Metadata } from 'next';
+import InteractiveCV from '@/components/cv/interactive-cv';
+import { getMockCVData } from '@/lib/cv-data';
 
-export const dynamic = 'force-dynamic' // Να σιγουρευτούμε ότι η σελίδα θα ανανεώνεται πάντα
+export const metadata: Metadata = {
+  title: 'Interactive CV - Christos Kerigkas',
+  description: 'Explore my professional experiences, skills, projects, and certifications through an interactive CV.',
+};
 
 export default async function CVPage() {
-  // Φόρτωση των δεδομένων CV από τον server
-  const cvData = await getCVData()
+  // Load data on the server
+  const cvData = await getMockCVData();
   
   return (
     <main className="container mx-auto px-4 py-8">
-      <Suspense fallback={
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-        </div>
-      }>
-        <InteractiveCV initialCVData={cvData} />
-      </Suspense>
+      <InteractiveCV initialCVData={cvData} />
     </main>
-  )
+  );
 }

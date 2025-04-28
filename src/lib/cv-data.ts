@@ -9,7 +9,6 @@ import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
 import { Certification, CertificationType } from '@/types/certifications';
 import { studentProjects } from './mock-projects';
 import { studentCertifications } from './mock-certifications';
-import { Certification as DbCertification, Project as DbProject } from './db/schema';
 
 // Mock data for professional experience - tailored for a student
 const mockExperience: Experience[] = [
@@ -168,41 +167,6 @@ export async function getMockCVData(): Promise<CVData> {
   };
 }
 
-// Μετατροπή των πιστοποιητικών από το σχήμα της βάσης δεδομένων στον τύπο Certification
-function mapCertificationsFromDb(certifications: DbCertification[]): Certification[] {
-  return certifications.map(cert => ({
-    id: cert.id,
-    title: cert.title,
-    issuer: cert.issuer,
-    issueDate: cert.issueDate instanceof Date ? cert.issueDate.toISOString() : String(cert.issueDate),
-    expirationDate: cert.expirationDate === null ? undefined : 
-      (cert.expirationDate instanceof Date ? cert.expirationDate.toISOString() : String(cert.expirationDate)),
-    credentialId: cert.credentialId === null ? undefined : cert.credentialId,
-    credentialUrl: cert.credentialUrl === null ? undefined : cert.credentialUrl,
-    description: cert.description === null ? undefined : cert.description,
-    skills: cert.skills === null ? undefined : cert.skills,
-    type: cert.type as CertificationType,
-    filename: cert.filename,
-    featured: cert.featured === null ? undefined : cert.featured
-  }));
-}
-
-// Μετατροπή των projects από το σχήμα της βάσης δεδομένων στον τύπο Project
-function mapProjectsFromDb(projects: DbProject[]): Project[] {
-  return projects.map(project => ({
-    title: project.title,
-    slug: project.slug,
-    description: project.description,
-    categories: project.categories.map(cat => cat as unknown as ProjectCategory),
-    tech: project.tech,
-    github: project.github,
-    demo: project.demo === null ? undefined : project.demo,
-    image: project.image,
-    featured: project.featured === null ? undefined : project.featured,
-    status: 'Active' as ProjectStatus
-  }));
-}
-
 // Function that collects all CV data
 export async function getCVData(): Promise<CVData> {
   try {
@@ -210,24 +174,38 @@ export async function getCVData(): Promise<CVData> {
     const projectsFromDb = await projectsRepository.findAll();
     const certificationsFromDb = await certificationsRepository.findAll();
     
-    // Καταγραφή των αποτελεσμάτων για αποσφαλμάτωση
-    console.log(`[getCVData] Found ${certificationsFromDb.length} certifications in database`);
-    console.log(`[getCVData] Found ${projectsFromDb.length} projects in database`);
-    
     // If there is data in the database, use it
-    const hasProjectsInDb = projectsFromDb.length > 0;
-    const hasCertificationsInDb = certificationsFromDb.length > 0;
-    
-    if (hasProjectsInDb || hasCertificationsInDb) {
+    if (projectsFromDb.length > 0 || certificationsFromDb.length > 0) {
       // Convert certifications coming from the database
-      const certifications = hasCertificationsInDb 
-        ? mapCertificationsFromDb(certificationsFromDb)
-        : studentCertifications;
+      const certifications: Certification[] = certificationsFromDb.map(cert => ({
+        id: cert.id,
+        title: cert.title,
+        issuer: cert.issuer,
+        issueDate: cert.issueDate instanceof Date ? cert.issueDate.toISOString() : String(cert.issueDate),
+        expirationDate: cert.expirationDate === null ? undefined : 
+          (cert.expirationDate instanceof Date ? cert.expirationDate.toISOString() : String(cert.expirationDate)),
+        credentialId: cert.credentialId === null ? undefined : cert.credentialId,
+        credentialUrl: cert.credentialUrl === null ? undefined : cert.credentialUrl,
+        description: cert.description === null ? undefined : cert.description,
+        skills: cert.skills === null ? undefined : cert.skills,
+        type: cert.type as CertificationType,
+        filename: cert.filename,
+        featured: cert.featured === null ? undefined : cert.featured
+      }));
       
       // Convert projects coming from the database
-      const projects = hasProjectsInDb
-        ? mapProjectsFromDb(projectsFromDb)
-        : studentProjects;
+      const projects: Project[] = projectsFromDb.map(project => ({
+        title: project.title,
+        slug: project.slug,
+        description: project.description,
+        categories: project.categories.map(cat => cat as unknown as ProjectCategory),
+        tech: project.tech,
+        github: project.github,
+        demo: project.demo === null ? undefined : project.demo,
+        image: project.image,
+        featured: project.featured === null ? undefined : project.featured,
+        status: 'Active' as ProjectStatus
+      }));
       
       // Basic CV data
       const baseData = await getMockCVData();
@@ -235,12 +213,11 @@ export async function getCVData(): Promise<CVData> {
       // Return with data from the database
       return {
         ...baseData,
-        certifications: certifications,
-        projects: projects
+        certifications: certificationsFromDb.length > 0 ? certifications : studentCertifications,
+        projects: projectsFromDb.length > 0 ? projects : studentProjects
       };
     } else {
       // If there is no data in the database, use mock data
-      console.log('[getCVData] No data found in database, using mock data');
       return getMockCVData();
     }
   } catch (error) {

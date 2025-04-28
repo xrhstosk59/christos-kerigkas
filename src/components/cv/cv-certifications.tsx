@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Certification } from '@/types/certifications'
 import { Calendar, Award, ExternalLink, X, Eye, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Certification } from '@/types/certifications'
 
 interface CVCertificationsProps {
   certifications: Certification[]
@@ -22,17 +22,6 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
   const [openPreview, setOpenPreview] = useState(false)
   const [filterType, setFilterType] = useState<string | null>(null)
   
-  // Check if certifications exist
-  if (!certifications || certifications.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600 dark:text-gray-400">
-          Δεν βρέθηκαν πιστοποιήσεις. Παρακαλώ προσθέστε πιστοποιήσεις στη βάση δεδομένων.
-        </p>
-      </div>
-    )
-  }
-  
   // Get unique certification types
   const certificationTypes = Array.from(
     new Set(certifications.map(cert => cert.type))
@@ -47,16 +36,8 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
     
     // Filter by skills
     if (filters.skills.length > 0 && (!cert.skills || 
-        !cert.skills.some(skill => filters.skills.includes(skill)))) {
+        !cert.skills.some((skill: string) => filters.skills.includes(skill)))) {
       return false
-    }
-    
-    // Filter by year range if issueDate exists
-    if (cert.issueDate) {
-      const issueYear = new Date(cert.issueDate).getFullYear()
-      if (issueYear < filters.years.min || issueYear > filters.years.max) {
-        return false
-      }
     }
     
     return true
@@ -159,7 +140,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                 {/* Skills */}
                 {cert.skills && cert.skills.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {cert.skills.map(skill => (
+                    {cert.skills.map((skill: string) => (
                       <span 
                         key={skill} 
                         className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300"
