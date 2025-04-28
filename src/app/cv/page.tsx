@@ -14,7 +14,7 @@ export default async function CVPage() {
   
   return (
     <main className="container mx-auto px-4 py-8">
-      <InteractiveCV cvData={cvData} />
+      <InteractiveCV initialCVData={cvData} />
     </main>
   );
 }

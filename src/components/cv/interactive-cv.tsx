@@ -17,10 +17,15 @@ import CVExport from './cv-export'
 import CVFilters from './cv-filters'
 import Image from 'next/image'
 
-export default function InteractiveCV() {
+// Ορισμός των props του component
+interface InteractiveCVProps {
+  initialCVData?: CVData;
+}
+
+export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
   const { theme } = useTheme()
-  const [cvData, setCVData] = useState<CVData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [cvData, setCVData] = useState<CVData | null>(initialCVData || null)
+  const [loading, setLoading] = useState(!initialCVData)
   const [error, setError] = useState<string | null>(null)
   const [activeView, setActiveView] = useState<'compact' | 'detailed'>('detailed')
   const [showFilters, setShowFilters] = useState(false)
@@ -40,8 +45,10 @@ export default function InteractiveCV() {
     colorScheme: theme === 'dark' ? 'dark' : 'light'
   })
 
-  // Load data during initialization
+  // Φόρτωση δεδομένων μόνο αν δεν έχουν δοθεί ως prop
   useEffect(() => {
+    if (initialCVData) return; // Παράλειψη φόρτωσης αν τα δεδομένα έχουν δοθεί ως prop
+    
     const loadCVData = async () => {
       try {
         setLoading(true)
@@ -56,7 +63,7 @@ export default function InteractiveCV() {
     }
 
     loadCVData()
-  }, [])
+  }, [initialCVData])
 
   // Update colorScheme when theme changes
   useEffect(() => {
