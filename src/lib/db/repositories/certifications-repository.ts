@@ -1,67 +1,75 @@
 // src/lib/db/repositories/certifications-repository.ts
-import { db } from '@/lib/db'
-import { certifications, type NewCertification } from '@/lib/db/schema'
+import { certifications, type NewCertification, type Certification } from '@/lib/db/schema'
+import { ensureDatabaseConnection } from '@/lib/db/helpers'
 import { desc, eq, sql } from 'drizzle-orm'
 
 export const certificationsRepository = {
-  async findAll() {
-    return db.select()
+  async findAll(): Promise<Certification[]> {
+    const database = ensureDatabaseConnection();
+    return database.select()
       .from(certifications)
-      .orderBy(desc(certifications.issueDate))
+      .orderBy(desc(certifications.issueDate));
   },
   
-  async findFeatured() {
-    return db.select()
+  async findFeatured(): Promise<Certification[]> {
+    const database = ensureDatabaseConnection();
+    return database.select()
       .from(certifications)
       .where(eq(certifications.featured, true))
-      .orderBy(desc(certifications.issueDate))
+      .orderBy(desc(certifications.issueDate));
   },
   
-  async findById(id: string) {
-    const [certification] = await db.select()
+  async findById(id: string): Promise<Certification | undefined> {
+    const database = ensureDatabaseConnection();
+    const [certification] = await database.select()
       .from(certifications)
       .where(eq(certifications.id, id))
-      .limit(1)
+      .limit(1);
     
-    return certification
+    return certification;
   },
   
-  async findByType(type: string) {
-    return db.select()
+  async findByType(type: string): Promise<Certification[]> {
+    const database = ensureDatabaseConnection();
+    return database.select()
       .from(certifications)
       .where(eq(certifications.type, type))
-      .orderBy(desc(certifications.issueDate))
+      .orderBy(desc(certifications.issueDate));
   },
   
-  async findBySkill(skill: string) {
-    return db.select()
+  async findBySkill(skill: string): Promise<Certification[]> {
+    const database = ensureDatabaseConnection();
+    return database.select()
       .from(certifications)
       .where(sql`${skill} = ANY(${certifications.skills})`)
-      .orderBy(desc(certifications.issueDate))
+      .orderBy(desc(certifications.issueDate));
   },
   
-  async create(certification: NewCertification) {
-    const [result] = await db.insert(certifications)
+  async create(certification: NewCertification): Promise<Certification> {
+    const database = ensureDatabaseConnection();
+    const [result] = await database.insert(certifications)
       .values(certification)
-      .returning()
+      .returning();
     
-    return result
+    return result;
   },
   
-  async update(id: string, certification: Partial<Omit<NewCertification, 'createdAt'>>) {
-    const [result] = await db.update(certifications)
+  async update(id: string, certification: Partial<Omit<NewCertification, 'createdAt'>>): Promise<Certification | undefined> {
+    const database = ensureDatabaseConnection();
+    const [result] = await database.update(certifications)
       .set({
         ...certification,
         updatedAt: new Date()
       })
       .where(eq(certifications.id, id))
-      .returning()
+      .returning();
     
-    return result
+    return result;
   },
   
-  async delete(id: string) {
-    return db.delete(certifications)
-      .where(eq(certifications.id, id))
+  async delete(id: string): Promise<void> {
+    const database = ensureDatabaseConnection();
+    await database.delete(certifications)
+      .where(eq(certifications.id, id));
   }
 }

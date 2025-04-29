@@ -1,23 +1,34 @@
 // src/lib/db/repositories/blog-repository.ts
-import { db } from '@/lib/db'
 import { blogPosts, type BlogPost, type NewBlogPost } from '@/lib/db/schema'
+import { ensureDatabaseConnection } from '@/lib/db/helpers'
 import { desc, eq, like, or, sql, count } from 'drizzle-orm'
 
+// Τύπος για τα αποτελέσματα αναζήτησης
+type PaginatedResult<T> = {
+  posts: T[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export const blogRepository = {
-  async findAll(page: number = 1, limit: number = 10) {
-    const offset = (page - 1) * limit
+  async findAll(page: number = 1, limit: number = 10): Promise<PaginatedResult<BlogPost>> {
+    const database = ensureDatabaseConnection();
+    const offset = (page - 1) * limit;
     
-    const posts = await db.select()
+    const posts = await database.select()
       .from(blogPosts)
       .orderBy(desc(blogPosts.date))
       .limit(limit)
-      .offset(offset)
+      .offset(offset);
     
-    const [result] = await db
+    const [result] = await database
       .select({ total: count() })
-      .from(blogPosts)
+      .from(blogPosts);
     
-    const total = Number(result.total)
+    const total = Number(result.total);
     
     return {
       posts,
@@ -26,34 +37,36 @@ export const blogRepository = {
       currentPage: page,
       hasNextPage: page < Math.ceil(total / limit),
       hasPrevPage: page > 1,
-    }
+    };
   },
   
   async findBySlug(slug: string): Promise<BlogPost | undefined> {
-    const [post] = await db.select()
+    const database = ensureDatabaseConnection();
+    const [post] = await database.select()
       .from(blogPosts)
       .where(eq(blogPosts.slug, slug))
-      .limit(1)
+      .limit(1);
     
-    return post
+    return post;
   },
   
-  async findByCategory(category: string, page: number = 1, limit: number = 10) {
-    const offset = (page - 1) * limit
+  async findByCategory(category: string, page: number = 1, limit: number = 10): Promise<PaginatedResult<BlogPost>> {
+    const database = ensureDatabaseConnection();
+    const offset = (page - 1) * limit;
     
-    const posts = await db.select()
+    const posts = await database.select()
       .from(blogPosts)
       .where(sql`${category} = ANY(${blogPosts.categories})`)
       .orderBy(desc(blogPosts.date))
       .limit(limit)
-      .offset(offset)
+      .offset(offset);
     
-    const [result] = await db
+    const [result] = await database
       .select({ total: count() })
       .from(blogPosts)
-      .where(sql`${category} = ANY(${blogPosts.categories})`)
+      .where(sql`${category} = ANY(${blogPosts.categories})`);
     
-    const total = Number(result.total)
+    const total = Number(result.total);
     
     return {
       posts,
@@ -62,11 +75,12 @@ export const blogRepository = {
       currentPage: page,
       hasNextPage: page < Math.ceil(total / limit),
       hasPrevPage: page > 1,
-    }
+    };
   },
   
-  async search(query: string, limit: number = 10) {
-    return db.select()
+  async search(query: string, limit: number = 10): Promise<BlogPost[]> {
+    const database = ensureDatabaseConnection();
+    return database.select()
       .from(blogPosts)
       .where(
         or(
@@ -76,31 +90,34 @@ export const blogRepository = {
         )
       )
       .orderBy(desc(blogPosts.date))
-      .limit(limit)
+      .limit(limit);
   },
   
-  async create(post: NewBlogPost) {
-    const [result] = await db.insert(blogPosts)
+  async create(post: NewBlogPost): Promise<BlogPost> {
+    const database = ensureDatabaseConnection();
+    const [result] = await database.insert(blogPosts)
       .values(post)
-      .returning()
+      .returning();
     
-    return result
+    return result;
   },
   
-  async update(slug: string, post: Partial<Omit<NewBlogPost, 'createdAt'>>) {
-    const [result] = await db.update(blogPosts)
+  async update(slug: string, post: Partial<Omit<NewBlogPost, 'createdAt'>>): Promise<BlogPost | undefined> {
+    const database = ensureDatabaseConnection();
+    const [result] = await database.update(blogPosts)
       .set({
         ...post,
         updatedAt: new Date()
       })
       .where(eq(blogPosts.slug, slug))
-      .returning()
+      .returning();
     
-    return result
+    return result;
   },
   
-  async delete(slug: string) {
-    return db.delete(blogPosts)
-      .where(eq(blogPosts.slug, slug))
+  async delete(slug: string): Promise<void> {
+    const database = ensureDatabaseConnection();
+    await database.delete(blogPosts)
+      .where(eq(blogPosts.slug, slug));
   }
 }
