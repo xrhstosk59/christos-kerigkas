@@ -14,7 +14,8 @@
     "db:migrate": "tsx ./src/lib/db/migrations.ts",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx ./src/lib/db/migrate.ts seed"
+    "db:seed": "tsx ./src/lib/db/migrate.ts seed",
+    "migrate:posts": "tsx ./scripts/migrate-posts-to-supabase.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
@@ -24,7 +25,7 @@
     "@radix-ui/react-tabs": "^1.1.8",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@supabase/ssr": "^0.1.0",
-    "@supabase/supabase-js": "^2.39.6",
+    "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/forms": "^0.5.10",
     "@types/nodemailer": "^6.4.17",
     "class-variance-authority": "^0.7.1",
@@ -32,7 +33,7 @@
     "critters": "^0.0.23",
     "crypto": "^1.0.1",
     "cva": "^0.0.0",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "drizzle-orm": "^0.40.1",
     "framer-motion": "^12.0.1",
     "jspdf": "^3.0.1",
@@ -50,7 +51,7 @@
     "remark-gfm": "^4.0.0",
     "shadcn-ui": "^0.9.5",
     "tailwind-merge": "^2.6.0",
-    "tsx": "^4.19.3",
+    "tsx": "^4.19.4",
     "zod": "^3.24.2"
   },
   "devDependencies": {
