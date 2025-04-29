@@ -44,12 +44,14 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/admin/users/page.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/admin/login/route.ts
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/blog/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/blog/[slug]/route.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/blog/route.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/blog/search/route.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/contact/route.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/newsletter/route.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/upload/route.ts
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/app/blog/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/blog/[slug]/layout.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/blog/[slug]/opengraph-image.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/blog/[slug]/page.tsx
@@ -114,6 +116,7 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/ui/card.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/ui/dialog.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/components/ui/tabs.tsx
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/content/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/content/certifications.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/content/posts/crypto-trading-basics.json
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/content/posts/getting-started-with-nextjs.json
@@ -160,5 +163,9 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/client.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/middleware.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/server.ts
+/Users/xrhstosk59/Downloads/christos-kerigkas/supabase/.branches/_current_branch
+/Users/xrhstosk59/Downloads/christos-kerigkas/supabase/.gitignore
+/Users/xrhstosk59/Downloads/christos-kerigkas/supabase/.temp/cli-latest
+/Users/xrhstosk59/Downloads/christos-kerigkas/supabase/config.toml
 /Users/xrhstosk59/Downloads/christos-kerigkas/tailwind.config.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/tsconfig.json
