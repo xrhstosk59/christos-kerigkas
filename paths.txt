@@ -32,7 +32,7 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/vercel.svg
 /Users/xrhstosk59/Downloads/christos-kerigkas/public/window.svg
 /Users/xrhstosk59/Downloads/christos-kerigkas/README.md
-/Users/xrhstosk59/Downloads/christos-kerigkas/scripts/migrate-posts-to-supabase.js
+/Users/xrhstosk59/Downloads/christos-kerigkas/scripts/migrate-posts-to-supabase.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/admin/layout.tsx
@@ -42,6 +42,7 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/admin/post/new/page.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/admin/profile/page.tsx
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/admin/users/page.tsx
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/admin/login/route.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/blog/[slug]/route.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/app/api/blog/route.ts
@@ -124,6 +125,7 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/lib/cv-data.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/lib/database.types.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/lib/db/.DS_Store
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/lib/db/helpers.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/lib/db/index.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/lib/db/migrate.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/lib/db/migrations.ts
@@ -154,6 +156,7 @@
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/types/cv.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/types/gtag.d.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/types/projects.ts
+/Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/.DS_Store
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/client.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/middleware.ts
 /Users/xrhstosk59/Downloads/christos-kerigkas/src/utils/supabase/server.ts
