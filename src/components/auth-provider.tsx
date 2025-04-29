@@ -2,7 +2,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabaseAuth, isAuthClientValid } from '@/lib/supabase-auth'
+import { supabaseAuthManager, isAuthClientValid, auth } from '@/lib/supabase-auth'
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
@@ -41,9 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Αρχικοποίηση της κατάστασης από το τρέχον session
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabaseAuth!.auth.getSession()
-        setSession(session)
-        setUser(session?.user ?? null)
+        const { data } = await auth.getSession()
+        const currentSession = data.session
+        setSession(currentSession)
+        setUser(currentSession?.user ?? null)
       } catch (error) {
         console.error('Error getting session:', error)
       } finally {
@@ -55,7 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let subscription: { unsubscribe: () => void } = { unsubscribe: () => {} }
     
     try {
-      const { data } = supabaseAuth!.auth.onAuthStateChange(
+      const client = supabaseAuthManager.getClient()
+      const { data } = client.auth.onAuthStateChange(
         (_event: AuthChangeEvent, session: Session | null) => {
           setSession(session)
           setUser(session?.user ?? null)
@@ -83,10 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Authentication system is not available')
     }
     
-    const { error } = await supabaseAuth!.auth.signInWithPassword({
-      email,
-      password,
-    })
+    // Χρησιμοποιούμε το νέο API
+    const { error } = await auth.signInWithPassword(email, password)
 
     if (error) {
       throw error
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Αποσύνδεση
   const signOut = async () => {
     if (isAuthClientValid()) {
-      await supabaseAuth!.auth.signOut()
+      await auth.signOut()
     }
     router.push('/admin/login')
     router.refresh()

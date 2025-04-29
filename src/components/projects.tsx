@@ -7,11 +7,11 @@ import { OptimizedImage } from './optimizedimage'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { ProjectsServer } from './projects-server'
+import { ErrorBoundary } from './error-boundary'
 
 export function Projects() {
   const { theme } = useTheme()
 
-  // Αφαιρέθηκε η παράμετρος index αφού δεν χρησιμοποιείται
   const renderImage = (src: string, alt: string) => (
     <OptimizedImage
       src={src}
@@ -81,12 +81,14 @@ export function Projects() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <ProjectsServer 
-            theme={theme}
-            renderImage={renderImage}
-            renderTechBadge={renderTechBadge}
-            renderProjectLinks={renderProjectLinks}
-          />
+          <ErrorBoundary fallback={<p>There was an error loading projects. Please try again.</p>}>
+            <ProjectsServer 
+              theme={theme}
+              renderImage={renderImage}
+              renderTechBadge={renderTechBadge}
+              renderProjectLinks={renderProjectLinks}
+            />
+          </ErrorBoundary>
         </motion.div>
       </div>
     </motion.section>

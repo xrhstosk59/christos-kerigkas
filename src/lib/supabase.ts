@@ -1,5 +1,5 @@
 // src/lib/supabase.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { BlogPost } from '@/types/blog'
 
 // Τύποι για το schema του Supabase
@@ -17,47 +17,113 @@ export type BlogPostRow = {
   created_at: string
 }
 
-// Δημιουργία του Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Τύπος για τα responses από το Supabase
 
-// Ελέγχουμε για server-side περιβάλλον
-const isServer = typeof window === 'undefined'
-const isBuildTime = process.env.NODE_ENV === 'production' && isServer
+// Κλάση για διαχείριση των σφαλμάτων του Supabase
+export class SupabaseError extends Error {
+  constructor(message: string, public originalError?: unknown) {
+    super(message)
+    this.name = 'SupabaseError'
+  }
+}
 
-// Θα χρησιμοποιήσουμε διαφορετικές μεταβλητές για το client-side
-const clientSideUrl = typeof window !== 'undefined' 
-  ? process.env.NEXT_PUBLIC_SUPABASE_URL 
-  : null
-const clientSideKey = typeof window !== 'undefined' 
-  ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY 
-  : null
+// Κεντρική διαχείριση για το Supabase client
+class SupabaseManager {
+  private client: SupabaseClient | null = null
+  private isBuildTime: boolean = false
 
-// Δημιουργούμε το client μόνο όταν είναι απαραίτητο
-let supabase: ReturnType<typeof createClient> | null = null
+  constructor() {
+    this.initialize()
+  }
 
-// Αποφεύγουμε τη δημιουργία του client κατά τη διάρκεια του static build
-if (!isBuildTime || (process.env.NEXT_PHASE !== 'phase-production-build')) {
-  if (isServer) {
-    if (supabaseUrl && supabaseKey) {
-      supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } })
+  private initialize() {
+    // Ελέγχουμε για server-side περιβάλλον
+    const isServer = typeof window === 'undefined'
+    this.isBuildTime = process.env.NODE_ENV === 'production' && isServer && 
+      (process.env.NEXT_PHASE === 'phase-production-build')
+
+    // Αποφεύγουμε τη δημιουργία του client κατά τη διάρκεια του static build
+    if (this.isBuildTime) {
+      return
     }
-  } else {
-    if (clientSideUrl && clientSideKey) {
-      supabase = createClient(clientSideUrl, clientSideKey, { auth: { persistSession: true } })
+
+    try {
+      if (isServer) {
+        // Server-side client
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+        if (supabaseUrl && supabaseKey) {
+          this.client = createClient(supabaseUrl, supabaseKey, { 
+            auth: { persistSession: false } 
+          })
+        }
+      } else {
+        // Client-side client
+        const clientSideUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const clientSideKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+        if (clientSideUrl && clientSideKey) {
+          this.client = createClient(clientSideUrl, clientSideKey, { 
+            auth: { persistSession: true } 
+          })
+        }
+      }
+
+      if (!this.client) {
+        console.warn(
+          'Supabase client initialization failed. ' +
+          'Please check your environment variables.'
+        )
+      }
+    } catch (error) {
+      console.error('Error initializing Supabase client:', error)
+      this.client = null
+    }
+  }
+
+  // Ασφαλής πρόσβαση στο client
+  getClient(): SupabaseClient {
+    if (this.isBuildTime) {
+      throw new SupabaseError('Supabase client is not available during build time')
+    }
+    
+    if (!this.client) {
+      throw new SupabaseError('Supabase client is not initialized')
+    }
+    
+    return this.client
+  }
+
+  // Έλεγχος αν το client είναι διαθέσιμο
+  isClientAvailable(): boolean {
+    return !this.isBuildTime && !!this.client
+  }
+
+  // Ασφαλής εκτέλεση ενεργειών με χειρισμό σφαλμάτων
+  async execute<T>(
+    action: (client: SupabaseClient) => Promise<T>,
+    errorMessage = 'Error executing Supabase operation'
+  ): Promise<T> {
+    try {
+      const client = this.getClient()
+      return await action(client)
+    } catch (error) {
+      if (error instanceof SupabaseError) {
+        throw error
+      }
+      throw new SupabaseError(errorMessage, error)
     }
   }
 }
 
-// Βεβαιωνόμαστε ότι το client υπάρχει
-if (!supabase && !isBuildTime) {
-  console.error(
-    'Supabase client initialization failed. ' +
-    'Please check your environment variables: ' +
-    `${isServer ? 'NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY' 
-               : 'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'}`
-  )
-}
+// Singleton instance
+export const supabaseManager = new SupabaseManager()
+
+// Για συμβατότητα με υπάρχοντα κώδικα
+export const supabase = supabaseManager.isClientAvailable() 
+  ? supabaseManager.getClient() 
+  : null
 
 // Μετατροπή από το schema της βάσης στο type της εφαρμογής
 export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
@@ -78,23 +144,23 @@ export function mapBlogPostRowToBlogPost(row: BlogPostRow): BlogPost {
 
 // Λειτουργίες για το blog με βελτιωμένο χειρισμό σφαλμάτων
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
-  if (!supabase) {
-    console.warn('Supabase client not initialized during getAllBlogPosts')
-    return []
-  }
-
   try {
-    const { data, error } = await supabase
+    if (!supabaseManager.isClientAvailable()) {
+      console.warn('Supabase client not initialized during getAllBlogPosts')
+      return []
+    }
+
+    const result = await supabaseManager.getClient()
       .from('blog_posts')
       .select('*')
       .order('date', { ascending: false })
     
-    if (error) {
-      console.error('Error fetching blog posts:', error)
+    if (result.error) {
+      console.error('Error fetching blog posts:', result.error)
       return []
     }
     
-    return ((data || []) as BlogPostRow[]).map(mapBlogPostRowToBlogPost)
+    return ((result.data || []) as BlogPostRow[]).map(mapBlogPostRowToBlogPost)
   } catch (err) {
     console.error('Exception in getAllBlogPosts:', err)
     return []
@@ -102,32 +168,27 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  if (!supabase) {
-    console.warn('Supabase client not initialized during getBlogPostBySlug')
-    return null
-  }
-
   try {
-    const { data, error } = await supabase
+    if (!supabaseManager.isClientAvailable()) {
+      console.warn('Supabase client not initialized during getBlogPostBySlug')
+      return null
+    }
+
+    const result = await supabaseManager.getClient()
       .from('blog_posts')
       .select('*')
       .eq('slug', slug)
       .single()
     
-    if (error) {
-      console.error('Error fetching blog post:', error)
+    if (result.error) {
+      console.error('Error fetching blog post:', result.error)
       return null
     }
     
-    if (!data) return null;
-    return mapBlogPostRowToBlogPost(data as BlogPostRow)
+    if (!result.data) return null;
+    return mapBlogPostRowToBlogPost(result.data as BlogPostRow)
   } catch (err) {
     console.error('Exception in getBlogPostBySlug:', err)
     return null
   }
 }
-
-// Παρόμοια ενημέρωση και για τις άλλες λειτουργίες...
-
-// Export του supabase client για άλλες λειτουργίες
-export { supabase }

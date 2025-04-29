@@ -1,7 +1,7 @@
-// src/components/hero.tsx - Με τροποποιήσεις για το Supabase Storage
+// src/components/hero.tsx
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useTheme } from './theme-provider'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
@@ -20,6 +20,7 @@ interface SocialLink {
 export default function Hero() {
   const { theme, profileImage, setProfileImage } = useTheme()
   const [isUploading, setIsUploading] = useState(false)
+  const [imageError, setImageError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const socialLinks: SocialLink[] = [
@@ -65,6 +66,7 @@ export default function Hero() {
 
     try {
       setIsUploading(true)
+      setImageError(false)
       const formData = new FormData()
       formData.append('image', file)
 
@@ -139,15 +141,26 @@ export default function Hero() {
     }
   }
 
-  // Προσθήκη loader για χειρισμό εξωτερικών URLs του Supabase
-  const imageLoader = ({ src }: { src: string }) => {
+  // Βελτιωμένο loader για χειρισμό εξωτερικών URLs του Supabase
+  const imageLoader = useCallback(({ src }: { src: string }) => {
     // Αν είναι Supabase URL, επέστρεψέ το ως έχει
     if (isSupabaseUrl(src)) {
       return src
     }
     // Αλλιώς χρησιμοποίησε το κανονικό path
     return src
-  }
+  }, [])
+
+  // Βελτιωμένος χειρισμός σφαλμάτων εικόνας
+  const handleImageError = useCallback(() => {
+    setImageError(true)
+    console.warn('Profile image failed to load, falling back to default')
+    
+    // Αλλάζουμε την εικόνα profile μόνο αν δεν είναι ήδη η default
+    if (profileImage !== '/uploads/profile.jpg') {
+      setProfileImage('/uploads/profile.jpg')
+    }
+  }, [profileImage, setProfileImage])
 
   return (
     <section
@@ -174,24 +187,24 @@ export default function Hero() {
                   </svg>
                 </div>
               ) : (
-                <Image
-                  loader={imageLoader}
-                  src={profileImage}
-                  alt="Christos Kerigkas Profile Picture"
-                  width={128}
-                  height={128}
-                  priority
-                  className="object-cover w-full h-full"
-                  onError={(e) => {
-                    // Fallback to default image if the custom one fails to load
-                    const target = e.target as HTMLImageElement;
-                    if (target.src !== '/uploads/profile.jpg') {
-                      console.warn('Profile image failed to load, falling back to default');
-                      setProfileImage('/uploads/profile.jpg');
-                    }
-                  }}
-                  unoptimized={isSupabaseUrl(profileImage)} // Απενεργοποίηση του Next.js optimization για Supabase URLs
-                />
+                <div className="w-full h-full relative">
+                  {imageError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100/70 dark:bg-gray-900/70 text-sm text-gray-700 dark:text-gray-300 z-10">
+                      Image failed to load
+                    </div>
+                  )}
+                  <Image
+                    loader={imageLoader}
+                    src={profileImage}
+                    alt="Christos Kerigkas Profile Picture"
+                    fill
+                    sizes="(max-width: 768px) 96px, 128px"
+                    priority
+                    className="object-cover w-full h-full"
+                    onError={handleImageError}
+                    unoptimized={isSupabaseUrl(profileImage)} // Απενεργοποίηση του Next.js optimization για Supabase URLs
+                  />
+                </div>
               )}
             </div>
 
@@ -226,7 +239,6 @@ export default function Hero() {
             />
           </motion.div>
 
-          {/* Το υπόλοιπο του component παραμένει ίδιο */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
