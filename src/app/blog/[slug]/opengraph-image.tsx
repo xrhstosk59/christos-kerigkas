@@ -51,9 +51,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-          {/* Το img element χρησιμοποιείται εδώ μέσα στο ImageResponse.
-              Προσθέτουμε το eslint-disable comment για να αποφύγουμε την προειδοποίηση */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* Το img element χρησιμοποιείται εδώ μέσα στο ImageResponse */}
           <img
             src={`${siteConfig.url}/profile.jpg`}
             width={60}

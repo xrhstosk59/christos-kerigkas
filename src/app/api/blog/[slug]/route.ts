@@ -4,10 +4,6 @@ import { blogRepository } from '@/lib/db/repositories/blog-repository'
 import { checkAuth } from '@/lib/auth'
 import { z } from 'zod'
 
-interface RouteContext {
-  params: { slug: string }
-}
-
 // Post validation schema
 const postSchema = z.object({
   slug: z.string().min(1, 'Slug is required'),
@@ -23,9 +19,14 @@ const postSchema = z.object({
   content: z.string().min(1, 'Content is required'),
 })
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+// Στο Next.js 15, οι παράμετροι διαδρομής (params) είναι πλέον Promise
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ slug: string }> }
+) {
   try {
-    const { slug } = context.params
+    const params = await context.params;
+    const { slug } = params;
 
     if (!slug) {
       return NextResponse.json(
@@ -73,12 +74,16 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 }
 
 // Ενημέρωση blog post
-export async function PUT(request: NextRequest, context: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ slug: string }> }
+) {
   try {
     // Έλεγχος αν ο χρήστης είναι authenticated
     await checkAuth()
     
-    const { slug: originalSlug } = context.params
+    const params = await context.params;
+    const { slug: originalSlug } = params;
     
     if (!originalSlug) {
       return NextResponse.json(
@@ -142,12 +147,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 }
 
 // Διαγραφή blog post
-export async function DELETE(_request: NextRequest, context: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ slug: string }> }
+) {
   try {
     // Έλεγχος αν ο χρήστης είναι authenticated
     await checkAuth()
     
-    const { slug } = context.params
+    const params = await context.params;
+    const { slug } = params;
     
     if (!slug) {
       return NextResponse.json(

@@ -1,74 +1,174 @@
-import type { Metadata } from 'next'
+// src/lib/seo.ts
+import { Metadata } from 'next';
 
+// Προσθήκη του siteConfig για συμβατότητα με τα υπόλοιπα αρχεία
 export const siteConfig = {
   name: 'Christos Kerigkas',
-  title: 'Christos Kerigkas | Full Stack Developer & Crypto Enthusiast',
-  description: 'Full Stack Developer specializing in Next.js, React, and TypeScript. Building modern web applications and cryptocurrency trading solutions.',
   url: 'https://christoskerigkas.com',
-  ogImage: '/og.png',
-  links: {
-    github: 'https://github.com/yourusername',
-    linkedin: 'https://linkedin.com/in/yourusername',
-    email: 'your-email@example.com'
-  },
   author: {
     name: 'Christos Kerigkas',
     image: '/profile.jpg',
-    bio: '21-year-old Full Stack Developer and Computer Science student based in Kavala, Greece.'
-  }
-}
+  },
+  description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js. Portfolio, blog, and professional experience.',
+};
 
+// Βασικό configuration για SEO
 export const defaultMetadata: Metadata = {
-  title: siteConfig.title,
-  description: siteConfig.description,
-  authors: [{ name: siteConfig.author.name, url: siteConfig.url }],
-  creator: siteConfig.author.name,
-  publisher: siteConfig.author.name,
+  title: {
+    default: 'Christos Kerigkas | Full Stack Developer',
+    template: '%s | Christos Kerigkas'
+  },
+  description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js. Portfolio, blog, and professional experience.',
+  keywords: ['Christos Kerigkas', 'Full Stack Developer', 'Next.js', 'React', 'TypeScript', 'Portfolio', 'Web Development'],
+  authors: [{ name: 'Christos Kerigkas', url: 'https://christoskerigkas.com' }],
+  creator: 'Christos Kerigkas',
+  publisher: 'Christos Kerigkas',
   formatDetection: {
     email: true,
-    address: false,
+    address: true,
     telephone: true,
   },
   openGraph: {
     type: 'website',
-    url: siteConfig.url,
-    title: siteConfig.title,
-    description: siteConfig.description,
-    siteName: siteConfig.name,
-    images: [{
-      url: siteConfig.ogImage,
-      width: 1200,
-      height: 630,
-      alt: siteConfig.name
-    }],
     locale: 'en_US',
+    url: 'https://christoskerigkas.com',
+    siteName: 'Christos Kerigkas',
+    title: 'Christos Kerigkas | Full Stack Developer',
+    description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js. Portfolio, blog, and professional experience.',
+    images: [
+      {
+        url: 'https://christoskerigkas.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Christos Kerigkas - Full Stack Developer',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: siteConfig.title,
-    description: siteConfig.description,
-    images: [siteConfig.ogImage],
-    creator: '@yourusername'
+    title: 'Christos Kerigkas | Full Stack Developer',
+    description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js.',
+    images: ['https://christoskerigkas.com/og-image.jpg'],
   },
-  alternates: {
-    canonical: siteConfig.url,
-    languages: {
-      'en-US': `${siteConfig.url}/en`,
-      'el-GR': `${siteConfig.url}/el`,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+      'max-snippet': -1,
     },
   },
-  category: 'technology',
-  keywords: [
-    'Full Stack Developer', 
-    'Next.js', 
-    'React', 
-    'TypeScript', 
-    'Web Development',
-    'Crypto Trading',
-    'Portfolio',
-    'Software Engineer',
-    'JavaScript Developer',
-    'Frontend Developer',
-    'Backend Developer'
-  ]
+  verification: {
+    google: process.env.GOOGLE_VERIFICATION_ID || '',
+    yandex: process.env.YANDEX_VERIFICATION_ID || '',
+    // Διόρθωση: Το 'bing' δεν είναι έγκυρο property, χρησιμοποιούμε το 'other'
+    other: {
+      'msvalidate.01': process.env.BING_VERIFICATION_ID || '',
+    },
+  },
+  alternates: {
+    canonical: 'https://christoskerigkas.com',
+    languages: {
+      'en-US': 'https://christoskerigkas.com',
+    },
+  }
+};
+
+// Δημιουργία metadata για blog posts
+export function generateBlogPostMetadata(
+  title: string,
+  description: string,
+  slug: string,
+  image: string,
+  date: string,
+  author: string
+): Metadata {
+  const url = `https://christoskerigkas.com/blog/${slug}`;
+  
+  return {
+    title,
+    description,
+    openGraph: {
+      type: 'article',
+      url,
+      title,
+      description,
+      images: [
+        {
+          url: image.startsWith('http') ? image : `https://christoskerigkas.com${image}`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      publishedTime: date,
+      authors: [author],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image.startsWith('http') ? image : `https://christoskerigkas.com${image}`],
+    },
+    alternates: {
+      canonical: url,
+    },
+  };
+}
+
+// Δημιουργία JSON-LD για SEO
+export function generatePersonJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Christos Kerigkas',
+    url: 'https://christoskerigkas.com',
+    jobTitle: 'Full Stack Developer',
+    sameAs: [
+      'https://github.com/christoskerigkas',
+      'https://linkedin.com/in/christoskerigkas',
+      // Πρόσθεσε τα δικά σου social media
+    ],
+    image: 'https://christoskerigkas.com/profile.jpg',
+    description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js.',
+  };
+}
+
+export function generateArticleJsonLd(post: {
+  title: string;
+  description: string;
+  slug: string;
+  date: string;
+  author: { name: string; image: string };
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.description,
+    image: post.author.image.startsWith('http') 
+      ? post.author.image 
+      : `https://christoskerigkas.com${post.author.image}`,
+    datePublished: post.date,
+    author: {
+      '@type': 'Person',
+      name: post.author.name,
+      url: 'https://christoskerigkas.com',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Christos Kerigkas',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://christoskerigkas.com/logo.png',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://christoskerigkas.com/blog/${post.slug}`,
+    },
+  };
 }

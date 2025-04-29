@@ -5,6 +5,12 @@ import { z } from 'zod'
 import { rateLimit } from '@/lib/rate-limit'
 import { db, sql } from '@/lib/db'
 
+// Ορισμός τύπου για το αποτέλεσμα του SQL ερωτήματος
+type DbQueryResult = {
+  id: number;
+  [key: string]: unknown;
+}
+
 // Create limiter
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
@@ -86,8 +92,11 @@ export async function POST(req: Request) {
           RETURNING id
         `);
         
-        if (result && result.length > 0 && result[0].id) {
-          messageId = result[0].id;
+        // Χρήση type assertion για να ορίσουμε τον τύπο του result
+        const typedResult = result as unknown as DbQueryResult[];
+        
+        if (typedResult && typedResult.length > 0 && typedResult[0].id) {
+          messageId = typedResult[0].id;
           databaseSuccess = true;
           console.log('Message saved to database with ID:', messageId);
         }

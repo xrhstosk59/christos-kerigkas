@@ -58,6 +58,11 @@ export default function AdminProfile() {
       setError(null)
       setSuccessMessage(null)
       
+      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
+      if (!supabaseAuth) {
+        throw new Error('Authentication service is not available')
+      }
+      
       // Χρήση του Supabase Auth API για την αλλαγή κωδικού
       const { error } = await supabaseAuth.auth.updateUser({ 
         password: formData.password 

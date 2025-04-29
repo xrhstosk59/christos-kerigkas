@@ -1,5 +1,6 @@
 // src/lib/db/index.ts
 import { drizzle } from 'drizzle-orm/postgres-js'
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres'
 import * as schema from './schema'
 import { sql } from 'drizzle-orm'
@@ -10,9 +11,11 @@ const isNode = typeof process !== 'undefined' &&
               process.versions != null && 
               process.versions.node != null
 
-// Δημιουργούμε σύνδεση με τη βάση μόνο αν είμαστε σε Node περιβάλλον
-let dbClient = null
+// Ορίζουμε τους τύπους
+let pgClient: postgres.Sql<Record<string, unknown>> | null = null;
+let dbClient: PostgresJsDatabase<typeof schema> | null = null;
 
+// Δημιουργούμε σύνδεση με τη βάση μόνο αν είμαστε σε Node περιβάλλον
 if (isNode) {
   try {
     // Το connection string από τις μεταβλητές περιβάλλοντος
@@ -21,8 +24,8 @@ if (isNode) {
     if (!connectionString) {
       console.error('DATABASE_URL is not defined in environment variables')
     } else {
-      // Δημιουργία του postgres client με πλήρες configuration
-      const client = postgres(connectionString, {
+      // Δημιουργία του postgres client
+      pgClient = postgres(connectionString, {
         max: 10, // Μέγιστος αριθμός connections
         idle_timeout: 20, // Χρόνος αδράνειας σε δευτερόλεπτα
         prepare: false, // απενεργοποίηση prepared statements για καλύτερη συμβατότητα με Supabase
@@ -33,7 +36,7 @@ if (isNode) {
       })
 
       // Δημιουργία του drizzle client
-      dbClient = drizzle(client, { schema })
+      dbClient = drizzle(pgClient, { schema })
       console.log('Database client initialized successfully')
     }
   } catch (error) {
@@ -41,8 +44,48 @@ if (isNode) {
   }
 }
 
-// Εξαγωγή του db client
-export const db = dbClient
+// Ορίζουμε τύπο για τα αποτελέσματα της execute
+type ExecuteResult<T = unknown> = Promise<T[]>;
+
+// Δημιουργία interface για το db object
+interface DbClient {
+  execute: (query: ReturnType<typeof sql>) => ExecuteResult;
+  query: (query: ReturnType<typeof sql>) => ExecuteResult;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  select: (...args: unknown[]) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  insert: (...args: unknown[]) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  update: (...args: unknown[]) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete: (...args: unknown[]) => any;
+}
+
+// Δημιουργία fallback functions
+const notInitializedError = (): never => {
+  throw new Error('Database client not initialized');
+};
+
+// Εξαγωγή του db client με τις μεθόδους drizzle
+export const db: DbClient = dbClient ? {
+  execute: (query) => dbClient!.execute(query),
+  query: (query) => dbClient!.execute(query),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  select: (...args) => (dbClient as any).select(...args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  insert: (...args) => (dbClient as any).insert(...args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  update: (...args) => (dbClient as any).update(...args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete: (...args) => (dbClient as any).delete(...args)
+} : {
+  execute: notInitializedError,
+  query: notInitializedError,
+  select: notInitializedError,
+  insert: notInitializedError,
+  update: notInitializedError,
+  delete: notInitializedError
+};
 
 // Βοηθητικές λειτουργίες για έλεγχο της κατάστασης της βάσης
 export const checkDatabaseConnection = async () => {

@@ -53,6 +53,11 @@ export default function AdminUsers() {
       setLoading(true)
       setError(null)
       
+      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
+      if (!supabaseAuth) {
+        throw new Error('Authentication service is not available')
+      }
+      
       // Χρησιμοποιούμε τη λειτουργία του Supabase για ανάκτηση χρηστών
       // Σημείωση: Αυτό απαιτεί Supabase service role key για να λειτουργήσει
       const { data, error } = await supabaseAuth.auth.admin.listUsers()
@@ -95,6 +100,11 @@ export default function AdminUsers() {
     setCreateUserError(null)
     
     try {
+      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
+      if (!supabaseAuth) {
+        throw new Error('Authentication service is not available')
+      }
+      
       // Χρήση του Supabase Auth API για τη δημιουργία νέου χρήστη
       const { error } = await supabaseAuth.auth.admin.createUser({
         email: newUserEmail,
@@ -127,6 +137,11 @@ export default function AdminUsers() {
     
     try {
       setLoading(true)
+      
+      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
+      if (!supabaseAuth) {
+        throw new Error('Authentication service is not available')
+      }
       
       // Χρήση του Supabase Auth API για τη διαγραφή χρήστη
       const { error } = await supabaseAuth.auth.admin.deleteUser(userId)

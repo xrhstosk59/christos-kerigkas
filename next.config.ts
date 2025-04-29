@@ -8,10 +8,17 @@ const nextConfig: NextConfig = {
     deviceSizes: imageConfig.deviceSizes,
     imageSizes: imageConfig.imageSizes,
     minimumCacheTTL: imageConfig.minimumCacheTTL,
-    remotePatterns: [{
-      protocol: 'https',
-      hostname: '**',
-    }],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'christoskerigkas.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'tnwbnlbmlqoxypsqdqii.supabase.co',
+      },
+      // Πρόσθεσε επιπλέον domains αν χρειάζεται
+    ],
   },
   typescript: {
     // Αφαιρέστε το ignoreBuildErrors για να εντοπίζετε τα προβλήματα
@@ -27,15 +34,16 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://christos-kerigkas.vercel.app',
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   },
   // Σύγχρονη προσέγγιση για server-only πακέτα
   experimental: {
-    serverComponentsExternalPackages: ['pg-native'],
+    // Διόρθωση: αφαιρέθηκε το serverComponentsExternalPackages
     optimizeServerReact: true,
     optimizeCss: true,
     serverMinification: true,
   },
+  // Προσθήκη του serverExternalPackages στο σωστό επίπεδο
+  serverExternalPackages: ['pg-native'],
   headers: async () => [
     {
       source: '/:all*(svg|jpg|png|webp|avif)',
@@ -78,6 +86,10 @@ const nextConfig: NextConfig = {
         {
           key: 'Referrer-Policy',
           value: 'strict-origin-when-cross-origin'
+        },
+        {
+          key: 'Content-Security-Policy',
+          value: imageConfig.contentSecurityPolicy || "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://tnwbnlbmlqoxypsqdqii.supabase.co;"
         }
       ],
     }
