@@ -1,47 +1,99 @@
-// src/lib/blog.ts
-import fs from 'fs/promises';
-import path from 'path';
-import type { BlogPost } from '@/types/blog';
+// /src/lib/blog.ts
+import { Post, BlogQueryParams, BlogResponse } from '@/types/blog'
 
-const postsDirectory = path.join(process.cwd(), 'src/content/posts');
-
-export async function getAllPosts(): Promise<BlogPost[]> {
-  const files = await fs.readdir(postsDirectory);
-  
-  const posts = await Promise.all(
-    files.map(async (filename) => {
-      const filePath = path.join(postsDirectory, filename);
-      const content = await fs.readFile(filePath, 'utf8');
-      return JSON.parse(content) as BlogPost;
-    })
-  );
-
-  // Sorting posts by date (newest first)
-  return posts.sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-}
-
-export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+/**
+ * Fetches blog posts with optional filtering and pagination
+ */
+export async function getBlogPosts({
+  category,
+  search,
+  page = 1,
+  postsPerPage = 9
+}: BlogQueryParams): Promise<BlogResponse> {
   try {
-    const filePath = path.join(postsDirectory, `${slug}.json`);
-    const content = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(content) as BlogPost;
+    // Build the URL with query parameters
+    const params = new URLSearchParams()
+    
+    if (category && category !== 'all') {
+      params.set('category', category)
+    }
+    
+    if (search) {
+      params.set('search', search)
+    }
+    
+    params.set('page', page.toString())
+    params.set('limit', postsPerPage.toString())
+    
+    // Fetch from the API
+    const response = await fetch(`/api/blog/search?${params.toString()}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch blog posts: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    
+    // Format the response
+    return {
+      posts: data.posts || [],
+      categories: data.categories || [],
+      totalPosts: data.totalPosts || 0,
+      pagination: data.pagination ? {
+        currentPage: page,
+        totalPages: Math.ceil(data.totalPosts / postsPerPage),
+        totalPosts: data.totalPosts,
+        postsPerPage,
+        hasNextPage: page < Math.ceil(data.totalPosts / postsPerPage),
+        hasPrevPage: page > 1
+      } : undefined
+    }
   } catch (error) {
-    console.error('Error reading post:', error);
-    return null;
+    console.error('Error fetching blog posts:', error)
+    
+    // Return empty data in case of error
+    return {
+      posts: [],
+      categories: [],
+      totalPosts: 0
+    }
   }
 }
 
-export async function getRelatedPosts(currentPost: BlogPost, limit = 3): Promise<BlogPost[]> {
-  const allPosts = await getAllPosts();
-  
-  return allPosts
-    .filter(post => 
-      post.slug !== currentPost.slug && 
-      post.categories.some(category => 
-        currentPost.categories.includes(category)
-      )
-    )
-    .slice(0, limit);
+/**
+ * Fetches a single blog post by slug
+ */
+export async function getBlogPostBySlug(slug: string): Promise<Post | null> {
+  try {
+    const response = await fetch(`/api/blog/${slug}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch blog post: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    return data.post || null
+  } catch (error) {
+    console.error(`Error fetching blog post with slug ${slug}:`, error)
+    return null
+  }
+}
+
+/**
+ * Fetches all blog categories
+ */
+export async function getBlogCategories(): Promise<string[]> {
+  try {
+    const response = await fetch('/api/blog/categories')
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch blog categories: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    return data.categories || []
+  } catch (error) {
+    console.error('Error fetching blog categories:', error)
+    return []
+  }
 }

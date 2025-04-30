@@ -13,6 +13,37 @@ export function formatDate(date: Date): string {
   }).format(date)
 }
 
+/**
+ * Μορφοποίηση ημερομηνίας με διάφορες επιλογές
+ * @param date - Η ημερομηνία σε μορφή string ή Date
+ * @param format - Η επιθυμητή μορφή ('short', 'medium', 'long')
+ * @returns Η μορφοποιημένη ημερομηνία ως string
+ */
+export function formatDateWithOptions(date: string | Date, format: 'short' | 'medium' | 'long' = 'medium', locale: string = 'en-US'): string {
+  // Μετατροπή του string σε Date object αν χρειάζεται
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // Έλεγχος αν η ημερομηνία είναι έγκυρη
+  if (isNaN(dateObj.getTime())) {
+    return 'Invalid date';
+  }
+  
+  // Επιλογή διαφορετικών options ανάλογα με το format
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: format === 'short' ? 'short' : 'long',
+    day: 'numeric',
+  };
+  
+  // Προσθήκη ώρας για 'long' format
+  if (format === 'long') {
+    options.hour = 'numeric';
+    options.minute = 'numeric';
+  }
+  
+  return new Intl.DateTimeFormat(locale, options).format(dateObj);
+}
+
 export function isExternalLink(url: string): boolean {
   return url.startsWith('http') || url.startsWith('mailto:') || url.startsWith('tel:')
 }
