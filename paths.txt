@@ -42,6 +42,8 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/post/new/page.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/profile/page.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/users/page.tsx
+/Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/.DS_Store
+/Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/admin/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/admin/login/route.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/blog/[slug]/route.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/blog/route.ts
@@ -150,6 +152,7 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/mock-certifications.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/mock-projects.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/navigation.ts
+/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/nsure-uploads-dir.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/pdf-generator.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/projects.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/rate-limit.ts

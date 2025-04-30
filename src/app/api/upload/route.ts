@@ -1,204 +1,244 @@
 // src/app/api/upload/route.ts
-import { NextResponse } from 'next/server'
-import path from 'path'
-import { z } from 'zod'
-import crypto from 'crypto'
-import { rateLimit } from '@/lib/rate-limit'
-import { uploadProfileImage, deleteProfileImage } from '@/lib/storage'
+import { NextRequest, NextResponse } from 'next/server';
+import { protectApiRoute } from '@/lib/auth';
+import { uploadRateLimit } from '@/lib/rate-limit';
+import path from 'path';
+import { writeFile } from 'fs/promises';
+import { ensureUploadsDir } from '@/lib/ensure-uploads-dir';
+import crypto from 'crypto';
+import { z } from 'zod';
 
-// Create limiter
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 10, 
-})
-
-// File validation schema
-const fileSchema = z.object({
-  type: z.string().refine(val => 
-    ['image/jpeg', 'image/png', 'image/webp'].includes(val), 
-    { message: 'Only JPG, PNG, and WebP files are allowed' }
-  ),
-  size: z.number().max(5 * 1024 * 1024, 'File size must not exceed 5MB')
-})
-
-// Generate a safe filename
-function getSafeFilename(originalName: string): string {
-  const ext = path.extname(originalName).toLowerCase()
-  const timestamp = Date.now()
-  const randomString = crypto.randomBytes(16).toString('hex')
+// Επιτρεπόμενοι τύποι αρχείων
+const ALLOWED_FILE_TYPES = {
+  // Εικόνες
+  'image/jpeg': { extension: '.jpg', maxSize: 2 * 1024 * 1024 },  // 2MB
+  'image/png': { extension: '.png', maxSize: 2 * 1024 * 1024 },   // 2MB
+  'image/webp': { extension: '.webp', maxSize: 2 * 1024 * 1024 }, // 2MB
+  'image/gif': { extension: '.gif', maxSize: 2 * 1024 * 1024 },   // 2MB
+  'image/svg+xml': { extension: '.svg', maxSize: 1 * 1024 * 1024 }, // 1MB
   
-  // Ensure we only use allowed extensions
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp']
-  const safeExt = allowedExtensions.includes(ext) ? ext : '.jpg'
-  
-  return `profile-${timestamp}-${randomString}${safeExt}`
-}
+  // Έγγραφα
+  'application/pdf': { extension: '.pdf', maxSize: 5 * 1024 * 1024 }, // 5MB
+  'application/msword': { extension: '.doc', maxSize: 5 * 1024 * 1024 }, // 5MB
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { 
+    extension: '.docx', maxSize: 5 * 1024 * 1024 // 5MB
+  },
+};
 
-// Security check for file type
-async function verifyFileType(buffer: Buffer, type: string): Promise<boolean> {
-  // Check magic numbers for common image formats
-  const signatures: Record<string, number[][]> = {
-    'image/jpeg': [[0xFF, 0xD8, 0xFF]],
-    'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
-    'image/webp': [[0x52, 0x49, 0x46, 0x46, -1, -1, -1, -1, 0x57, 0x45, 0x42, 0x50]]
+// Τύποι υποφακέλων για οργάνωση των uploads
+const ALLOWED_UPLOAD_TYPES = ['profile', 'certificate', 'blog', 'project'] as const;
+
+// Τύπος για τους επιτρεπόμενους φακέλους upload
+type UploadType = typeof ALLOWED_UPLOAD_TYPES[number];
+
+// Σχήμα επικύρωσης για τα metadata του αρχείου
+const uploadMetadataSchema = z.object({
+  type: z.enum(ALLOWED_UPLOAD_TYPES).optional(),
+  folder: z.string().optional(),
+  allowPublicAccess: z.boolean().default(false).optional(),
+  description: z.string().optional(),
+});
+
+// Συνάρτηση για έλεγχο ασφάλειας περιεχομένου αρχείου
+async function checkFileContent(buffer: Buffer, mimeType: string): Promise<boolean> {
+  // Έλεγχος υπογραφής αρχείου για αποτροπή επιθέσεων
+  if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
+    // JPEG magic number check: ξεκινάει με FF D8 FF
+    return buffer.length >= 3 && 
+           buffer[0] === 0xFF && 
+           buffer[1] === 0xD8 && 
+           buffer[2] === 0xFF;
   }
-
-  if (!signatures[type]) return false
-
-  const bytes = Array.from(buffer.slice(0, 12))
   
-  return signatures[type].some(signature => 
-    signature.every((byte, i) => 
-      byte === -1 || byte === bytes[i]
-    )
-  )
+  if (mimeType === 'image/png') {
+    // PNG magic number check: ξεκινάει με 89 50 4E 47 0D 0A 1A 0A
+    return buffer.length >= 8 && 
+           buffer[0] === 0x89 && 
+           buffer[1] === 0x50 && 
+           buffer[2] === 0x4E && 
+           buffer[3] === 0x47 && 
+           buffer[4] === 0x0D && 
+           buffer[5] === 0x0A && 
+           buffer[6] === 0x1A && 
+           buffer[7] === 0x0A;
+  }
+  
+  if (mimeType === 'application/pdf') {
+    // PDF magic number check: ξεκινάει με %PDF-
+    return buffer.length >= 5 && 
+           buffer[0] === 0x25 && // %
+           buffer[1] === 0x50 && // P
+           buffer[2] === 0x44 && // D
+           buffer[3] === 0x46 && // F
+           buffer[4] === 0x2D;   // -
+  }
+  
+  // Για άλλους τύπους αρχείων, μπορούμε να προσθέσουμε επιπλέον ελέγχους
+  // Αν δεν υπάρχει συγκεκριμένος έλεγχος, επιστρέφουμε true
+  return true;
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    // Get client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown'
+    // Έλεγχος αυθεντικοποίησης
+    const authError = await protectApiRoute(req);
+    if (authError) return authError;
     
-    // Check rate limit - 5 uploads per minute per IP
-    try {
-      await limiter.check(5, `UPLOAD_${ip}`)
-    } catch {
-      return NextResponse.json(
-        { error: 'Πάρα πολλές προσπάθειες αποστολής. Παρακαλώ δοκιμάστε αργότερα.' },
-        { status: 429 }
-      )
+    // Έλεγχος rate limit
+    const rateLimitResult = await uploadRateLimit(req);
+    
+    // Έλεγχος αν το αποτέλεσμα είναι NextResponse (σφάλμα rate limit)
+    if (rateLimitResult instanceof NextResponse) {
+      return rateLimitResult; // Επιστρέφει 429 Too Many Requests
     }
-
-    const formData = await request.formData()
-    const file = formData.get('image') as File
-
+    
+    // Παραλαβή των δεδομένων form
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
+    
+    // Παραλαβή και επικύρωση των metadata (αν υπάρχουν)
+    const typeString = formData.get('type') as string | null;
+    const folderString = formData.get('folder') as string | null;
+    const allowPublicAccessString = formData.get('allowPublicAccess') as string | null;
+    const descriptionString = formData.get('description') as string | null;
+    
+    // Ασφαλής έλεγχος αν ο typeString είναι έγκυρος UploadType
+    let validType: UploadType | undefined = undefined;
+    if (typeString && ALLOWED_UPLOAD_TYPES.includes(typeString as UploadType)) {
+      validType = typeString as UploadType;
+    }
+    
+    const metadata = uploadMetadataSchema.parse({
+      type: validType,
+      folder: folderString || undefined,
+      allowPublicAccess: allowPublicAccessString === 'true',
+      description: descriptionString || undefined,
+    });
+    
+    // Έλεγχος αν υπάρχει αρχείο
     if (!file) {
       return NextResponse.json(
-        { error: 'Δεν βρέθηκε αρχείο για αποστολή' },
-        { status: 400 }
-      )
-    }
-
-    // Validate file using zod schema
-    const validationResult = fileSchema.safeParse({
-      type: file.type,
-      size: file.size
-    })
-
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors[0].message },
-        { status: 400 }
-      )
-    }
-
-    // Get file buffer and verify its actual type using magic numbers
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const isValidFileType = await verifyFileType(buffer, file.type)
-    
-    if (!isValidFileType) {
-      return NextResponse.json(
-        { error: 'Το περιεχόμενο του αρχείου δεν ταιριάζει με τον δηλωμένο τύπο' },
-        { status: 400 }
-      )
-    }
-
-    // Generate a safe filename to prevent path traversal
-    const safeFilename = getSafeFilename(file.name)
-
-    try {
-      // Upload the file to Supabase Storage
-      const fileUrl = await uploadProfileImage(buffer, safeFilename)
-
-      // Return success response with the filename
-      return NextResponse.json({ 
-        success: true,
-        filename: fileUrl
-      })
-    } catch (error) {
-      console.error('Error uploading file to Supabase:', error)
-      return NextResponse.json(
-        { error: 'Αποτυχία αποθήκευσης αρχείου' },
-        { status: 500 }
-      )
-    }
-  } catch (error) {
-    console.error('Error uploading file:', error)
-    return NextResponse.json(
-      { error: 'Σφάλμα κατά την αποστολή του αρχείου' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    // Get client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown'
-    
-    // Check rate limit - 5 deletes per minute per IP
-    try {
-      await limiter.check(5, `DELETE_UPLOAD_${ip}`)
-    } catch {
-      return NextResponse.json(
-        { error: 'Πάρα πολλές προσπάθειες διαγραφής. Παρακαλώ δοκιμάστε αργότερα.' },
-        { status: 429 }
-      )
-    }
-
-    // Parse the request body to get the filename
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: 'Μη έγκυρο αίτημα JSON' },
+        { error: 'Δεν υπάρχει αρχείο για ανέβασμα' },
         { status: 400 }
       );
     }
-
-    const { filename } = body;
-
-    // Check if filename is provided
-    if (!filename) {
+    
+    // Έλεγχος τύπου αρχείου
+    const fileTypeInfo = ALLOWED_FILE_TYPES[file.type as keyof typeof ALLOWED_FILE_TYPES];
+    if (!fileTypeInfo) {
       return NextResponse.json(
-        { error: 'Δεν δόθηκε όνομα αρχείου' },
+        { error: 'Μη επιτρεπόμενος τύπος αρχείου', allowedTypes: Object.keys(ALLOWED_FILE_TYPES) },
         { status: 400 }
-      )
+      );
     }
-
-    // Skip deletion for default profile
-    if (filename === '/profile.jpg') {
-      return NextResponse.json({ 
-        success: true,
-        message: 'Default profile image cannot be deleted' 
-      })
-    }
-
-    try {
-      // Delete the file from Supabase Storage
-      await deleteProfileImage(filename)
-      
-      return NextResponse.json({ 
-        success: true,
-        message: 'Το αρχείο διαγράφηκε επιτυχώς' 
-      })
-    } catch (deleteError) {
-      console.error('Error deleting file:', deleteError)
+    
+    // Έλεγχος μεγέθους αρχείου
+    if (file.size > fileTypeInfo.maxSize) {
       return NextResponse.json(
-        { error: 'Αποτυχία διαγραφής αρχείου' },
-        { status: 500 }
-      )
+        { 
+          error: 'Το μέγεθος του αρχείου υπερβαίνει το όριο', 
+          maxSize: `${Math.round(fileTypeInfo.maxSize / (1024 * 1024))}MB` 
+        },
+        { status: 400 }
+      );
     }
-  } catch (catchError) {
-    console.error('Error deleting file:', catchError)
+    
+    // Μετατροπή του αρχείου σε buffer για έλεγχο περιεχομένου
+    const buffer = Buffer.from(await file.arrayBuffer());
+    
+    // Έλεγχος περιεχομένου αρχείου (magic numbers κλπ)
+    const isValidContent = await checkFileContent(buffer, file.type);
+    if (!isValidContent) {
+      return NextResponse.json(
+        { error: 'Μη έγκυρο περιεχόμενο αρχείου' },
+        { status: 400 }
+      );
+    }
+    
+    // Δημιουργία ασφαλούς ονόματος αρχείου
+    const fileExtension = fileTypeInfo.extension;
+    const randomName = crypto.randomBytes(16).toString('hex');
+    const safeFileName = `${randomName}${fileExtension}`;
+    
+    // Καθορισμός υποφακέλου για αποθήκευση
+    let uploadDir = 'uploads';
+    
+    if (metadata.type) {
+      uploadDir = path.join(uploadDir, metadata.type);
+    }
+    
+    if (metadata.folder) {
+      // Αποτροπή directory traversal attacks
+      const safeFolderName = metadata.folder.replace(/[^a-zA-Z0-9-_]/g, '_');
+      uploadDir = path.join(uploadDir, safeFolderName);
+    }
+    
+    // Δημιουργία φακέλου αν δεν υπάρχει
+    await ensureUploadsDir(uploadDir);
+    
+    // Αποθήκευση αρχείου
+    const filePath = path.join(process.cwd(), 'public', uploadDir, safeFileName);
+    await writeFile(filePath, buffer);
+    
+    // Υπολογισμός hash για έλεγχο ακεραιότητας
+    const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
+    
+    // Δημιουργία public URL
+    const fileUrl = `/${uploadDir}/${safeFileName}`;
+    
+    // Επιστροφή πληροφοριών αρχείου
     return NextResponse.json(
-      { error: 'Σφάλμα κατά τη διαγραφή του αρχείου' },
-      { status: 500 }
-    )
+      {
+        success: true,
+        url: fileUrl,
+        fileName: safeFileName,
+        originalName: file.name,
+        type: file.type,
+        size: file.size,
+        hash: fileHash,
+        meta: {
+          type: metadata.type,
+          folder: metadata.folder,
+          description: metadata.description,
+        }
+      },
+      { 
+        status: 200,
+        headers: rateLimitResult.headers 
+      }
+    );
+  } catch (error) {
+    console.error('File upload error:', error);
+    
+    // Ασφαλής χειρισμός errors
+    let errorMessage = 'Παρουσιάστηκε απροσδόκητο σφάλμα';
+    let status = 500;
+    
+    if (error instanceof z.ZodError) {
+      errorMessage = 'Μη έγκυρα μεταδεδομένα';
+      status = 400;
+    }
+    
+    return NextResponse.json(
+      { error: errorMessage },
+      { status }
+    );
   }
+}
+
+// GET endpoint για λήψη των επιτρεπόμενων τύπων και ορίων
+export async function GET(req: NextRequest) {
+  // Έλεγχος αυθεντικοποίησης
+  const authError = await protectApiRoute(req);
+  if (authError) return authError;
+  
+  return NextResponse.json({
+    allowedTypes: Object.entries(ALLOWED_FILE_TYPES).map(([mimeType, info]) => ({
+      mimeType,
+      extension: info.extension,
+      maxSize: info.maxSize,
+      maxSizeFormatted: `${Math.round(info.maxSize / (1024 * 1024))}MB`
+    })),
+    uploadTypes: ALLOWED_UPLOAD_TYPES,
+  }, { status: 200 });
 }

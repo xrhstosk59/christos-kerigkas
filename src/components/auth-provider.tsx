@@ -2,7 +2,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabaseAuthManager, isAuthClientValid, auth } from '@/lib/supabase-auth'
+import { supabaseAuthManager, isAuthClientValid, auth } from '@/lib/supabase-auth-client'
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 

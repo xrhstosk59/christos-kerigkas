@@ -1,85 +1,125 @@
 // src/app/api/admin/login/route.ts
-import { NextResponse } from 'next/server';
-import { ADMIN_USERNAME, ADMIN_PASSWORD, generateAuthToken } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { loginWithSupabase } from '@/lib/auth';
+import { loginRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
-import { rateLimit } from '@/lib/rate-limit';
 
-// Create limiter for login attempts
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 10,
-});
-
-// Login validation schema
+// Σχήμα επικύρωσης για το login request
 const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email('Μη έγκυρη διεύθυνση email'),
+  password: z.string().min(1, 'Ο κωδικός πρόσβασης είναι υποχρεωτικός'),
 });
 
-export async function POST(req: Request) {
+// Συνάρτηση για την καταγραφή αποτυχημένων προσπαθειών login
+async function logFailedLoginAttempt(req: NextRequest, email: string, reason: string) {
+  const ip = req.headers.get('x-forwarded-for') || 
+           req.headers.get('x-real-ip') || 
+           'unknown';
+  
+  // Σε παραγωγικό περιβάλλον, θα μπορούσαμε να αποθηκεύσουμε αυτά τα logs
+  if (process.env.NODE_ENV === 'production') {
+    console.error(`Αποτυχημένη προσπάθεια login: ${email} από IP ${ip} - Λόγος: ${reason}`);
+    // Εδώ θα μπορούσαμε να προσθέσουμε κώδικα για αποθήκευση σε βάση δεδομένων
+  } else {
+    console.warn(`[DEV] Αποτυχημένη προσπάθεια login: ${email} από IP ${ip} - Λόγος: ${reason}`);
+  }
+}
+
+export async function POST(req: NextRequest) {
   try {
-    // Get client IP for rate limiting
-    const ip = req.headers.get('x-forwarded-for') || 
-              req.headers.get('x-real-ip') || 
-              'unknown';
+    // Εφαρμογή rate limiting
+    const rateLimitResult = await loginRateLimit(req);
     
-    // Check rate limit - 5 attempts per minute per IP
-    try {
-      await limiter.check(5, `LOGIN_${ip}`);
-    } catch {
-      return NextResponse.json(
-        { error: 'Too many login attempts. Please try again later.' },
-        { status: 429 }
-      );
+    // Έλεγχος αν το αποτέλεσμα είναι NextResponse (σφάλμα rate limit)
+    if (rateLimitResult instanceof NextResponse) {
+      return rateLimitResult; // Επιστρέφει 429 Too Many Requests
     }
     
-    // Get and validate data
+    // Λήψη και επικύρωση δεδομένων
     const body = await req.json();
     const validationResult = loginSchema.safeParse(body);
     
     if (!validationResult.success) {
+      await logFailedLoginAttempt(req, body.email || 'unknown', 'Μη έγκυρα δεδομένα φόρμας');
+      
       return NextResponse.json(
-        { error: 'Invalid form data', errors: validationResult.error.flatten() },
-        { status: 400 }
+        { 
+          error: 'Μη έγκυρα δεδομένα φόρμας', 
+          errors: validationResult.error.flatten() 
+        },
+        { 
+          status: 400,
+          headers: rateLimitResult.headers
+        }
       );
     }
     
-    const { username, password } = validationResult.data;
+    const { email, password } = validationResult.data;
     
-    // Check credentials
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    // Προσπάθεια σύνδεσης με Supabase
+    const loginResult = await loginWithSupabase(email, password);
+    
+    if (!loginResult.success) {
+      await logFailedLoginAttempt(req, email, loginResult.error || 'Αποτυχία σύνδεσης');
+      
       return NextResponse.json(
-        { error: 'Invalid username or password' },
-        { status: 401 }
+        { error: loginResult.error || 'Λάθος email ή κωδικός πρόσβασης' },
+        { 
+          status: 401,
+          headers: rateLimitResult.headers
+        }
       );
     }
     
-    // Generate authentication token
-    const token = generateAuthToken(username);
-    
-    // Set cookie and return success
-    const response = NextResponse.json(
-      { success: true, message: 'Login successful' },
-      { status: 200 }
+    // Επιτυχής σύνδεση - Το Supabase ήδη έχει ορίσει τα cookies
+    return NextResponse.json(
+      { success: true, message: 'Επιτυχής σύνδεση' },
+      { 
+        status: 200,
+        headers: rateLimitResult.headers
+      }
     );
-    
-    // Set auth token cookie with appropriate security settings
-    response.cookies.set({
-      name: 'auth_token',
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/',
-      sameSite: 'strict',
-    });
-    
-    return response;
   } catch (error) {
     console.error('Login error:', error);
+    
     return NextResponse.json(
-      { error: 'An unexpected error occurred' },
+      { error: 'Παρουσιάστηκε απροσδόκητο σφάλμα' },
       { status: 500 }
     );
   }
 }
+
+// Για έλεγχο της κατάστασης σύνδεσης
+export async function GET(req: NextRequest) {
+  try {
+    // Χρησιμοποιούμε import στο τέλος αντί για require
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          persistSession: false
+        },
+        global: {
+          headers: {
+            cookie: req.headers.get('cookie') || ''
+          }
+        }
+      }
+    );
+    
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error || !data.session) {
+      return NextResponse.json({ isAuthenticated: false }, { status: 200 });
+    }
+    
+    return NextResponse.json({ isAuthenticated: true }, { status: 200 });
+  } catch (error) {
+    console.error('Session check error:', error);
+    return NextResponse.json({ isAuthenticated: false }, { status: 200 });
+  }
+}
+
+// Εισαγωγή στο τέλος για αποφυγή κυκλικών εξαρτήσεων
+import { createClient } from '@supabase/supabase-js';
