@@ -1,10 +1,20 @@
-// src/components/certifications.tsx
-// Το αρχείο αυτό πρέπει να είναι Client Component γιατί χρησιμοποιεί το useTheme hook
 'use client'
 
-import { useTheme } from './theme-provider'
+// src/components/certifications.tsx
+// Αντικαθιστά το παλιό certifications.tsx αρχείο
+import { useTheme } from '@/components/theme-provider'
 import { Suspense } from 'react'
-import { CertificationsServer } from './certifications-server'
+import dynamic from 'next/dynamic'
+
+// Δυναμική εισαγωγή του νέου Certifications component
+const CertificationsComponent = dynamic(() => import('./certifications/index'), {
+  ssr: true,
+  loading: () => (
+    <div className="flex justify-center items-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    </div>
+  )
+})
 
 export default function Certifications() {
   const { theme } = useTheme()
@@ -17,7 +27,7 @@ export default function Certifications() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
           </div>
         }>
-          <CertificationsServer theme={theme} />
+          <CertificationsComponent theme={theme} />
         </Suspense>
       </div>
     </section>

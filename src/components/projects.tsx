@@ -1,71 +1,24 @@
-// src/components/projects.tsx
 'use client'
 
-import { useTheme } from './theme-provider'
-import { Github, ExternalLink } from 'lucide-react'
-import { OptimizedImage } from './optimizedimage'
-import { cn } from '@/lib/utils'
+// src/components/projects.tsx
+import { useTheme } from '@/components/theme-provider'
 import { motion } from 'framer-motion'
-import { ProjectsServer } from './projects-server'
-import { ErrorBoundary } from './error-boundary'
+import { Suspense } from 'react'
+import { cn } from '@/lib/utils'
+import dynamic from 'next/dynamic'
+
+// Δυναμική εισαγωγή του Projects component
+const ProjectsComponent = dynamic(() => import('./projects/index'), {
+  ssr: true,
+  loading: () => (
+    <div className="flex justify-center items-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    </div>
+  )
+})
 
 export function Projects() {
   const { theme } = useTheme()
-
-  const renderImage = (src: string, alt: string) => (
-    <OptimizedImage
-      src={src}
-      alt={alt}
-      width={800}
-      height={450}
-      className="w-full h-full object-cover"
-    />
-  )
-
-  const renderTechBadge = (tech: string, currentTheme: 'light' | 'dark') => (
-    <span
-      key={tech}
-      className={cn("inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
-        currentTheme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-blue-50 text-blue-700'
-      )}
-    >
-      {tech}
-    </span>
-  )
-
-  const renderProjectLinks = (project: { github: string; demo?: string }, currentTheme: 'light' | 'dark') => (
-    <>
-      <motion.a
-        href={project.github}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={cn("inline-flex items-center gap-1 transition-colors duration-200",
-          currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-        )}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Github className="h-5 w-5" />
-        <span>Code</span>
-      </motion.a>
-      
-      {project.demo && (
-        <motion.a
-          href={project.demo}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn("inline-flex items-center gap-1 transition-colors duration-200",
-            currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-          )}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ExternalLink className="h-5 w-5" />
-          <span>Live Demo</span>
-        </motion.a>
-      )}
-    </>
-  )
   
   return (
     <motion.section 
@@ -81,14 +34,13 @@ export function Projects() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <ErrorBoundary fallback={<p>There was an error loading projects. Please try again.</p>}>
-            <ProjectsServer 
-              theme={theme}
-              renderImage={renderImage}
-              renderTechBadge={renderTechBadge}
-              renderProjectLinks={renderProjectLinks}
-            />
-          </ErrorBoundary>
+          <Suspense fallback={
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+          }>
+            <ProjectsComponent theme={theme} />
+          </Suspense>
         </motion.div>
       </div>
     </motion.section>

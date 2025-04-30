@@ -1,24 +1,23 @@
-// src/components/experience.tsx
 'use client'
 
-import { useTheme } from './theme-provider'
+// src/components/experience.tsx
+import { useTheme } from '@/components/theme-provider'
 import { motion } from 'framer-motion'
-import { FileCode2, LineChart, Bot } from 'lucide-react'
-import { ExperienceServer } from './experience-server'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
+
+// Δυναμική εισαγωγή του Experience component
+const ExperienceComponent = dynamic(() => import('./experience/index'), {
+  ssr: true,
+  loading: () => (
+    <div className="flex justify-center items-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    </div>
+  )
+})
 
 export function Experience() {
   const { theme } = useTheme()
-  
-  const renderIcon = (iconName: string) => {
-    const iconProps = { className: `w-6 h-6 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}` }
-    
-    switch (iconName) {
-      case 'FileCode2': return <FileCode2 {...iconProps} />
-      case 'LineChart': return <LineChart {...iconProps} />
-      case 'Bot': return <Bot {...iconProps} />
-      default: return <FileCode2 {...iconProps} />
-    }
-  }
   
   return (
     <section 
@@ -32,7 +31,13 @@ export function Experience() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <ExperienceServer theme={theme} renderIcon={renderIcon} />
+          <Suspense fallback={
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+          }>
+            <ExperienceComponent theme={theme} />
+          </Suspense>
         </motion.div>
       </div>
     </section>
