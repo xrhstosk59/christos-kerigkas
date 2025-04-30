@@ -1,4 +1,3 @@
-/Users/xrhstosk59/Projects/christos-kerigkas/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/.env.local
 /Users/xrhstosk59/Projects/christos-kerigkas/.eslintrc.json
 /Users/xrhstosk59/Projects/christos-kerigkas/.gitignore
@@ -33,8 +32,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/public/window.svg
 /Users/xrhstosk59/Projects/christos-kerigkas/README.md
 /Users/xrhstosk59/Projects/christos-kerigkas/scripts/migrate-posts-to-supabase.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/.DS_Store
-/Users/xrhstosk59/Projects/christos-kerigkas/src/app/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/layout.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/login/page.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/page.tsx
@@ -42,16 +39,13 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/post/new/page.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/profile/page.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/users/page.tsx
-/Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/admin/login/route.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/blog/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/blog/[slug]/route.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/blog/route.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/blog/search/route.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/contact/route.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/newsletter/route.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/api/upload/route.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/app/blog/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/blog/[slug]/layout.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/blog/[slug]/opengraph-image.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/blog/[slug]/page.tsx
@@ -70,7 +64,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/robot.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/sitemap.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/trading-dashboard/page.tsx
-/Users/xrhstosk59/Projects/christos-kerigkas/src/components/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/about.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/admin/blog-post-form.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/admin/navbar.tsx
@@ -116,18 +109,15 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/ui/card.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/ui/dialog.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/ui/tabs.tsx
-/Users/xrhstosk59/Projects/christos-kerigkas/src/content/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/content/certifications.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/content/posts/crypto-trading-basics.json
 /Users/xrhstosk59/Projects/christos-kerigkas/src/content/posts/getting-started-with-nextjs.json
 /Users/xrhstosk59/Projects/christos-kerigkas/src/content/projects.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/hooks/use-blog.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/blog.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/cv-data.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/database.types.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/db/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/db/helpers.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/db/index.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/db/migrate.ts
@@ -159,7 +149,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/types/cv.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/types/gtag.d.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/types/projects.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/utils/.DS_Store
 /Users/xrhstosk59/Projects/christos-kerigkas/src/utils/supabase/client.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/utils/supabase/middleware.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/utils/supabase/server.ts
