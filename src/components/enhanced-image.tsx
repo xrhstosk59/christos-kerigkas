@@ -1,4 +1,4 @@
-// src/components/enhanced-image.tsx
+// Βελτιωμένο enhanced-image.tsx
 "use client"
 
 import Image from 'next/image'
@@ -11,6 +11,7 @@ type EnhancedImageProps = {
   height: number
   className?: string
   priority?: boolean
+  blurDataURL?: string
 }
 
 export function EnhancedImage({ 
@@ -19,7 +20,8 @@ export function EnhancedImage({
   width, 
   height, 
   className,
-  priority = false
+  priority = false,
+  blurDataURL
 }: EnhancedImageProps) {
   const [isLoading, setIsLoading] = useState(true)
 
@@ -36,6 +38,8 @@ export function EnhancedImage({
         quality={90}
         priority={priority}
         loading={priority ? 'eager' : 'lazy'}
+        placeholder={blurDataURL ? "blur" : "empty"}
+        blurDataURL={blurDataURL}
         className={`
           duration-700 ease-in-out
           ${isLoading ? 'scale-110 blur-lg' : 'scale-100 blur-0'}
@@ -48,6 +52,11 @@ export function EnhancedImage({
           cacheId: cacheKey,
         } : {})}
       />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-200/30 dark:bg-gray-800/30">
+          <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-700 rounded-full animate-spin border-t-indigo-500"></div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,16 +1,14 @@
 // src/components/theme-provider.tsx
-
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, memo } from 'react'
+import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'next-themes'
 import { Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { isSupabaseUrl } from '@/lib/storage'
 
-type Theme = 'light' | 'dark'
-type ThemeContextType = { 
-  theme: Theme
-  toggleTheme: () => void
+// Τύπος για το προφίλ context
+type ProfileContextType = { 
   profileImage: string
   setProfileImage: (path: string) => void
   isUploadingImage: boolean
@@ -18,38 +16,50 @@ type ThemeContextType = {
 
 const DEFAULT_PROFILE_IMAGE = '/uploads/profile.jpg'
 
-const ThemeContext = createContext<ThemeContextType>({ 
-  theme: 'light', 
-  toggleTheme: () => null,
+const ProfileContext = createContext<ProfileContextType>({ 
   profileImage: DEFAULT_PROFILE_IMAGE,
   setProfileImage: () => null,
   isUploadingImage: false
 })
 
-const ThemeToggleButton = memo(({ theme, toggleTheme }: { theme: Theme; toggleTheme: () => void }) => (
-  <button
-    onClick={toggleTheme}
-    className={cn(
-      "fixed bottom-4 right-4 p-3 rounded-full shadow-lg transition-colors duration-200 z-10",
-      theme === 'dark' 
-        ? 'bg-gray-800 hover:bg-gray-700 text-gray-200' 
-        : 'bg-white hover:bg-gray-100 text-gray-900'
-    )}
-    aria-label="Toggle theme"
-  >
-    {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-  </button>
-))
+// Χρήση memo για το ThemeToggleButton για καλύτερη απόδοση
+const ThemeToggleButton = memo(() => {
+  const { theme, setTheme } = useNextTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // Φόρτωση του component μόνο στον client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // SSR safe return - καθόλου render στον server
+  if (!mounted) return null
+
+  return (
+    <button
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className={cn(
+        "fixed bottom-4 right-4 p-3 rounded-full shadow-lg transition-colors duration-200 z-10",
+        theme === 'dark' 
+          ? 'bg-gray-800 hover:bg-gray-700 text-gray-200' 
+          : 'bg-white hover:bg-gray-100 text-gray-900'
+      )}
+      aria-label="Toggle theme"
+    >
+      {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+    </button>
+  )
+})
 
 ThemeToggleButton.displayName = 'ThemeToggleButton'
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+// Profile Provider component
+function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
-  const [theme, setTheme] = useState<Theme>('light')
   const [profileImage, setProfileImageState] = useState(DEFAULT_PROFILE_IMAGE)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
-  // Wrapper for setProfileImage to handle persistence
+  // Wrapper για το setProfileImage που διαχειρίζεται την αποθήκευση
   const setProfileImage = useCallback((path: string) => {
     if (!path || path.trim() === '') {
       console.warn('Attempted to set empty profile image path')
@@ -59,30 +69,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Αποθήκευση του πλήρους URL από το Supabase
     setProfileImageState(path)
     
-    // If mounted, update localStorage immediately
+    // Αν είναι mounted, ενημέρωση του localStorage άμεσα
     if (mounted && typeof window !== 'undefined') {
       localStorage.setItem('profileImage', path)
     }
   }, [mounted])
 
-  const toggleTheme = useCallback(() => {
-    setTheme(prev => {
-      const newTheme = prev === 'light' ? 'dark' : 'light'
-      if (mounted && typeof window !== 'undefined') {
-        localStorage.setItem('theme', newTheme)
-      }
-      return newTheme
-    })
-  }, [mounted])
-
-  // Initialize from localStorage
+  // Αρχικοποίηση από το localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme') as Theme
       const savedProfileImage = localStorage.getItem('profileImage')
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      
-      setTheme(savedTheme || (prefersDark ? 'dark' : 'light'))
       
       if (savedProfileImage) {
         // Έλεγχος εγκυρότητας για Supabase URLs και τοπικά paths
@@ -101,23 +97,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Apply theme to document
-  useEffect(() => {
-    if (mounted && typeof document !== 'undefined') {
-      document.documentElement.dataset.theme = theme
-      document.documentElement.classList.toggle('dark', theme === 'dark')
-    }
-  }, [theme, mounted])
-
   // SSR safe return
   if (!mounted) {
     return null
   }
 
   return (
-    <ThemeContext.Provider value={{ 
-      theme, 
-      toggleTheme, 
+    <ProfileContext.Provider value={{ 
       profileImage, 
       setProfileImage: (path) => {
         setIsUploadingImage(true)
@@ -127,9 +113,49 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       isUploadingImage
     }}>
       {children}
-      <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
-    </ThemeContext.Provider>
+    </ProfileContext.Provider>
   )
 }
 
-export const useTheme = () => useContext(ThemeContext)
+// Ο κύριος ThemeProvider που συνδυάζει next-themes με το profile management
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  
+  // Βεβαιωνόμαστε ότι το component είναι mounted στον client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    // Απλός placeholder για SSR
+    return <>{children}</>
+  }
+
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <ProfileProvider>
+        {children}
+        <ThemeToggleButton />
+      </ProfileProvider>
+    </NextThemesProvider>
+  )
+}
+
+// Custom hook για χρήση του theme και του profile σε συνδυασμό
+export function useTheme() {
+  const nextTheme = useNextTheme()
+  const profile = useContext(ProfileContext)
+  
+  return {
+    ...nextTheme,
+    theme: nextTheme.theme as 'light' | 'dark',
+    profileImage: profile.profileImage,
+    setProfileImage: profile.setProfileImage,
+    isUploadingImage: profile.isUploadingImage
+  }
+}
