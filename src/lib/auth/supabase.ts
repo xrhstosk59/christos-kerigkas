@@ -1,4 +1,4 @@
-// src/lib/supabase.ts
+// src/auth/supabase.ts
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { BlogPost } from '@/types/blog'
 

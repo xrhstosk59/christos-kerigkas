@@ -1,4 +1,4 @@
-// src/lib/storage.ts
+// src/lib/utils/storage.ts
 import { supabaseManager, SupabaseError } from './supabase'
 
 const BUCKET_NAME = 'profiles'

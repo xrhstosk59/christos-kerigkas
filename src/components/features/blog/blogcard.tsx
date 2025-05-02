@@ -4,7 +4,7 @@
 import { memo } from 'react'
 import { useTheme } from '@/components/providers/theme-provider'
 import { motion } from 'framer-motion'
-import { OptimizedImage } from '@/components/common/optimizedimage'
+import { OptimizedImage } from '@/components/common/optimized-image'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils/utils'
 import type { Post } from '@/types/blog'

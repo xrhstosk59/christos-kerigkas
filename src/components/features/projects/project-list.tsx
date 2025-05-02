@@ -1,9 +1,10 @@
 'use client'
 
-// /src/components/projects/project-list.tsx
+// /src/components/features/projects/project-list.tsx
 import { motion } from 'framer-motion'
 import { Github, ExternalLink } from 'lucide-react'
-import { OptimizedImage } from '@/components/optimizedimage'
+// Διόρθωση μονοπατιού εισαγωγής
+import { OptimizedImage } from '@/components/common/optimized-image'
 import { Project } from '@/types/projects'
 import { cn } from '@/lib/utils/utils'
 import ProjectCard from './project-card'

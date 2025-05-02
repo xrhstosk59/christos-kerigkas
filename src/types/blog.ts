@@ -39,3 +39,20 @@ export interface BlogQueryParams {
   page?: number;
   postsPerPage?: number;
 }
+
+// Προσθήκη του τύπου BlogPost που λείπει
+export interface BlogPost {
+  id?: number | string;
+  title: string;
+  slug: string;
+  description: string;
+  content: string;
+  date: string | Date;
+  image: string;
+  author?: {
+    name: string;
+    image?: string;
+  };
+  categories?: string[];
+  featured?: boolean;
+}

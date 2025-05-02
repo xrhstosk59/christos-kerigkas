@@ -5,7 +5,8 @@ import { motion } from 'framer-motion'
 import { useTheme } from  '@/components/providers/theme-provider'
 import { Project, ProjectCategory } from '@/types/projects'
 import { ExternalLink, Github, ChevronLeft, ChevronRight } from 'lucide-react'
-import { OptimizedImage } from '../optimizedimage'
+// Διόρθωση του μονοπατιού εισαγωγής
+import { OptimizedImage } from '@/components/common/optimized-image'
 import { Button } from '@/components/ui/button'
 
 interface CVProjectsProps {

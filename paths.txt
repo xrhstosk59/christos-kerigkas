@@ -70,7 +70,7 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/common/markdown.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/common/navbar.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/common/newsletter.tsx
-/Users/xrhstosk59/Projects/christos-kerigkas/src/components/common/optimizedimage.tsx
+/Users/xrhstosk59/Projects/christos-kerigkas/src/components/common/optimized-image.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/common/page-transition.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/common/scroll-progress.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/about/about.tsx

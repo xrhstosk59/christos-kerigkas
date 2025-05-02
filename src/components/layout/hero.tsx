@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { useTheme } from './theme-provider'
+import { useTheme } from '@/components/providers/theme-provider'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'

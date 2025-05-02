@@ -1,12 +1,13 @@
 'use client'
 
-// src/components/skills.tsx
-import { useTheme } from '@/components/theme-provider'
+// src/components/features/skills/skills.tsx
+import { useTheme } from '@/components/providers/theme-provider'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 
 // Δυναμική εισαγωγή του νέου Skills component
-const SkillsComponent = dynamic(() => import('./skills/index'), {
+// Διόρθωση του μονοπατιού εισαγωγής
+const SkillsComponent = dynamic(() => import('./index'), {
   ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">
@@ -26,7 +27,8 @@ export function Skills() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
           </div>
         }>
-          <SkillsComponent theme={theme} />
+          {/* Διόρθωση type casting για το theme prop */}
+          <SkillsComponent theme={theme === 'dark' ? 'dark' : 'light'} />
         </Suspense>
       </div>
     </section>

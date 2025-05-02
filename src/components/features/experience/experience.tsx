@@ -1,13 +1,14 @@
 'use client'
 
-// src/components/experience.tsx
+// src/components/features/experience/experience.tsx
 import { useTheme } from '@/components/providers/theme-provider'
 import { motion } from 'framer-motion'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 
 // Δυναμική εισαγωγή του Experience component
-const ExperienceComponent = dynamic(() => import('./experience/index'), {
+// Διόρθωση του μονοπατιού εισαγωγής
+const ExperienceComponent = dynamic(() => import('./index'), {
   ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">
@@ -36,7 +37,8 @@ export function Experience() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
           }>
-            <ExperienceComponent theme={theme} />
+            {/* Διόρθωση type casting για το theme prop */}
+            <ExperienceComponent theme={theme === 'dark' ? 'dark' : 'light'} />
           </Suspense>
         </motion.div>
       </div>
