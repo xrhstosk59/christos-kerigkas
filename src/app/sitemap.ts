@@ -2,7 +2,7 @@
 import { MetadataRoute } from 'next'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { siteConfig } from '@/lib/seo'
+import { siteConfig } from '@/lib/utils/seo'
 
 type ChangeFreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never'
 
