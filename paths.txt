@@ -161,7 +161,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/utils/image-config.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/utils/image-loader.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/utils/navigation.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/utils/nsure-uploads-dir.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/utils/pdf-generator.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/utils/rate-limit.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/utils/seo.ts
