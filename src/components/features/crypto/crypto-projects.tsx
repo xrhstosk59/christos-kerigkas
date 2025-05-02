@@ -7,13 +7,8 @@ import { Cpu } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/utils'
-import { projects } from '@/lib/data/projects'
-import { ProjectType } from '@/types/projects'
-
-// Φιλτράρουμε τα crypto projects
-const filteredCryptoProjects = projects.filter(
-  (project: ProjectType) => project.category === 'crypto'
-)
+import { CryptoProject } from '@/types/projects'
+import { filteredCryptoProjects } from '@/lib/data/mock-projects'
 
 export function CryptoProjects() {
   const { theme } = useTheme()
@@ -49,7 +44,7 @@ export function CryptoProjects() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {filteredCryptoProjects.map((project: ProjectType, index: number) => (
+            {filteredCryptoProjects.map((project: CryptoProject, index: number) => (
               <motion.div
                 key={project.title}
                 initial={{ opacity: 0, y: 20 }}
