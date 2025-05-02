@@ -1,7 +1,7 @@
 // src/app/cv/page.tsx
 import { Suspense } from 'react'
-import { getCVData } from '@/lib/cv-data'
-import InteractiveCV from '@/components/cv/interactive-cv'
+import { getCVData } from '@/lib/data/cv-data'
+import InteractiveCV from '@/components/features/cv/interactive-cv'
 
 export const dynamic = 'force-dynamic' // Να σιγουρευτούμε ότι η σελίδα θα ανανεώνεται πάντα
 
