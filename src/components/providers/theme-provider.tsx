@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState, useCallback, memo } fro
 import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'next-themes'
 import { Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
-import { isSupabaseUrl } from '@/lib/storage'
+import { isSupabaseUrl } from '@/lib/utils/storage'
 
 // Τύπος για το προφίλ context
 type ProfileContextType = { 

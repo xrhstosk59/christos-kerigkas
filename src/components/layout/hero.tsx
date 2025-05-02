@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 import Link from 'next/link'
-import { isSupabaseUrl } from '@/lib/storage'
+import { isSupabaseUrl } from '@/lib/utils/storage'
 
 interface SocialLink {
   icon: React.ComponentType<{ className?: string }>
