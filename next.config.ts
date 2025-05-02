@@ -1,6 +1,6 @@
 // next.config.ts
 import { type NextConfig } from "next"
-import { imageConfig } from "./src/lib/image-config"
+import { imageConfig } from "./src/lib/utils/image-config"
 
 const nextConfig: NextConfig = {
   images: {

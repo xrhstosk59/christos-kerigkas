@@ -1,8 +1,8 @@
-// /src/components/certifications/index.tsx
+// /src/components/features/certifications/index.tsx
 import { Suspense } from 'react'
-import { studentCertifications } from '@/lib/mock-certifications'
+import { studentCertifications } from '@/lib/data/mock-certifications'
 import CertificationList from './certification-list'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 
 // Ορίζουμε ρητά τον τύπο των props
 interface CertificationsProps {

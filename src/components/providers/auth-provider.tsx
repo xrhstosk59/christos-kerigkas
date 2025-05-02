@@ -1,8 +1,8 @@
-// src/components/auth-provider.tsx
+// src/components/providers/auth-provider.tsx
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabaseAuthManager, isAuthClientValid, auth } from '@/lib/supabase-auth-client'
+import { supabaseAuthManager, isAuthClientValid, auth } from '@/lib/auth/supabase-auth-client'
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 

@@ -1,14 +1,15 @@
+//src/components/features/cv/interactive-cv.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTheme } from '../theme-provider'
+import { useTheme } from '@/components/providers/theme-provider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Filter, Eye, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CVData, ExportOptions } from '@/types/cv'
-import { getCVData } from '@/lib/cv-data'
-import { downloadCV } from '@/lib/pdf-generator'
+import { getCVData } from '@/lib/data/cv-data'
+import { downloadCV } from '@/lib/utils/pdf-generator'
 import CVTimeline from './cv-timeline'
 import CVSkillsChart from './cv-skills-chart'
 import CVCertifications from './cv-certifications'
