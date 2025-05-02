@@ -1,13 +1,19 @@
-// src/components/crypto-projects.tsx
+// src/components/features/crypto/crypto-projects.tsx
 'use client'
 
-import { useTheme } from './theme-provider'
+import { useTheme } from '@/components/providers/theme-provider'
 import { motion } from 'framer-motion'
 import { Cpu } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { filteredCryptoProjects } from '@/content/projects'
+import { cn } from '@/lib/utils/utils'
+import { projects } from '@/lib/data/projects'
+import { ProjectType } from '@/types/projects'
+
+// Φιλτράρουμε τα crypto projects
+const filteredCryptoProjects = projects.filter(
+  (project: ProjectType) => project.category === 'crypto'
+)
 
 export function CryptoProjects() {
   const { theme } = useTheme()
@@ -43,7 +49,7 @@ export function CryptoProjects() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {filteredCryptoProjects.map((project, index) => (
+            {filteredCryptoProjects.map((project: ProjectType, index: number) => (
               <motion.div
                 key={project.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -94,7 +100,7 @@ export function CryptoProjects() {
                       Key Features:
                     </h4>
                     <ul className="space-y-1 mb-4">
-                      {project.features.map((feature, i) => (
+                      {project.features.map((feature: string, i: number) => (
                         <li 
                           key={i}
                           className={cn(
@@ -108,7 +114,7 @@ export function CryptoProjects() {
                       ))}
                     </ul>
                     <div className="flex flex-wrap gap-1.5 mt-3">
-                      {project.tech.map((tech) => (
+                      {project.tech.map((tech: string) => (
                         <span
                           key={tech}
                           className={cn(

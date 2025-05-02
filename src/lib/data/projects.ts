@@ -1,4 +1,4 @@
-// src/types/projects.ts
+// src/data/projects.ts
 import { type LucideIcon } from 'lucide-react';
 
 export type ProjectCategory = 

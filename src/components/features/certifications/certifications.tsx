@@ -1,13 +1,13 @@
 'use client'
 
-// src/components/certifications.tsx
+// src/components/features/certifications/certifications.tsx
 // Αντικαθιστά το παλιό certifications.tsx αρχείο
-import { useTheme } from '@/components/theme-provider'
+import { useTheme } from '@/components/providers/theme-provider'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 
 // Δυναμική εισαγωγή του νέου Certifications component
-const CertificationsComponent = dynamic(() => import('./certifications/index'), {
+const CertificationsComponent = dynamic(() => import('@/components/features/certifications/index'), {
   ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">

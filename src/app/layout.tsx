@@ -1,12 +1,12 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Analytics } from "@/components/analytics";
-import PageTransition from "@/components/page-transition";
-import ScrollProgress from "@/components/scroll-progress";
-import { AuthProvider } from "@/components/auth-provider";
-import { defaultMetadata } from "@/lib/seo";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { Analytics } from "@/components/layout/analytics";
+import PageTransition from "@/components/common/page-transition";
+import ScrollProgress from "@/components/common/scroll-progress";
+import { AuthProvider } from "@/components/providers/auth-provider";
+import { defaultMetadata } from "@/lib/utils/seo";
 import "./globals.css";
 
 const geist = Geist({

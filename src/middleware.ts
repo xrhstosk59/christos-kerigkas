@@ -1,6 +1,6 @@
 // src/middleware.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { updateSession } from './utils/supabase/middleware';
+import { updateSession } from '@/lib/supabase/middleware';
 
 /**
  * Βελτιωμένα security headers για καλύτερη προστασία της εφαρμογής

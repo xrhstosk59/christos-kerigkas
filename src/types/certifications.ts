@@ -1,3 +1,4 @@
+//src/types/certifications.ts
 export type CertificationType = 'course' | 'badge' | 'seminar' | 'conference';
 
 export interface Certification {
