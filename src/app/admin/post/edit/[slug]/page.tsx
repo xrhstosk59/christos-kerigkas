@@ -1,12 +1,12 @@
-// src/app/admin/posts/edit/[slug]/page.tsx
+// src/app/admin/post/edit/[slug]/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import BlogPostForm from '@/components/admin/blog-post-form'
+import BlogPostForm from '@/components/features/admin/blog-post-form'
 import { Loader2 } from 'lucide-react'
-import { useTheme } from '@/components/theme-provider'
-import { cn } from '@/lib/utils'
+import { useTheme } from '@/components/providers/theme-provider'
+import { cn } from '@/lib/utils/utils'
 import type { BlogPost } from '@/types/blog'
 
 export default function EditBlogPostPage() {

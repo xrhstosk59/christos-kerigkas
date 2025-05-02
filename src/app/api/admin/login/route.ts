@@ -1,8 +1,9 @@
 // src/app/api/admin/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { loginWithSupabase } from '@/lib/auth';
-import { loginRateLimit } from '@/lib/rate-limit';
+import { loginWithSupabase } from '@/lib/auth/supabase-auth';
+import { loginRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
 // Σχήμα επικύρωσης για το login request
 const loginSchema = z.object({
@@ -92,7 +93,6 @@ export async function POST(req: NextRequest) {
 // Για έλεγχο της κατάστασης σύνδεσης
 export async function GET(req: NextRequest) {
   try {
-    // Χρησιμοποιούμε import στο τέλος αντί για require
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -120,6 +120,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ isAuthenticated: false }, { status: 200 });
   }
 }
-
-// Εισαγωγή στο τέλος για αποφυγή κυκλικών εξαρτήσεων
-import { createClient } from '@supabase/supabase-js';

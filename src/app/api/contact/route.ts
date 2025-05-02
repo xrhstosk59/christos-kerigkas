@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { createTransport } from 'nodemailer'
 import { z } from 'zod'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimit } from '@/lib/utils/rate-limit'
 import { db, sql } from '@/lib/db'
 
 // Ορισμός τύπου για το αποτέλεσμα του SQL ερωτήματος

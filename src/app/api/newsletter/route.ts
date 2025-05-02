@@ -1,7 +1,7 @@
 // src/app/api/newsletter/route.ts
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimit } from '@/lib/utils/rate-limit'
 import { createTransport } from 'nodemailer'
 import { newsletterRepository } from '@/lib/db/repositories/newsletter-repository'
 

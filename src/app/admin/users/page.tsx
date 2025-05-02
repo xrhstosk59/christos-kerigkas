@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTheme } from '@/components/theme-provider'
-import { useAuth } from '@/components/auth-provider'
+import { useTheme } from '@/components/providers/theme-provider'
+import { useAuth } from '@/components/providers/auth-provider'
 import { supabaseAuth } from '@/lib/supabase-auth'
 import Link from 'next/link'
 import { 
@@ -13,7 +13,7 @@ import {
   Loader2,
   UserPlus
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 import { 
   Dialog, 
   DialogContent, 

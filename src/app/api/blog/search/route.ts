@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { blogRepository } from '@/lib/db/repositories/blog-repository'
 import { z } from 'zod'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimit } from '@/lib/utils/rate-limit'
 
 // Create limiter
 const limiter = rateLimit({

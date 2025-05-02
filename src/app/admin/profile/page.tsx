@@ -3,9 +3,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTheme } from '@/components/theme-provider'
-import { useAuth } from '@/components/auth-provider'
-import { supabaseAuth } from '@/lib/supabase-auth'
+import { useTheme } from '@/components/providers/theme-provider'
+import { useAuth } from '@/components/providers/auth-provider'
+import { supabaseAuth } from '@/lib/auth/supabase-auth'
 import Link from 'next/link'
 import { 
   User as UserIcon, 
@@ -13,7 +13,7 @@ import {
   Loader2,
   LogOut,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 import { Button } from '@/components/ui/button'
 
 export default function AdminProfile() {

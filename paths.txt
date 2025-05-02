@@ -154,7 +154,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/db/schema/index.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/db/schema/projects.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/db/seed.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/image-config.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/supabase/client.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/supabase/middleware.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/supabase/server.ts

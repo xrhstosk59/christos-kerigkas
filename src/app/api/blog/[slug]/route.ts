@@ -1,7 +1,7 @@
 // src/app/api/blog/[slug]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { blogRepository } from '@/lib/db/repositories/blog-repository'
-import { checkAuth } from '@/lib/auth'
+import { checkAuth } from '@/lib/auth/auth'
 import { z } from 'zod'
 
 // Post validation schema

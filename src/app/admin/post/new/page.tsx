@@ -1,7 +1,7 @@
-// src/app/admin/posts/new/page.tsx
+// src/app/admin/post/new/page.tsx
 'use client'
 
-import BlogPostForm from '@/components/admin/blog-post-form'
+import BlogPostForm from '@/components/features/admin/blog-post-form'
 
 export default function NewBlogPostPage() {
   return <BlogPostForm isEditing={false} />

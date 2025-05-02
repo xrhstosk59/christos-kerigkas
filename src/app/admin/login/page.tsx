@@ -3,10 +3,10 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useTheme } from '@/components/theme-provider'
-import { cn } from '@/lib/utils'
+import { useTheme } from '@/components/providers/theme-provider'
+import { cn } from '@/lib/utils/utils'
 import { Loader2 } from 'lucide-react'
-import { useAuth } from '@/components/auth-provider'
+import { useAuth } from '@/components/providers/auth-provider'
 
 export default function AdminLoginPage() {
   const { theme } = useTheme()

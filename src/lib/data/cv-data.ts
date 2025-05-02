@@ -1,15 +1,15 @@
-// src/lib/cv-data.ts
+// src/lib/data/cv-data.ts
 // Add 'use server' directive to ensure this file runs only on the server
 'use server';
 
-import { projectsRepository } from './db/repositories/projects-repository';
-import { certificationsRepository } from './db/repositories/certifications-repository';
+import { projectsRepository } from '../db/repositories/projects-repository';
+import { certificationsRepository } from '../db/repositories/certifications-repository';
 import { CVData, Experience, Education, Skill } from '@/types/cv';
 import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
 import { Certification, CertificationType } from '@/types/certifications';
 import { studentProjects } from './mock-projects';
 import { studentCertifications } from './mock-certifications';
-import { Certification as DbCertification, Project as DbProject } from './db/schema';
+import { Certification as DbCertification, Project as DbProject } from '../db/schema';
 
 // Mock data for professional experience - tailored for a student
 const mockExperience: Experience[] = [
@@ -193,7 +193,7 @@ function mapProjectsFromDb(projects: DbProject[]): Project[] {
     title: project.title,
     slug: project.slug,
     description: project.description,
-    categories: project.categories.map(cat => cat as unknown as ProjectCategory),
+    categories: project.categories.map((cat: unknown) => cat as ProjectCategory),
     tech: project.tech,
     github: project.github,
     demo: project.demo === null ? undefined : project.demo,

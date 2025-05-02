@@ -1,7 +1,7 @@
 // src/app/api/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { protectApiRoute } from '@/lib/auth';
-import { uploadRateLimit } from '@/lib/rate-limit';
+import { uploadRateLimit } from '@/lib/utils/rate-limit';
 import path from 'path';
 import { writeFile } from 'fs/promises';
 import { ensureUploadsDir } from '@/lib/ensure-uploads-dir';
