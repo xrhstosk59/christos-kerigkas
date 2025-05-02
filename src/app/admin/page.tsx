@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                         theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
                       )}>
                         <div className="flex flex-wrap gap-1 max-w-sm">
-                          {post.categories.map((category, i) => (
+                          {(post.categories || []).map((category, i) => (
                             <span
                               key={i}
                               className={cn(

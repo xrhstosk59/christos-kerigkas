@@ -2,7 +2,7 @@
 import { certifications as certificationsTable } from '@/lib/db/schema'
 import { ensureDatabaseConnection } from '@/lib/db/helpers'
 import { desc, eq, sql } from 'drizzle-orm'
-import { studentCertifications } from '@/lib/mock-certifications'
+import { studentCertifications } from '@/lib/data/mock-certifications'
 import { Certification, CertificationType } from '@/types/certifications'
 
 // Τύπος που επιστρέφεται από τη βάση δεδομένων 
@@ -34,20 +34,78 @@ function mapDBCertificationToCertification(dbCert: DBCertification): Certificati
   };
 }
 
+// Δημιουργία και εξαγωγή του αντικειμένου repository
+export const certificationsRepository = {
+  // Αναζήτηση όλων των πιστοποιητικών
+  findAll: async (): Promise<DBCertification[]> => {
+    try {
+      // Προσπάθεια σύνδεσης με τη βάση δεδομένων
+      const database = ensureDatabaseConnection();
+      return await database.select()
+        .from(certificationsTable)
+        .orderBy(desc(certificationsTable.issueDate));
+    } catch (error) {
+      console.error('Database error when fetching certifications:', error);
+      return [];
+    }
+  },
+
+  // Αναζήτηση πιστοποιητικού με βάση το id
+  findById: async (id: string): Promise<DBCertification | undefined> => {
+    try {
+      const database = ensureDatabaseConnection();
+      const [certification] = await database.select()
+        .from(certificationsTable)
+        .where(eq(certificationsTable.id, id))
+        .limit(1);
+      
+      return certification;
+    } catch (error) {
+      console.error(`Database error when fetching certification with id ${id}:`, error);
+      return undefined;
+    }
+  },
+
+  // Αναζήτηση επιλεγμένων πιστοποιητικών
+  findFeatured: async (): Promise<DBCertification[]> => {
+    try {
+      const database = ensureDatabaseConnection();
+      return await database.select()
+        .from(certificationsTable)
+        .where(eq(certificationsTable.featured, true))
+        .orderBy(desc(certificationsTable.issueDate));
+    } catch (error) {
+      console.error('Database error when fetching featured certifications:', error);
+      return [];
+    }
+  },
+
+  // Αναζήτηση πιστοποιητικών με βάση ένα skill
+  findBySkill: async (skill: string): Promise<DBCertification[]> => {
+    try {
+      const database = ensureDatabaseConnection();
+      return await database.select()
+        .from(certificationsTable)
+        .where(sql`${skill} = ANY(${certificationsTable.skills})`)
+        .orderBy(desc(certificationsTable.issueDate));
+    } catch (error) {
+      console.error(`Database error when fetching certifications for skill ${skill}:`, error);
+      return [];
+    }
+  }
+};
+
+// Διατηρούμε και τις προηγούμενες συναρτήσεις για backwards compatibility
 export const getCertifications = async (): Promise<Certification[]> => {
   try {
-    // Προσπάθεια σύνδεσης με τη βάση δεδομένων
-    const database = ensureDatabaseConnection();
-    const result = await database.select()
-      .from(certificationsTable)
-      .orderBy(desc(certificationsTable.issueDate));
+    const result = await certificationsRepository.findAll();
     
     // Μετατροπή των αποτελεσμάτων στον τύπο Certification
     return result.length > 0 
       ? result.map(mapDBCertificationToCertification) 
       : studentCertifications;
   } catch (error) {
-    console.error('Database error when fetching certifications:', error);
+    console.error('Error in getCertifications:', error);
     // Επιστροφή mock data σε περίπτωση σφάλματος
     return studentCertifications;
   }
@@ -55,18 +113,14 @@ export const getCertifications = async (): Promise<Certification[]> => {
 
 export const getCertificationById = async (id: string): Promise<Certification | undefined> => {
   try {
-    const database = ensureDatabaseConnection();
-    const [certification] = await database.select()
-      .from(certificationsTable)
-      .where(eq(certificationsTable.id, id))
-      .limit(1);
+    const certification = await certificationsRepository.findById(id);
     
     // Μετατροπή του αποτελέσματος αν υπάρχει
     return certification 
       ? mapDBCertificationToCertification(certification) 
       : studentCertifications.find(cert => cert.id === id);
   } catch (error) {
-    console.error(`Database error when fetching certification with id ${id}:`, error);
+    console.error(`Error in getCertificationById:`, error);
     // Επιστροφή του αντίστοιχου mock certification
     return studentCertifications.find(cert => cert.id === id);
   }
@@ -74,18 +128,14 @@ export const getCertificationById = async (id: string): Promise<Certification | 
 
 export const getFeaturedCertifications = async (): Promise<Certification[]> => {
   try {
-    const database = ensureDatabaseConnection();
-    const result = await database.select()
-      .from(certificationsTable)
-      .where(eq(certificationsTable.featured, true))
-      .orderBy(desc(certificationsTable.issueDate));
+    const result = await certificationsRepository.findFeatured();
     
     // Μετατροπή των αποτελεσμάτων
     return result.length > 0 
       ? result.map(mapDBCertificationToCertification) 
       : studentCertifications.filter(cert => cert.featured);
   } catch (error) {
-    console.error('Database error when fetching featured certifications:', error);
+    console.error('Error in getFeaturedCertifications:', error);
     // Επιστροφή των featured από τα mock data
     return studentCertifications.filter(cert => cert.featured);
   }
@@ -93,18 +143,14 @@ export const getFeaturedCertifications = async (): Promise<Certification[]> => {
 
 export const getCertificationsBySkill = async (skill: string): Promise<Certification[]> => {
   try {
-    const database = ensureDatabaseConnection();
-    const result = await database.select()
-      .from(certificationsTable)
-      .where(sql`${skill} = ANY(${certificationsTable.skills})`)
-      .orderBy(desc(certificationsTable.issueDate));
+    const result = await certificationsRepository.findBySkill(skill);
     
     // Μετατροπή των αποτελεσμάτων
     return result.length > 0 
       ? result.map(mapDBCertificationToCertification) 
       : studentCertifications.filter(cert => cert.skills?.includes(skill));
   } catch (error) {
-    console.error(`Database error when fetching certifications for skill ${skill}:`, error);
+    console.error(`Error in getCertificationsBySkill:`, error);
     // Επιστροφή των αντίστοιχων mock data
     return studentCertifications.filter(cert => cert.skills?.includes(skill));
   }

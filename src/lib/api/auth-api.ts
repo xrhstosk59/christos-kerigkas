@@ -1,5 +1,5 @@
-// src/lib/auth-api.ts
-import { createClient } from '@/utils/supabase/server';
+// src/lib/api/auth-api.ts
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 

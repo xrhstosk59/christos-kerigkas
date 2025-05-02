@@ -13,7 +13,7 @@ interface BlogPageProps {
 }
 
 // Δυναμική εισαγωγή του BlogComponent για αποφυγή προβλημάτων με το 'use client' directive
-const BlogComponent = dynamic(() => import('@/components/blog'), { 
+const BlogComponent = dynamic(() => import('@/components/features/blog'), { 
   ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">
@@ -52,7 +52,7 @@ export default function BlogPage({ searchParams }: BlogPageProps) {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
       }>
-        <BlogComponent searchParams={searchParams} />
+        <BlogComponent theme="light" searchParams={searchParams} />
       </Suspense>
     </main>
   )

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/components/providers/theme-provider'
 import { useAuth } from '@/components/providers/auth-provider'
-import { supabaseAuth } from '@/lib/supabase-auth'
+import { supabaseAuth } from '@/lib/auth/supabase-auth'
+import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { 
   Users, 
@@ -67,17 +68,20 @@ export default function AdminUsers() {
       }
       
       // Φιλτράρουμε μόνο τους χρήστες με ρόλο admin
-      const adminUsers = data.users.filter(user => 
-        user.app_metadata.role === 'admin' || 
-        user.user_metadata.role === 'admin'
-      )
+      // Χρησιμοποιούμε τη σωστή δομή για πρόσβαση στα metadata
+      const adminUsers = data.users.filter((supabaseUser: User) => {
+        const appRole = supabaseUser.app_metadata?.role;
+        const userRole = supabaseUser.user_metadata?.role;
+        return appRole === 'admin' || userRole === 'admin';
+      });
       
-      setUsers(adminUsers.map(user => ({
-        id: user.id,
-        email: user.email!,
-        created_at: user.created_at,
-        role: (user.app_metadata.role || user.user_metadata.role || 'user') as string
-      })))
+      // Μετατροπή των χρηστών Supabase σε AdminUser τύπο για εμφάνιση
+      setUsers(adminUsers.map((supabaseUser: User) => ({
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        created_at: supabaseUser.created_at,
+        role: (supabaseUser.app_metadata?.role || supabaseUser.user_metadata?.role || 'user') as string
+      })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users')
       console.error('Error fetching users:', err)

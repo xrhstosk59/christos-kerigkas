@@ -1,6 +1,6 @@
 // src/app/admin/layout.tsx
 import type { Metadata } from 'next'
-import AdminNavbar from '@/components/admin/navbar'
+import AdminNavbar from '@/components/features/admin/navbar'
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard - Christos Kerigkas',
