@@ -1,10 +1,10 @@
 // src/app/api/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { protectApiRoute } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth/auth';
 import { uploadRateLimit } from '@/lib/utils/rate-limit';
 import path from 'path';
 import { writeFile } from 'fs/promises';
-import { ensureUploadsDir } from '@/lib/ensure-uploads-dir';
+import { ensureUploadsDir } from '@/lib/utils/ensure-uploads-dir';
 import crypto from 'crypto';
 import { z } from 'zod';
 

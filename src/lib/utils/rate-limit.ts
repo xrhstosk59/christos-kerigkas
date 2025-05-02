@@ -1,4 +1,4 @@
-// src/lib/rate-limit.ts
+// src/lib/utils/rate-limit.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 // Τύπος παραμετροποίησης για το rate limiting
