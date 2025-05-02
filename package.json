@@ -28,7 +28,7 @@
     "@radix-ui/react-tabs": "^1.1.8",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@supabase/ssr": "^0.1.0",
-    "@supabase/supabase-js": "^2.39.6",
+    "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/forms": "^0.5.10",
     "@types/nodemailer": "^6.4.14",
     "@upstash/redis": "^1.28.4",
