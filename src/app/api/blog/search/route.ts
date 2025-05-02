@@ -2,13 +2,10 @@
 import { NextResponse } from 'next/server'
 import { blogRepository } from '@/lib/db/repositories/blog-repository'
 import { z } from 'zod'
-import { rateLimit } from '@/lib/utils/rate-limit'
+import { createEndpointRateLimit } from '@/lib/utils/rate-limit'
 
-// Create limiter
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 10,
-})
+// Χρήση του προκαθορισμένου rate limiter για αναζήτηση blog
+const blogSearchRateLimit = createEndpointRateLimit('blog-search', 10, 60); // 10 αιτήματα ανά λεπτό
 
 // Search request validation
 const searchParamsSchema = z.object({
@@ -18,19 +15,12 @@ const searchParamsSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    // Get client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown'
+    // Έλεγχος rate limit - 10 requests per minute per IP
+    const rateLimitResult = await blogSearchRateLimit(request);
     
-    // Check rate limit - 10 requests per minute per IP
-    try {
-      await limiter.check(10, `BLOG_SEARCH_${ip}`)
-    } catch {
-      return NextResponse.json(
-        { message: 'Rate limit exceeded. Please try again later.' },
-        { status: 429 }
-      )
+    // Έλεγχος αν το αποτέλεσμα είναι NextResponse (σφάλμα rate limit)
+    if (rateLimitResult instanceof NextResponse) {
+      return rateLimitResult; // Επιστρέφει 429 Too Many Requests
     }
     
     // Parse search parameters
@@ -68,11 +58,13 @@ export async function GET(request: Request) {
       content: post.content
     }))
     
+    // Προσθήκη των rate limit headers στην απάντηση
     return NextResponse.json(
       { posts },
       {
         headers: {
           'Cache-Control': 'public, max-age=60, stale-while-revalidate=3600',
+          ...rateLimitResult.headers
         },
       }
     )

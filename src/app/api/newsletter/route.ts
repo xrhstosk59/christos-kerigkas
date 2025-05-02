@@ -1,15 +1,9 @@
 // src/app/api/newsletter/route.ts
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { rateLimit } from '@/lib/utils/rate-limit'
+import { newsletterRateLimit } from '@/lib/utils/rate-limit'
 import { createTransport } from 'nodemailer'
 import { newsletterRepository } from '@/lib/db/repositories/newsletter-repository'
-
-// Create limiter
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 10,
-})
 
 // Form validation schema
 const subscribeSchema = z.object({
@@ -18,20 +12,18 @@ const subscribeSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    // Get client IP for rate limiting
+    // Έλεγχος rate limit - 3 αιτήματα ανά ώρα
+    const rateLimitResult = await newsletterRateLimit(req);
+    
+    // Έλεγχος αν το αποτέλεσμα είναι NextResponse (σφάλμα rate limit)
+    if (rateLimitResult instanceof NextResponse) {
+      return rateLimitResult; // Επιστρέφει 429 Too Many Requests
+    }
+    
+    // Get client IP για καταγραφή
     const ip = req.headers.get('x-forwarded-for') || 
                req.headers.get('x-real-ip') || 
                'unknown'
-    
-    // Check rate limit
-    try {
-      await limiter.check(3, `NEWSLETTER_${ip}`) // 3 requests per minute per IP
-    } catch {
-      return NextResponse.json(
-        { message: 'Rate limit exceeded. Please try again later.' },
-        { status: 429 }
-      )
-    }
     
     // Get and validate data
     const body = await req.json()
@@ -53,7 +45,7 @@ export async function POST(req: Request) {
     if (isSubscribed) {
       return NextResponse.json(
         { message: 'Subscription successful' },
-        { status: 200 }
+        { status: 200, headers: rateLimitResult.headers }
       )
     }
 
@@ -106,7 +98,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { message: 'Subscription successful' },
-      { status: 200 }
+      { status: 200, headers: rateLimitResult.headers }
     )
   } catch (error) {
     console.error('Newsletter subscription error:', error)

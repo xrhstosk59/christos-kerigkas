@@ -88,18 +88,36 @@ export class RateLimiter {
 // Singleton instance
 export const rateLimiter = new RateLimiter();
 
+// Βοηθητική συνάρτηση για λήψη IP από request (υποστηρίζει NextRequest και Request)
+function getIpFromRequest(req: Request | NextRequest): string {
+  return req.headers.get('x-forwarded-for') || 
+         req.headers.get('x-real-ip') || 
+         'anonymous';
+}
+
+// Βοηθητική συνάρτηση για λήψη path από request (υποστηρίζει NextRequest και Request)
+function getPathFromRequest(req: Request | NextRequest): string {
+  if ('nextUrl' in req) {
+    // Είναι NextRequest
+    return req.nextUrl.pathname;
+  } else {
+    // Είναι standard Request
+    return new URL(req.url).pathname;
+  }
+}
+
 // Middleware για εφαρμογή rate limiting σε API routes
 export async function rateLimit(
-  req: NextRequest,
+  req: Request | NextRequest,
   config: RateLimitConfig = { limit: 10, window: 60 }
 ): Promise<NextResponse | RateLimitSuccess> {
-  // Λήψη IP από header X-Forwarded-For ή real IP
-  const ip = req.headers.get('x-forwarded-for') || 
-           req.headers.get('x-real-ip') || 
-           'anonymous';
+  // Λήψη IP
+  const ip = getIpFromRequest(req);
 
+  // Λήψη path
+  const path = getPathFromRequest(req);
+  
   // Δημιουργία μοναδικού αναγνωριστικού με βάση το IP και το path
-  const path = req.nextUrl.pathname;
   const identifier = config.identifier || `${ip}:${path}`;
   
   // Έλεγχος rate limit
@@ -132,10 +150,8 @@ export async function rateLimit(
 }
 
 // Βοηθητική συνάρτηση για εφαρμογή rate limiting ειδικά για login attempts
-export async function loginRateLimit(req: NextRequest): Promise<NextResponse | RateLimitSuccess> {
-  const ip = req.headers.get('x-forwarded-for') || 
-           req.headers.get('x-real-ip') || 
-           'anonymous';
+export async function loginRateLimit(req: Request | NextRequest): Promise<NextResponse | RateLimitSuccess> {
+  const ip = getIpFromRequest(req);
   
   // Αυστηρότερα όρια για τα login attempts - 5 προσπάθειες ανά 5 λεπτά
   const config: RateLimitConfig = { 
@@ -153,10 +169,8 @@ export function createEndpointRateLimit(
   limit: number = 60,
   window: number = 60
 ) {
-  return async (req: NextRequest): Promise<NextResponse | RateLimitSuccess> => {
-    const ip = req.headers.get('x-forwarded-for') || 
-             req.headers.get('x-real-ip') || 
-             'anonymous';
+  return async (req: Request | NextRequest): Promise<NextResponse | RateLimitSuccess> => {
+    const ip = getIpFromRequest(req);
     
     const config: RateLimitConfig = {
       limit,

@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { createTransport } from 'nodemailer'
 import { z } from 'zod'
-import { rateLimit } from '@/lib/utils/rate-limit'
+import { contactFormRateLimit } from '@/lib/utils/rate-limit'
 import { db, sql } from '@/lib/db'
 
 // Ορισμός τύπου για το αποτέλεσμα του SQL ερωτήματος
@@ -10,12 +10,6 @@ type DbQueryResult = {
   id: number;
   [key: string]: unknown;
 }
-
-// Create limiter
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 10, // Max 10 users per minute
-})
 
 // Form validation schema
 const contactSchema = z.object({
@@ -28,23 +22,20 @@ export async function POST(req: Request) {
   try {
     console.log('Received contact form submission');
     
-    // Get client IP for rate limiting
+    // Έλεγχος rate limit - 5 αιτήματα ανά 10 λεπτά
+    const rateLimitResult = await contactFormRateLimit(req);
+    
+    // Έλεγχος αν το αποτέλεσμα είναι NextResponse (σφάλμα rate limit)
+    if (rateLimitResult instanceof NextResponse) {
+      return rateLimitResult; // Επιστρέφει 429 Too Many Requests
+    }
+    
+    // Get client IP for logging purposes
     const ip = req.headers.get('x-forwarded-for') || 
                req.headers.get('x-real-ip') || 
                'unknown'
     
     console.log('Client IP:', typeof ip === 'string' ? ip : ip?.[0] || 'unknown');
-    
-    // Check rate limit
-    try {
-      await limiter.check(5, `CONTACT_FORM_${ip}`) // 5 requests per minute per IP
-    } catch (error) {
-      console.error('Rate limit exceeded:', error);
-      return NextResponse.json(
-        { message: 'Rate limit exceeded. Please try again later.' },
-        { status: 429 }
-      )
-    }
     
     // Get and validate data
     let body;
@@ -118,7 +109,7 @@ export async function POST(req: Request) {
         if (databaseSuccess) {
           return NextResponse.json(
             { message: 'Message saved successfully but email notification was not sent', databaseSuccess, emailSent: false },
-            { status: 200 }
+            { status: 200, headers: rateLimitResult.headers }
           )
         } else {
           return NextResponse.json(
@@ -180,7 +171,7 @@ export async function POST(req: Request) {
           databaseSuccess,
           emailSent: true 
         },
-        { status: 200 }
+        { status: 200, headers: rateLimitResult.headers }
       )
     } catch (emailError) {
       console.error('Failed to send email notification:', emailError);
@@ -189,7 +180,7 @@ export async function POST(req: Request) {
       if (databaseSuccess) {
         return NextResponse.json(
           { message: 'Message saved but email notification failed to send', databaseSuccess, emailSent: false },
-          { status: 200 }
+          { status: 200, headers: rateLimitResult.headers }
         )
       } else {
         return NextResponse.json(
