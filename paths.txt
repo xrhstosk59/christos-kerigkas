@@ -128,8 +128,11 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/api/auth-api.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/api/blog.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/auth.ts
+/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/client-auth.ts
+/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/common.ts
+/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/index.ts
+/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/server-auth.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/supabase-auth-client.ts
-/Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/supabase-auth.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/auth/supabase.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/data/cv-data.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/lib/data/mock-certifications.ts

@@ -1,17 +1,21 @@
 // drizzle.config.ts
-import type { Config } from 'drizzle-kit'
-import * as dotenv from 'dotenv'
+import 'dotenv/config';
+import { defineConfig } from 'drizzle-kit';
 
-// Φόρτωση μεταβλητών περιβάλλοντος από .env.local
-dotenv.config({ path: '.env.local' })
+// Ensure we're loading environment variables
+// Make sure .env.local exists and contains DATABASE_URL
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL is not set. Please check your .env.local file.');
+}
 
-export default {
+export default defineConfig({
   schema: './src/lib/db/schema.ts',
   out: './drizzle',
-  dialect: 'postgresql', // Use dialect instead of driver
+  dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgres://postgres.tnwbnlbmlqoxypsqdqii:Xrhstos1@!#$@aws-0-eu-central-1.pooler.supabase.com:6543/postgres',
+    url: DATABASE_URL,
   },
   verbose: true,
   strict: true,
-} satisfies Config;
+});

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/providers/theme-provider'
 import { useAuth } from '@/components/providers/auth-provider'
-import { supabaseAuth } from '@/lib/auth/supabase-auth'
+import { supabaseAuthManager } from '@/lib/auth/supabase-auth-client'
 import Link from 'next/link'
 import { 
   User as UserIcon, 
@@ -58,13 +58,14 @@ export default function AdminProfile() {
       setError(null)
       setSuccessMessage(null)
       
-      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
-      if (!supabaseAuth) {
+      // Έλεγχος αν το client είναι διαθέσιμο
+      if (!supabaseAuthManager.isClientAvailable()) {
         throw new Error('Authentication service is not available')
       }
       
       // Χρήση του Supabase Auth API για την αλλαγή κωδικού
-      const { error } = await supabaseAuth.auth.updateUser({ 
+      const client = supabaseAuthManager.getClient()
+      const { error } = await client.auth.updateUser({ 
         password: formData.password 
       })
       

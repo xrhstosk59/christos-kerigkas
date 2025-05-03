@@ -1,6 +1,6 @@
 // src/app/api/admin/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { loginWithSupabase } from '@/lib/auth/supabase-auth';
+import { loginWithSupabase } from '@/lib/auth/server-auth';
 import { loginRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';

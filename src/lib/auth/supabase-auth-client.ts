@@ -1,4 +1,4 @@
-// src/lib/supabase-auth-client.ts
+// src/lib/auth/supabase-auth-client.ts
 'use client'
 
 import { createClient, SupabaseClient, Session, User } from '@supabase/supabase-js';

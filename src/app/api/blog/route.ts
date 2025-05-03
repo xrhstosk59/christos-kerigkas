@@ -1,7 +1,7 @@
 // src/app/api/blog/route.ts
 import { NextResponse } from 'next/server'
 import { blogRepository } from '@/lib/db/repositories/blog-repository'
-import { checkAuth } from '@/lib/auth'
+import { checkAuth } from '@/lib/auth/server-auth';
 import { z } from 'zod'
 
 const POSTS_PER_PAGE = 6

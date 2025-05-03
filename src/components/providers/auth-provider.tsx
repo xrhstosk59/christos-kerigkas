@@ -1,11 +1,11 @@
-// src/components/providers/auth-provider.tsx
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabaseAuthManager, isAuthClientValid, auth } from '@/lib/auth/supabase-auth-client'
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import * as clientAuth from '@/lib/auth/client-auth' // ΧΡΗΣΙΜΟΠΟΙΟΥΜΕ client-auth αντί για supabase-auth-client
 
+// Διατηρούμε τον τύπο όπως είναι στο υπάρχον αρχείο
 type AuthContextType = {
   user: User | null
   session: Session | null
@@ -31,8 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
-    if (!isAuthClientValid()) {
+    // Έλεγχος αν το Supabase client είναι διαθέσιμο
+    if (!clientAuth.isAuthClientValid()) {
       console.warn('AuthProvider: Supabase Auth client is not initialized')
       setIsLoading(false)
       return
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Αρχικοποίηση της κατάστασης από το τρέχον session
     const initializeAuth = async () => {
       try {
-        const { data } = await auth.getSession()
+        const { data } = await clientAuth.auth.getSession()
         const currentSession = data.session
         setSession(currentSession)
         setUser(currentSession?.user ?? null)
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let subscription: { unsubscribe: () => void } = { unsubscribe: () => {} }
     
     try {
-      const client = supabaseAuthManager.getClient()
+      const client = clientAuth.supabaseAuthClient.getClient()
       const { data } = client.auth.onAuthStateChange(
         (_event: AuthChangeEvent, session: Session | null) => {
           setSession(session)
@@ -81,12 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Σύνδεση με email και κωδικό
   const signIn = async (email: string, password: string) => {
-    if (!isAuthClientValid()) {
+    if (!clientAuth.isAuthClientValid()) {
       throw new Error('Authentication system is not available')
     }
     
     // Χρησιμοποιούμε το νέο API
-    const { error } = await auth.signInWithPassword(email, password)
+    const { error } = await clientAuth.auth.signInWithPassword(email, password)
 
     if (error) {
       throw error
@@ -98,8 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Αποσύνδεση
   const signOut = async () => {
-    if (isAuthClientValid()) {
-      await auth.signOut()
+    if (clientAuth.isAuthClientValid()) {
+      await clientAuth.auth.signOut()
     }
     router.push('/admin/login')
     router.refresh()

@@ -1,9 +1,10 @@
+//src/app/admin/users/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/components/providers/theme-provider'
 import { useAuth } from '@/components/providers/auth-provider'
-import { supabaseAuth } from '@/lib/auth/supabase-auth'
+import { supabaseAuthManager } from '@/lib/auth/supabase-auth-client'
 import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { 
@@ -54,14 +55,15 @@ export default function AdminUsers() {
       setLoading(true)
       setError(null)
       
-      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
-      if (!supabaseAuth) {
+      // Έλεγχος αν το client είναι διαθέσιμο
+      if (!supabaseAuthManager.isClientAvailable()) {
         throw new Error('Authentication service is not available')
       }
       
       // Χρησιμοποιούμε τη λειτουργία του Supabase για ανάκτηση χρηστών
       // Σημείωση: Αυτό απαιτεί Supabase service role key για να λειτουργήσει
-      const { data, error } = await supabaseAuth.auth.admin.listUsers()
+      const client = supabaseAuthManager.getClient()
+      const { data, error } = await client.auth.admin.listUsers()
       
       if (error) {
         throw new Error(error.message)
@@ -104,13 +106,14 @@ export default function AdminUsers() {
     setCreateUserError(null)
     
     try {
-      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
-      if (!supabaseAuth) {
+      // Έλεγχος αν το client είναι διαθέσιμο
+      if (!supabaseAuthManager.isClientAvailable()) {
         throw new Error('Authentication service is not available')
       }
       
       // Χρήση του Supabase Auth API για τη δημιουργία νέου χρήστη
-      const { error } = await supabaseAuth.auth.admin.createUser({
+      const client = supabaseAuthManager.getClient()
+      const { error } = await client.auth.admin.createUser({
         email: newUserEmail,
         password: newUserPassword,
         email_confirm: true, // Επιβεβαίωση του email αυτόματα
@@ -142,13 +145,14 @@ export default function AdminUsers() {
     try {
       setLoading(true)
       
-      // Έλεγχος αν το supabaseAuth είναι διαθέσιμο
-      if (!supabaseAuth) {
+      // Έλεγχος αν το client είναι διαθέσιμο
+      if (!supabaseAuthManager.isClientAvailable()) {
         throw new Error('Authentication service is not available')
       }
       
       // Χρήση του Supabase Auth API για τη διαγραφή χρήστη
-      const { error } = await supabaseAuth.auth.admin.deleteUser(userId)
+      const client = supabaseAuthManager.getClient()
+      const { error } = await client.auth.admin.deleteUser(userId)
       
       if (error) {
         throw new Error(error.message)

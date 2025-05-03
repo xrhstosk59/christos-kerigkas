@@ -1,16 +1,14 @@
-// src/components/analytics.tsx
+// src/components/layout/analytics.tsx
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
 
-export function Analytics() {
-  const pathname = usePathname()
+// Separate component for search params tracking
+function SearchParamsTracker({ pathname, GA_ID }: { pathname: string, GA_ID: string }) {
   const searchParams = useSearchParams()
-  const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
-  // Track page views
   useEffect(() => {
     if (!GA_ID) return
 
@@ -23,6 +21,13 @@ export function Analytics() {
       })
     }
   }, [pathname, searchParams, GA_ID])
+
+  return null
+}
+
+export function Analytics() {
+  const pathname = usePathname()
+  const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
   if (!GA_ID) return null
 
@@ -47,6 +52,9 @@ export function Analytics() {
           `,
         }}
       />
+      <Suspense fallback={null}>
+        <SearchParamsTracker pathname={pathname} GA_ID={GA_ID} />
+      </Suspense>
     </>
   )
 }

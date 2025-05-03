@@ -5,11 +5,11 @@ import dynamic from 'next/dynamic'
 
 // Τύπος για τα props της σελίδας
 interface BlogPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     category?: string;
     search?: string;
     page?: string;
-  };
+  }>;
 }
 
 // Δυναμική εισαγωγή του BlogComponent για αποφυγή προβλημάτων με το 'use client' directive
@@ -44,7 +44,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default function BlogPage({ searchParams }: BlogPageProps) {
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  // Αναλύουμε τα searchParams από το Promise
+  const params = searchParams ? await searchParams : undefined;
+  
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-20">
       <Suspense fallback={
@@ -52,7 +55,7 @@ export default function BlogPage({ searchParams }: BlogPageProps) {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
       }>
-        <BlogComponent theme="light" searchParams={searchParams} />
+        <BlogComponent theme="light" searchParams={params} />
       </Suspense>
     </main>
   )

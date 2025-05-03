@@ -2,7 +2,7 @@
 "use client"
 
 import React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 import { motion, HTMLMotionProps } from "framer-motion"
 
 interface AnimatedButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag'> {
