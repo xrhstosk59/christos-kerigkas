@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { defaultMetadata } from '@/lib/seo'
+import { defaultMetadata } from '@/lib/utils/seo'
 
 export const metadata: Metadata = {
   ...defaultMetadata,

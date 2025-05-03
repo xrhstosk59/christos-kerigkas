@@ -1,3 +1,4 @@
+//src/content/certifications.ts
 import { Certification } from '@/types/certifications';
 
 export const certifications: Certification[] = [

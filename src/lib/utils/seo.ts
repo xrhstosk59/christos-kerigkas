@@ -1,4 +1,4 @@
-// src/lib/seo.ts
+// src/lib/utils/seo.ts
 import { Metadata } from 'next';
 
 // Προσθήκη του siteConfig για συμβατότητα με τα υπόλοιπα αρχεία
