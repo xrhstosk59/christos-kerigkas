@@ -91,7 +91,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/certifications/index.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/contact/contact.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/crypto/crypto-projects.tsx
-/Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/crypto/index.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/cv/cv-certifications.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/cv/cv-export.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/cv/cv-filters.tsx

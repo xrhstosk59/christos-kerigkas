@@ -20,16 +20,16 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
     return {
       title: `${post.title} | Blog`,
       description: post.description,
-      authors: [{ name: post.author.name }],
+      authors: [{ name: post.author?.name || 'Christos Kerigkas' }],
       openGraph: {
         title: post.title,
         description: post.description,
         type: 'article',
-        publishedTime: post.date,
-        authors: [post.author.name],
+        publishedTime: typeof post.date === 'string' ? post.date : post.date?.toISOString(),
+        authors: [post.author?.name || 'Christos Kerigkas'],
         images: [
           {
-            url: post.image,
+            url: post.image || '/placeholder.jpg',
             width: 1200,
             height: 630,
             alt: post.title,
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
         card: 'summary_large_image',
         title: post.title,
         description: post.description,
-        images: [post.image],
+        images: [post.image || '/placeholder.jpg'],
       },
     }
   } catch {

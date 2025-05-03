@@ -1,7 +1,7 @@
 // src/app/blog/[slug]/opengraph-image.tsx
 import { ImageResponse } from 'next/og';
-import { getPostBySlug } from '@/lib/blog';
-import { siteConfig } from '@/lib/seo';
+import { getBlogPostBySlug } from '@/lib/api/blog';
+import { siteConfig } from '@/lib/utils/seo';
 
 export const size = {
   width: 1200,
@@ -12,7 +12,7 @@ export const contentType = 'image/png';
 export const alt = 'Blog Post';
 
 export default async function Image({ params }: { params: { slug: string } }) {
-  const post = await getPostBySlug(params.slug);
+  const post = await getBlogPostBySlug(params.slug);
   
   if (!post) {
     return new ImageResponse(
@@ -71,7 +71,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
         </p>
         
         <div style={{ display: 'flex', marginTop: 'auto', gap: 10 }}>
-          {post.categories.map((category) => (
+          {post.categories && post.categories.map((category: string) => (
             <div
               key={category}
               style={{
