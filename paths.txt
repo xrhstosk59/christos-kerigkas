@@ -80,6 +80,7 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/blog/blog-categories.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/blog/blog-list.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/blog/blog-pagination.tsx
+/Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/blog/blog-post-view.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/blog/blog-search.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/blog/blog.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/components/features/blog/blogcard.tsx
