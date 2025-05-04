@@ -28,7 +28,10 @@ if (!fs.existsSync(migrationsFolder)) {
 // Ρύθμιση του postgres client για migrations
 const migrationClient = postgres(connectionString, { 
   max: 1,
-  onnotice: () => {} // Καταστέλλει τα notice messages
+  onnotice: () => {}, // Καταστέλλει τα notice messages
+  ssl: { 
+    rejectUnauthorized: false // Επιτρέπει self-signed πιστοποιητικά
+  }
 });
 
 async function runMigrations() {

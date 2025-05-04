@@ -2,10 +2,13 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/.eslintrc.json
 /Users/xrhstosk59/Projects/christos-kerigkas/.gitignore
 /Users/xrhstosk59/Projects/christos-kerigkas/.vscode/settings.json
+/Users/xrhstosk59/Projects/christos-kerigkas/backend-complete/complete-backend.txt
 /Users/xrhstosk59/Projects/christos-kerigkas/drizzle.config.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/drizzle/0000_public_blockbuster.sql
+/Users/xrhstosk59/Projects/christos-kerigkas/drizzle/0001_lethal_machine_man.sql
 /Users/xrhstosk59/Projects/christos-kerigkas/drizzle/meta/_journal.json
 /Users/xrhstosk59/Projects/christos-kerigkas/drizzle/meta/0000_snapshot.json
+/Users/xrhstosk59/Projects/christos-kerigkas/drizzle/meta/0001_snapshot.json
 /Users/xrhstosk59/Projects/christos-kerigkas/eslint.config.mjs
 /Users/xrhstosk59/Projects/christos-kerigkas/next-env.d.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/next.config.ts

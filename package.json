@@ -14,7 +14,7 @@
     "db:migrate": "tsx ./src/lib/db/migrations.ts",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx ./src/lib/db/migrate.ts seed",
+    "db:seed": "tsx ./src/lib/db/seed.ts",
     "db:apply-rls": "tsx ./scripts/apply-rls-policies.ts",
     "db:verify": "tsx ./scripts/verify-schema.ts",
     "migrate:posts": "tsx ./scripts/migrate-posts-to-supabase.ts",

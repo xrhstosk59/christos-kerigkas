@@ -1,0 +1,829 @@
+===== SEED.TS =====
+// src/lib/db/seed.ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as dotenv from 'dotenv';
+import path from 'path';
+import * as schema from './schema';
+
+// Φόρτωση μεταβλητών περιβάλλοντος
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
+const connectionString = process.env.DATABASE_URL || '';
+
+if (!connectionString) {
+  console.error('DATABASE_URL environment variable is not set');
+  process.exit(1);
+}
+
+// Ρύθμιση του postgres client για το seeding
+const seedClient = postgres(connectionString, { 
+  max: 1,
+  onnotice: () => {}, // Καταστέλλει τα notice messages
+  ssl: { 
+    rejectUnauthorized: false // Επιτρέπει self-signed πιστοποιητικά
+  }
+});
+
+// Δημιουργία του drizzle instance
+const db = drizzle(seedClient, { schema });
+
+async function seed() {
+  console.log('Seeding database...');
+  
+  // Seed blog posts
+  const blogPosts = [
+    {
+      slug: 'getting-started-with-nextjs',
+      title: 'Getting Started with Next.js and TypeScript',
+      description: 'Learn how to build modern web applications using Next.js 13+ with TypeScript and best practices for performance and SEO.',
+      date: new Date('2024-01-23'),
+      image: '/blog/nextjs-typescript.jpg',
+      authorName: 'Christos Kerigkas',
+      authorImage: '/profile.jpg',
+      categories: ['Next.js', 'TypeScript', 'Web Development'],
+      content: '## Introduction\n\nNext.js has become one of the most popular frameworks for building modern web applications...\n\n## Why Next.js?\n\nNext.js provides an excellent developer experience with features like...\n\n## Getting Started\n\nFirst, create a new Next.js project with TypeScript support...'
+    },
+    {
+      slug: 'crypto-trading-basics',
+      title: 'Getting Started with Cryptocurrency Trading: A Developer\'s Perspective',
+      description: 'Learn the fundamentals of crypto trading through a technical lens, including API integrations, data analysis, and automated trading strategies.',
+      date: new Date('2024-01-25'),
+      image: '/blog/crypto-trading.jpg',
+      authorName: 'Christos Kerigkas',
+      authorImage: '/profile.jpg',
+      categories: ['Cryptocurrency', 'Trading', 'Programming', 'Data Analysis'],
+      content: '## Introduction\n\nAs a developer venturing into cryptocurrency trading, understanding both technical analysis and programmatic approaches is crucial...'
+    }
+  ];
+  
+  for (const post of blogPosts) {
+    try {
+      await db.insert(schema.blogPosts)
+        .values(post)
+        .onConflictDoNothing();
+      console.log(`Inserted blog post: ${post.title}`);
+    } catch (error) {
+      console.error(`Failed to insert post ${post.title}:`, error);
+    }
+  }
+  
+  // Seed blog categories
+  const categories = [
+    { name: 'Next.js', slug: 'nextjs', description: 'Posts about Next.js framework' },
+    { name: 'TypeScript', slug: 'typescript', description: 'Posts about TypeScript language' },
+    { name: 'Web Development', slug: 'web-development', description: 'General web development topics' },
+    { name: 'Cryptocurrency', slug: 'cryptocurrency', description: 'Posts about cryptocurrency' },
+    { name: 'Trading', slug: 'trading', description: 'Posts about trading strategies' },
+    { name: 'Programming', slug: 'programming', description: 'General programming topics' },
+    { name: 'Data Analysis', slug: 'data-analysis', description: 'Data analytics and visualization' }
+  ];
+  
+  for (const category of categories) {
+    try {
+      await db.insert(schema.blogCategories).values(category).onConflictDoNothing();
+      console.log(`Added category ${category.name}`);
+    } catch (error) {
+      console.error(`Failed to insert category ${category.name}:`, error);
+    }
+  }
+  
+  // Seed skills
+  const skills = [
+    { name: 'React', category: 'frontend' },
+    { name: 'Next.js', category: 'frontend' },
+    { name: 'TypeScript', category: 'frontend' },
+    { name: 'JavaScript', category: 'frontend' },
+    { name: 'Tailwind CSS', category: 'frontend' },
+    { name: 'HTML5/CSS3', category: 'frontend' },
+    { name: 'Node.js', category: 'backend' },
+    { name: 'Python', category: 'backend' },
+    { name: 'PostgreSQL', category: 'backend' },
+    { name: 'MongoDB', category: 'backend' },
+    { name: 'Supabase', category: 'backend' },
+    { name: 'Drizzle ORM', category: 'backend' },
+    { name: 'Git', category: 'tools' },
+    { name: 'VS Code', category: 'tools' },
+    { name: 'Docker', category: 'tools' },
+    { name: 'REST APIs', category: 'tools' },
+    { name: 'Telegram Bot API', category: 'tools' },
+    { name: 'Technical Analysis', category: 'trading' },
+    { name: 'Bot Development', category: 'trading' },
+    { name: 'Data Mining', category: 'trading' },
+    { name: 'Machine Learning', category: 'trading' },
+  ];
+  
+  for (const skill of skills) {
+    try {
+      await db.insert(schema.skills)
+        .values(skill)
+        .onConflictDoNothing();
+      console.log(`Added skill ${skill.name}`);
+    } catch (error) {
+      console.error(`Failed to insert skill ${skill.name}:`, error);
+    }
+  }
+  
+  // Seed project categories
+  const projectCategories = [
+    { name: 'Web Development', slug: 'web-development' },
+    { name: 'Mobile', slug: 'mobile' },
+    { name: 'Crypto', slug: 'crypto' },
+    { name: 'Education', slug: 'education' },
+    { name: 'Data Analysis', slug: 'data-analysis' },
+    { name: 'Real Estate', slug: 'real-estate' },
+    { name: 'Portfolio', slug: 'portfolio' }
+  ];
+  
+  for (const category of projectCategories) {
+    try {
+      await db.insert(schema.projectCategories).values(category).onConflictDoNothing();
+      console.log(`Added project category ${category.name}`);
+    } catch (error) {
+      console.error(`Failed to insert project category ${category.name}:`, error);
+    }
+  }
+  
+  console.log('Database seeding completed!');
+  
+  // Κλείσιμο της σύνδεσης
+  await seedClient.end();
+}
+
+// Εκτέλεση του seed αν αυτό το αρχείο εκτελεστεί απευθείας
+if (require.main === module) {
+  seed()
+    .then(() => {
+      console.log('Seeding completed successfully.');
+      process.exit(0);
+    })
+    .catch(error => {
+      console.error('Seeding failed:', error);
+      process.exit(1);
+    });
+}
+
+export { seed };
+
+===== BLOG.TS =====
+// src/lib/db/schema/blog.ts
+import {
+    pgTable,
+    serial,
+    text,
+    timestamp,
+    varchar,
+    index,
+    integer,
+    primaryKey,
+    uuid
+  } from 'drizzle-orm/pg-core';
+  import { users } from './auth';
+  
+  // Blog categories table
+  export const blogCategories = pgTable('blog_categories', {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 100 }).notNull().unique(),
+    slug: varchar('slug', { length: 100 }).notNull().unique(),
+    description: text('description'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  });
+  
+  // Blog posts table
+  export const blogPosts = pgTable('blog_posts', {
+    id: serial('id').primaryKey(),
+    slug: varchar('slug', { length: 255 }).notNull().unique(),
+    title: varchar('title', { length: 255 }).notNull(),
+    description: text('description').notNull(),
+    content: text('content').notNull(),
+    date: timestamp('date').defaultNow().notNull(),
+    image: varchar('image', { length: 255 }).notNull(),
+    authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+    authorName: varchar('author_name', { length: 255 }).notNull(),
+    authorImage: varchar('author_image', { length: 255 }).notNull(),
+    categories: text('categories').array().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  }, (table) => {
+    return {
+      slugIdx: index('slug_idx').on(table.slug),
+      dateIdx: index('date_idx').on(table.date),
+      authorIdIdx: index('author_id_idx').on(table.authorId),
+    }
+  });
+  
+  // Blog post to category junction table (many-to-many)
+  export const blogPostsToCategories = pgTable('blog_posts_to_categories', {
+    postId: integer('post_id').notNull().references(() => blogPosts.id, { onDelete: 'cascade' }),
+    categoryId: integer('category_id').notNull().references(() => blogCategories.id, { onDelete: 'cascade' }),
+  }, (table) => {
+    return {
+      pk: primaryKey(table.postId, table.categoryId),
+    }
+  });
+  
+  // Export types
+  export type BlogCategory = typeof blogCategories.$inferSelect;
+  export type NewBlogCategory = typeof blogCategories.$inferInsert;
+  
+  export type BlogPost = typeof blogPosts.$inferSelect;
+  export type NewBlogPost = typeof blogPosts.$inferInsert;
+
+===== PROJECTS.TS =====
+// src/lib/db/schema/projects.ts
+import {
+    pgTable,
+    serial,
+    text,
+    timestamp,
+    varchar,
+    boolean,
+    jsonb,
+    integer,
+    primaryKey
+  } from 'drizzle-orm/pg-core';
+  
+  // Projects table
+  export const projects = pgTable('projects', {
+    id: serial('id').primaryKey(),
+    slug: varchar('slug', { length: 100 }).notNull().unique(),
+    title: varchar('title', { length: 100 }).notNull(),
+    description: text('description').notNull(),
+    shortDescription: text('short_description'),
+    categories: text('categories').array().notNull(),
+    tech: text('tech').array().notNull(),
+    github: varchar('github', { length: 255 }).notNull(),
+    demo: varchar('demo', { length: 255 }),
+    image: varchar('image', { length: 255 }).notNull(),
+    images: jsonb('images'),
+    featured: boolean('featured').default(false),
+    order: serial('order'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  });
+  
+  // Crypto projects table
+  export const cryptoProjects = pgTable('crypto_projects', {
+    id: serial('id').primaryKey(),
+    slug: varchar('slug', { length: 100 }).notNull().unique(),
+    title: varchar('title', { length: 100 }).notNull(),
+    description: text('description').notNull(),
+    features: text('features').array().notNull(),
+    tech: text('tech').array().notNull(),
+    github: varchar('github', { length: 255 }).notNull(),
+    status: varchar('status', { length: 50 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  });
+  
+  // Project categories table
+  export const projectCategories = pgTable('project_categories', {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 100 }).notNull().unique(),
+    slug: varchar('slug', { length: 100 }).notNull().unique(),
+  });
+  
+  // Project to category junction table (many-to-many)
+  export const projectsToCategories = pgTable('projects_to_categories', {
+    projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+    categoryId: integer('category_id').notNull().references(() => projectCategories.id, { onDelete: 'cascade' }),
+  }, (table) => {
+    return {
+      pk: primaryKey(table.projectId, table.categoryId),
+    }
+  });
+  
+  // Export types
+  export type Project = typeof projects.$inferSelect;
+  export type NewProject = typeof projects.$inferInsert;
+  
+  export type CryptoProject = typeof cryptoProjects.$inferSelect;
+  export type NewCryptoProject = typeof cryptoProjects.$inferInsert;
+  
+  export type ProjectCategory = typeof projectCategories.$inferSelect;
+  export type NewProjectCategory = typeof projectCategories.$inferInsert;
+
+===== CERTIFICATIONS.TS =====
+// src/lib/db/schema/certifications.ts
+import {
+    pgTable,
+    serial,
+    text,
+    timestamp,
+    varchar,
+    boolean,
+    integer,
+    primaryKey
+  } from 'drizzle-orm/pg-core';
+  
+  // Certifications table
+  export const certifications = pgTable('certifications', {
+    id: varchar('id', { length: 100 }).primaryKey(),
+    title: varchar('title', { length: 255 }).notNull(),
+    issuer: varchar('issuer', { length: 255 }).notNull(),
+    issueDate: timestamp('issue_date').notNull(),
+    expirationDate: timestamp('expiration_date'),
+    credentialId: varchar('credential_id', { length: 100 }),
+    credentialUrl: varchar('credential_url', { length: 255 }),
+    description: text('description'),
+    skills: text('skills').array(),
+    type: varchar('type', { length: 50 }).notNull(),
+    filename: varchar('filename', { length: 255 }).notNull(),
+    featured: boolean('featured').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  });
+  
+  // Skills table
+  export const skills = pgTable('skills', {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 100 }).notNull().unique(),
+    category: varchar('category', { length: 50 }).notNull(),
+  });
+  
+  // Certification to skill junction table (many-to-many)
+  export const certificationsToSkills = pgTable('certifications_to_skills', {
+    certificationId: varchar('certification_id', { length: 100 }).notNull().references(() => certifications.id, { onDelete: 'cascade' }),
+    skillId: integer('skill_id').notNull().references(() => skills.id, { onDelete: 'cascade' }),
+  }, (table) => {
+    return {
+      pk: primaryKey(table.certificationId, table.skillId),
+    }
+  });
+  
+  // Export types
+  export type Certification = typeof certifications.$inferSelect;
+  export type NewCertification = typeof certifications.$inferInsert;
+  
+  export type Skill = typeof skills.$inferSelect;
+  export type NewSkill = typeof skills.$inferInsert;
+
+===== SCHEMA/INDEX.TS =====
+// src/lib/db/schema/index.ts
+// Κεντρικό αρχείο που εξάγει όλα τα schema και τους τύπους
+
+// Εξαγωγή των σχημάτων
+export * from './auth';
+export * from './blog';
+export * from './projects';
+export * from './certifications';
+export * from './contact';
+export * from './common';
+
+===== DRIZZLE.CONFIG.TS =====
+// drizzle.config.ts
+import { config } from 'dotenv';
+import { defineConfig } from 'drizzle-kit';
+import path from 'path';
+
+// Φορτώνουμε συγκεκριμένα το .env.local
+config({ path: path.resolve(process.cwd(), '.env.local') });
+
+// Έλεγχος για DATABASE_URL
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL is not set. Please check your .env.local file.');
+}
+
+export default defineConfig({
+  schema: './src/lib/db/schema/index.ts', // Ενημερωμένο path για το schema
+  out: './drizzle',
+  dialect: 'postgresql',
+  dbCredentials: {
+    url: DATABASE_URL,
+  },
+  verbose: true,
+  strict: true,
+});
+
+===== 0000_PUBLIC_BLOCKBUSTER.SQL =====
+CREATE TABLE "blog_categories" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" varchar(100) NOT NULL,
+	"slug" varchar(100) NOT NULL,
+	"description" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "blog_categories_name_unique" UNIQUE("name"),
+	CONSTRAINT "blog_categories_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
+CREATE TABLE "blog_posts" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"slug" varchar(255) NOT NULL,
+	"title" varchar(255) NOT NULL,
+	"description" text NOT NULL,
+	"content" text NOT NULL,
+	"date" timestamp DEFAULT now() NOT NULL,
+	"image" varchar(255) NOT NULL,
+	"author_id" uuid,
+	"author_name" varchar(255) NOT NULL,
+	"author_image" varchar(255) NOT NULL,
+	"categories" text[] NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "blog_posts_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
+CREATE TABLE "blog_posts_to_categories" (
+	"post_id" integer NOT NULL,
+	"category_id" integer NOT NULL,
+	CONSTRAINT "blog_posts_to_categories_post_id_category_id_pk" PRIMARY KEY("post_id","category_id")
+);
+--> statement-breakpoint
+CREATE TABLE "certifications" (
+	"id" varchar(100) PRIMARY KEY NOT NULL,
+	"title" varchar(255) NOT NULL,
+	"issuer" varchar(255) NOT NULL,
+	"issue_date" timestamp NOT NULL,
+	"expiration_date" timestamp,
+	"credential_id" varchar(100),
+	"credential_url" varchar(255),
+	"description" text,
+	"skills" text[],
+	"type" varchar(50) NOT NULL,
+	"filename" varchar(255) NOT NULL,
+	"featured" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "certifications_to_skills" (
+	"certification_id" varchar(100) NOT NULL,
+	"skill_id" integer NOT NULL,
+	CONSTRAINT "certifications_to_skills_certification_id_skill_id_pk" PRIMARY KEY("certification_id","skill_id")
+);
+--> statement-breakpoint
+CREATE TABLE "contact_messages" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" varchar(100) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"message" text NOT NULL,
+	"ip_address" varchar(50),
+	"status" varchar(20) DEFAULT 'new' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"responded_at" timestamp,
+	"responded_by_id" uuid
+);
+--> statement-breakpoint
+CREATE TABLE "crypto_projects" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"slug" varchar(100) NOT NULL,
+	"title" varchar(100) NOT NULL,
+	"description" text NOT NULL,
+	"features" text[] NOT NULL,
+	"tech" text[] NOT NULL,
+	"github" varchar(255) NOT NULL,
+	"status" varchar(50) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "crypto_projects_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
+CREATE TABLE "newsletter_subscribers" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"subscribed_at" timestamp DEFAULT now() NOT NULL,
+	"ip_address" varchar(50),
+	"is_active" boolean DEFAULT true NOT NULL,
+	"unsubscribed_at" timestamp,
+	CONSTRAINT "newsletter_subscribers_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "project_categories" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" varchar(100) NOT NULL,
+	"slug" varchar(100) NOT NULL,
+	CONSTRAINT "project_categories_name_unique" UNIQUE("name"),
+	CONSTRAINT "project_categories_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
+CREATE TABLE "projects" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"slug" varchar(100) NOT NULL,
+	"title" varchar(100) NOT NULL,
+	"description" text NOT NULL,
+	"short_description" text,
+	"categories" text[] NOT NULL,
+	"tech" text[] NOT NULL,
+	"github" varchar(255) NOT NULL,
+	"demo" varchar(255),
+	"image" varchar(255) NOT NULL,
+	"images" jsonb,
+	"featured" boolean DEFAULT false,
+	"order" serial NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "projects_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
+CREATE TABLE "projects_to_categories" (
+	"project_id" integer NOT NULL,
+	"category_id" integer NOT NULL,
+	CONSTRAINT "projects_to_categories_project_id_category_id_pk" PRIMARY KEY("project_id","category_id")
+);
+--> statement-breakpoint
+CREATE TABLE "skills" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" varchar(100) NOT NULL,
+	"category" varchar(50) NOT NULL,
+	CONSTRAINT "skills_name_unique" UNIQUE("name")
+);
+--> statement-breakpoint
+CREATE TABLE "user_profiles" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" uuid NOT NULL,
+	"first_name" varchar(100),
+	"last_name" varchar(100),
+	"bio" text,
+	"avatar_url" varchar(255),
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"role" text DEFAULT 'user' NOT NULL,
+	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+ALTER TABLE "blog_posts" ADD CONSTRAINT "blog_posts_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "blog_posts_to_categories" ADD CONSTRAINT "blog_posts_to_categories_post_id_blog_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."blog_posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "blog_posts_to_categories" ADD CONSTRAINT "blog_posts_to_categories_category_id_blog_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."blog_categories"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "certifications_to_skills" ADD CONSTRAINT "certifications_to_skills_certification_id_certifications_id_fk" FOREIGN KEY ("certification_id") REFERENCES "public"."certifications"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "certifications_to_skills" ADD CONSTRAINT "certifications_to_skills_skill_id_skills_id_fk" FOREIGN KEY ("skill_id") REFERENCES "public"."skills"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "contact_messages" ADD CONSTRAINT "contact_messages_responded_by_id_users_id_fk" FOREIGN KEY ("responded_by_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "projects_to_categories" ADD CONSTRAINT "projects_to_categories_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "projects_to_categories" ADD CONSTRAINT "projects_to_categories_category_id_project_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."project_categories"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "slug_idx" ON "blog_posts" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX "date_idx" ON "blog_posts" USING btree ("date");--> statement-breakpoint
+CREATE INDEX "author_id_idx" ON "blog_posts" USING btree ("author_id");--> statement-breakpoint
+CREATE INDEX "email_idx" ON "users" USING btree ("email");
+
+===== 0001_LETHAL_MACHINE_MAN.SQL =====
+CREATE TYPE "public"."certificate_type" AS ENUM('course', 'certification', 'degree', 'award', 'other');--> statement-breakpoint
+CREATE TYPE "public"."project_status" AS ENUM('active', 'inactive', 'archived', 'featured', 'completed', 'in-progress');--> statement-breakpoint
+CREATE TYPE "public"."status" AS ENUM('new', 'pending', 'processing', 'completed', 'failed', 'canceled');
+
+===== CLIENTS.TS =====
+// src/lib/db/clients.ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from './schema';
+import { sql } from 'drizzle-orm';
+
+// Τύποι για καλύτερο type safety
+export interface DatabaseClient {
+  execute: <T>(query: unknown) => Promise<T[]>;
+  query: <T>(query: unknown) => Promise<T[]>;
+  select: <T>(args: unknown) => T;
+  insert: <T>(args: unknown) => T;
+  update: <T>(args: unknown) => T;
+  delete: <T>(args: unknown) => T;
+}
+
+/**
+ * Έλεγχος αν το περιβάλλον είναι Node.js
+ * Αυτό είναι σημαντικό γιατί η σύνδεση με τη βάση δεδομένων
+ * πρέπει να γίνεται μόνο στο server-side
+ */
+const isNode = typeof process !== 'undefined' && 
+              process.versions != null && 
+              process.versions.node != null;
+
+// Επιλογές για το regular client που σέβεται το Row Level Security
+const regularPoolOptions = {
+  max: 15, // Αύξηση από 10 σε 15 για καλύτερο handling περισσότερων συνδέσεων
+  idle_timeout: 30, // Αύξηση από 20 σε 30 δευτερόλεπτα
+  prepare: false, // Απαραίτητο για συμβατότητα με Supabase connection pooler
+  ssl: { rejectUnauthorized: false }, // Επιτρέπει self-signed πιστοποιητικά
+  connect_timeout: 30, // Αύξηση του timeout για μεγαλύτερη ανοχή σε καθυστερήσεις δικτύου
+  application_name: 'christos-kerigkas-app' // Βοηθά στην αναγνώριση των συνδέσεων
+};
+
+// Regular client (σέβεται τις RLS πολιτικές)
+let regularPgClient: postgres.Sql<Record<string, unknown>> | null = null;
+let regularDbClient: ReturnType<typeof drizzle<typeof schema>> | null = null;
+
+// Admin client (παρακάμπτει τις RLS πολιτικές για διαχειριστικές λειτουργίες)
+let adminPgClient: postgres.Sql<Record<string, unknown>> | null = null;
+let adminDbClient: ReturnType<typeof drizzle<typeof schema>> | null = null;
+
+// Flag για να παρακολουθούμε αν οι connections έχουν κλείσει
+let connectionsActive = false;
+
+// Δημιουργία clients μόνο αν είμαστε σε Node.js περιβάλλον
+if (isNode) {
+  try {
+    // Το connection string από τις μεταβλητές περιβάλλοντος
+    const connectionString = process.env.DATABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!connectionString) {
+      console.error('DATABASE_URL is not defined in environment variables');
+    } else {
+      // Regular client για κανονικές λειτουργίες (σέβεται το RLS)
+      regularPgClient = postgres(connectionString, regularPoolOptions);
+      regularDbClient = drizzle(regularPgClient, { schema });
+      
+      // Admin client για διαχειριστικές λειτουργίες (παρακάμπτει το RLS)
+      if (serviceRoleKey) {
+        // Σημείωση: Η Supabase χρησιμοποιεί κυρίως το header Authorization για RLS bypass
+        // αλλά επειδή το postgres.js δεν υποστηρίζει custom headers απευθείας 
+        // χρησιμοποιούμε εναλλακτική προσέγγιση
+        
+        // Δημιουργία ξεχωριστού client με τα ίδια options
+        adminPgClient = postgres(connectionString, {
+          ...regularPoolOptions,
+          // Σε περιβάλλον παραγωγής, θα χρειαζόταν εναλλακτική προσέγγιση
+          // όπως η χρήση του Supabase REST API με το service role key
+        });
+        
+        adminDbClient = drizzle(adminPgClient, { schema });
+      }
+      
+      connectionsActive = true;
+      console.log('Database clients initialized successfully');
+    }
+  } catch (error) {
+    console.error('Failed to initialize database clients:', error);
+  }
+  
+  // Προσθήκη event listeners για graceful shutdown
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, closing database connections');
+    await closeDbConnections();
+    process.exit(0);
+  });
+  
+  process.on('SIGINT', async () => {
+    console.log('SIGINT received, closing database connections');
+    await closeDbConnections();
+    process.exit(0);
+  });
+  
+  // Διασφάλιση ότι οι συνδέσεις κλείνουν πριν την έξοδο της εφαρμογής
+  process.on('exit', () => {
+    if (connectionsActive) {
+      console.warn('Process exiting but database connections were not properly closed');
+    }
+  });
+}
+
+// Ορίζουμε fallback functions για όταν οι clients δεν είναι διαθέσιμοι
+const notInitializedError = (): never => {
+  throw new Error('Database client not initialized');
+};
+
+// Βοηθητική συνάρτηση για μετατροπή των αποτελεσμάτων σε συμβατή μορφή
+function transformResult<T>(result: unknown): T[] {
+  // Εδώ θα μπορούσαμε να προσθέσουμε οποιαδήποτε λογική μετασχηματισμού αν χρειαστεί
+  return result as T[];
+}
+
+// Εξαγωγή του regular db client (με πλήρες σεβασμό στο RLS)
+export const db: DatabaseClient = regularDbClient ? {
+  execute: <T>(query: unknown) => {
+    return regularDbClient!.execute(query as never)
+      .then(result => transformResult<T>(result));
+  },
+  query: <T>(query: unknown) => {
+    return regularDbClient!.execute(query as never)
+      .then(result => transformResult<T>(result));
+  },
+  select: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return regularDbClient!.select(args as never) as unknown as T;
+  },
+  insert: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return regularDbClient!.insert(args as never) as unknown as T;
+  },
+  update: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return regularDbClient!.update(args as never) as unknown as T;
+  },
+  delete: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return regularDbClient!.delete(args as never) as unknown as T;
+  }
+} : {
+  execute: notInitializedError,
+  query: notInitializedError,
+  select: notInitializedError,
+  insert: notInitializedError,
+  update: notInitializedError,
+  delete: notInitializedError
+};
+
+// Εξαγωγή του admin db client (παρακάμπτει το RLS)
+export const adminDb: DatabaseClient = adminDbClient ? {
+  execute: <T>(query: unknown) => {
+    return adminDbClient!.execute(query as never)
+      .then(result => transformResult<T>(result));
+  },
+  query: <T>(query: unknown) => {
+    return adminDbClient!.execute(query as never)
+      .then(result => transformResult<T>(result));
+  },
+  select: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return adminDbClient!.select(args as never) as unknown as T;
+  },
+  insert: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return adminDbClient!.insert(args as never) as unknown as T;
+  },
+  update: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return adminDbClient!.update(args as never) as unknown as T;
+  },
+  delete: <T>(args: unknown) => {
+    // Αντί για spreading, περνάμε το args ως έχει
+    return adminDbClient!.delete(args as never) as unknown as T;
+  }
+} : {
+  execute: notInitializedError,
+  query: notInitializedError,
+  select: notInitializedError,
+  insert: notInitializedError,
+  update: notInitializedError,
+  delete: notInitializedError
+};
+
+/**
+ * Συνάρτηση για σωστό κλείσιμο των database connections
+ * Χρησιμοποιείται κατά το shutdown της εφαρμογής ή όταν χρειάζεται
+ * να κλείσουμε χειροκίνητα τις συνδέσεις
+ */
+export async function closeDbConnections(): Promise<void> {
+  if (!connectionsActive) {
+    console.log('Database connections are already closed');
+    return;
+  }
+
+  try {
+    // Κλείσιμο του regularPgClient
+    if (regularPgClient) {
+      await regularPgClient.end({ timeout: 5 });
+      regularPgClient = null;
+      regularDbClient = null;
+      console.log('Regular database connection closed');
+    }
+    
+    // Κλείσιμο του adminPgClient
+    if (adminPgClient) {
+      await adminPgClient.end({ timeout: 5 });
+      adminPgClient = null;
+      adminDbClient = null;
+      console.log('Admin database connection closed');
+    }
+    
+    connectionsActive = false;
+    console.log('All database connections closed successfully');
+  } catch (error) {
+    console.error('Error closing database connections:', error);
+    throw error;
+  }
+}
+
+// Βοηθητικές συναρτήσεις για έλεγχο της κατάστασης της βάσης
+export async function checkDatabaseConnection(): Promise<{ connected: boolean; message: string }> {
+  if (!regularDbClient) {
+    return {
+      connected: false,
+      message: 'Database client not initialized. Make sure DATABASE_URL is set and you are in a server environment.'
+    };
+  }
+  
+  try {
+    // Προσπαθούμε να εκτελέσουμε ένα απλό ερώτημα με timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Database connection timeout after 5 seconds')), 5000);
+    });
+    
+    const queryPromise = regularDbClient.execute(sql`SELECT 1`);
+    
+    // Race για να κάνουμε timeout αν η σύνδεση καθυστερήσει πολύ
+    await Promise.race([queryPromise, timeoutPromise]);
+    
+    return {
+      connected: true,
+      message: 'Database connection successful'
+    };
+  } catch (error) {
+    console.error('Database connection test failed:', error);
+    return {
+      connected: false,
+      message: `Database connection failed: ${error instanceof Error ? error.message : String(error)}`
+    };
+  }
+}
+
+// Εξαγωγή για εύκολη πρόσβαση στο sql tag
+export { sql };

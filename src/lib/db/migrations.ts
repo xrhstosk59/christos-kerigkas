@@ -29,9 +29,10 @@ if (!fs.existsSync(migrationsFolder)) {
 const migrationClient = postgres(connectionString, { 
   max: 1,
   onnotice: () => {}, // Καταστέλλει τα notice messages
-  ssl: true, // Ενεργοποίηση SSL
+  ssl: { 
+    rejectUnauthorized: false // Επιτρέπει self-signed πιστοποιητικά
+  }, 
   connect_timeout: 30, // Αύξηση του timeout
-  // Δεν ορίζουμε user/pass εδώ, αφήνουμε τα στοιχεία να προέρχονται από το connection string
 });
 
 async function runMigrations() {
