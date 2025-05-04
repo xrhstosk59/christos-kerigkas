@@ -41,6 +41,9 @@ let regularDbClient: ReturnType<typeof drizzle<typeof schema>> | null = null;
 let adminPgClient: postgres.Sql<Record<string, unknown>> | null = null;
 let adminDbClient: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
+// Flag για να παρακολουθούμε αν οι connections έχουν κλείσει
+let connectionsActive = false;
+
 // Δημιουργία clients μόνο αν είμαστε σε Node.js περιβάλλον
 if (isNode) {
   try {
@@ -71,11 +74,32 @@ if (isNode) {
         adminDbClient = drizzle(adminPgClient, { schema });
       }
       
+      connectionsActive = true;
       console.log('Database clients initialized successfully');
     }
   } catch (error) {
     console.error('Failed to initialize database clients:', error);
   }
+  
+  // Προσθήκη event listeners για graceful shutdown
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, closing database connections');
+    await closeDbConnections();
+    process.exit(0);
+  });
+  
+  process.on('SIGINT', async () => {
+    console.log('SIGINT received, closing database connections');
+    await closeDbConnections();
+    process.exit(0);
+  });
+  
+  // Διασφάλιση ότι οι συνδέσεις κλείνουν πριν την έξοδο της εφαρμογής
+  process.on('exit', () => {
+    if (connectionsActive) {
+      console.warn('Process exiting but database connections were not properly closed');
+    }
+  });
 }
 
 // Ορίζουμε fallback functions για όταν οι clients δεν είναι διαθέσιμοι
@@ -159,8 +183,44 @@ export const adminDb: DatabaseClient = adminDbClient ? {
   delete: notInitializedError
 };
 
+/**
+ * Συνάρτηση για σωστό κλείσιμο των database connections
+ * Χρησιμοποιείται κατά το shutdown της εφαρμογής ή όταν χρειάζεται
+ * να κλείσουμε χειροκίνητα τις συνδέσεις
+ */
+export async function closeDbConnections(): Promise<void> {
+  if (!connectionsActive) {
+    console.log('Database connections are already closed');
+    return;
+  }
+
+  try {
+    // Κλείσιμο του regularPgClient
+    if (regularPgClient) {
+      await regularPgClient.end({ timeout: 5 });
+      regularPgClient = null;
+      regularDbClient = null;
+      console.log('Regular database connection closed');
+    }
+    
+    // Κλείσιμο του adminPgClient
+    if (adminPgClient) {
+      await adminPgClient.end({ timeout: 5 });
+      adminPgClient = null;
+      adminDbClient = null;
+      console.log('Admin database connection closed');
+    }
+    
+    connectionsActive = false;
+    console.log('All database connections closed successfully');
+  } catch (error) {
+    console.error('Error closing database connections:', error);
+    throw error;
+  }
+}
+
 // Βοηθητικές συναρτήσεις για έλεγχο της κατάστασης της βάσης
-export async function checkDatabaseConnection() {
+export async function checkDatabaseConnection(): Promise<{ connected: boolean; message: string }> {
   if (!regularDbClient) {
     return {
       connected: false,
@@ -169,8 +229,16 @@ export async function checkDatabaseConnection() {
   }
   
   try {
-    // Προσπαθούμε να εκτελέσουμε ένα απλό ερώτημα
-    await regularDbClient.execute(sql`SELECT 1`);
+    // Προσπαθούμε να εκτελέσουμε ένα απλό ερώτημα με timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Database connection timeout after 5 seconds')), 5000);
+    });
+    
+    const queryPromise = regularDbClient.execute(sql`SELECT 1`);
+    
+    // Race για να κάνουμε timeout αν η σύνδεση καθυστερήσει πολύ
+    await Promise.race([queryPromise, timeoutPromise]);
+    
     return {
       connected: true,
       message: 'Database connection successful'

@@ -1,7 +1,7 @@
 // src/app/error.tsx
 'use client'
 
-import { ErrorBoundary } from '@/components/common/error-boundary'
+import ErrorBoundary from '@/components/common/error-boundary'
 
 export default function GlobalError({
   error,

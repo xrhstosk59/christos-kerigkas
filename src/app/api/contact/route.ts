@@ -1,6 +1,6 @@
 // src/app/api/contact/route.ts
 import { NextResponse } from 'next/server'
-import { createTransport } from 'nodemailer'
+import { createTransport, SentMessageInfo } from 'nodemailer'
 import { z } from 'zod'
 import { contactFormRateLimit } from '@/lib/utils/rate-limit'
 import { db, sql } from '@/lib/db'
@@ -30,42 +30,52 @@ export async function POST(req: Request) {
       return rateLimitResult; // Επιστρέφει 429 Too Many Requests
     }
     
-    // Get client IP for logging purposes
+    // Get client IP for logging purposes - με μερική απόκρυψη για ασφάλεια
     const ip = req.headers.get('x-forwarded-for') || 
                req.headers.get('x-real-ip') || 
-               'unknown'
+               'unknown';
     
-    console.log('Client IP:', typeof ip === 'string' ? ip : ip?.[0] || 'unknown');
+    // Απόκρυψη μέρους της IP για λόγους ιδιωτικότητας
+    const maskedIp = typeof ip === 'string' 
+      ? ip.split('.').slice(0, 2).join('.') + '.xxx.xxx' 
+      : 'unknown';
+    
+    console.log('Client IP (masked):', maskedIp);
     
     // Get and validate data
     let body;
     try {
-      body = await req.json()
+      body = await req.json();
+      // Ασφαλές logging χωρίς να εμφανίζονται προσωπικά δεδομένα
       console.log('Form data received:', { 
-        name: body.name,
-        email: body.email,
-        messagePreview: body.message?.substring(0, 20) + '...' 
+        nameProvided: Boolean(body.name),
+        emailProvided: Boolean(body.email),
+        messageLength: body.message?.length || 0
       });
     } catch (parseError) {
       console.error('Error parsing request body:', parseError);
       return NextResponse.json(
         { message: 'Invalid request format' },
         { status: 400 }
-      )
+      );
     }
     
-    const validationResult = contactSchema.safeParse(body)
+    const validationResult = contactSchema.safeParse(body);
     
     if (!validationResult.success) {
       const errors = validationResult.error.flatten();
-      console.error('Validation error:', errors);
+      console.error('Validation error:', {
+        fieldErrors: Object.keys(errors.fieldErrors),
+        formErrors: errors.formErrors.length
+      });
       return NextResponse.json(
         { message: 'Invalid form data', errors },
         { status: 400 }
-      )
+      );
     }
     
-    const { name, email, message } = validationResult.data
+    const { name, email, message } = validationResult.data;
+    // Αποθήκευση πλήρους IP μόνο στη βάση δεδομένων
     const ipAddress = typeof ip === 'string' ? ip : ip?.[0] || 'unknown';
     
     // Variable to track if we stored in database
@@ -95,7 +105,8 @@ export async function POST(req: Request) {
         console.warn('Database client not available, skipping database storage');
       }
     } catch (dbError) {
-      console.error('Database error:', dbError);
+      // Ασφαλές logging του σφάλματος χωρίς να εμφανίζει ευαίσθητα δεδομένα
+      console.error('Database error:', dbError instanceof Error ? dbError.message : 'Unknown error');
       // We continue with email sending even if database failed
     }
 
@@ -110,21 +121,22 @@ export async function POST(req: Request) {
           return NextResponse.json(
             { message: 'Message saved successfully but email notification was not sent', databaseSuccess, emailSent: false },
             { status: 200, headers: rateLimitResult.headers }
-          )
+          );
         } else {
           return NextResponse.json(
             { message: 'Failed to process your message. Email configuration is missing.' },
             { status: 500 }
-          )
+          );
         }
       }
 
+      // Ασφαλές logging των SMTP ρυθμίσεων χωρίς να εμφανίζει ευαίσθητα δεδομένα
       console.log('SMTP Configuration:', {
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        user: process.env.SMTP_USER?.substring(0, 3) + '***',
-        from: process.env.SMTP_FROM?.substring(0, 3) + '***',
-        to: process.env.CONTACT_EMAIL?.substring(0, 3) + '***'
+        user: process.env.SMTP_USER ? `${process.env.SMTP_USER.substring(0, 3)}***` : 'Not set',
+        from: process.env.SMTP_FROM ? `${process.env.SMTP_FROM.substring(0, 3)}***` : 'Not set',
+        to: process.env.CONTACT_EMAIL ? `${process.env.CONTACT_EMAIL.substring(0, 3)}***` : 'Not set'
       });
 
       // Create email transporter
@@ -136,12 +148,12 @@ export async function POST(req: Request) {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
-      })
+      });
 
-      console.log('Sending email notification to:', process.env.CONTACT_EMAIL);
+      console.log('Sending email notification');
       
       // Send email
-      const mailResult = await transporter.sendMail({
+      const mailOptions = {
         from: process.env.SMTP_FROM,
         to: process.env.CONTACT_EMAIL,
         subject: `New Contact Form Message from ${name}`,
@@ -150,6 +162,7 @@ export async function POST(req: Request) {
           Email: ${email}
           Message: ${message}
           ${messageId ? `Message ID: ${messageId}` : ''}
+          IP: ${maskedIp}
         `,
         html: `
           <h3>New Contact Form Submission</h3>
@@ -158,9 +171,30 @@ export async function POST(req: Request) {
           <p><strong>Message:</strong></p>
           <p>${message.replace(/\n/g, '<br>')}</p>
           ${messageId ? `<p><strong>Message ID:</strong> ${messageId}</p>` : ''}
+          <p><strong>Origin:</strong> ${maskedIp}</p>
         `,
-      })
-
+      };
+      
+      // Προσθήκη timeout στην αποστολή email
+      const mailPromise = new Promise<SentMessageInfo>((resolve, reject) => {
+        // Set a timeout of 10 seconds
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Email sending timeout after 10 seconds'));
+        }, 10000);
+        
+        // Attempt to send the email
+        transporter.sendMail(mailOptions, (err, info) => {
+          clearTimeout(timeoutId);
+          if (err) {
+            reject(err);
+          } else {
+            resolve(info);
+          }
+        });
+      });
+      
+      const mailResult = await mailPromise;
+      
       console.log('Email sent successfully:', mailResult.messageId);
       
       return NextResponse.json(
@@ -172,28 +206,30 @@ export async function POST(req: Request) {
           emailSent: true 
         },
         { status: 200, headers: rateLimitResult.headers }
-      )
+      );
     } catch (emailError) {
-      console.error('Failed to send email notification:', emailError);
+      console.error('Failed to send email notification:', 
+        emailError instanceof Error ? emailError.message : 'Unknown error');
       
       // If we at least stored in database, that's a partial success
       if (databaseSuccess) {
         return NextResponse.json(
           { message: 'Message saved but email notification failed to send', databaseSuccess, emailSent: false },
           { status: 200, headers: rateLimitResult.headers }
-        )
+        );
       } else {
         return NextResponse.json(
           { message: 'Failed to process your message completely.' },
           { status: 500 }
-        )
+        );
       }
     }
   } catch (error) {
-    console.error('Unhandled contact form error:', error);
+    console.error('Unhandled contact form error:', 
+      error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
       { message: 'Failed to process your message' },
       { status: 500 }
-    )
+    );
   }
 }

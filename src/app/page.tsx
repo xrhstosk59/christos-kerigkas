@@ -16,25 +16,23 @@ const NavbarLoading = () => <div className="h-16 bg-gray-100 dark:bg-gray-900 an
 const HeroLoading = () => <div className="min-h-[calc(100vh-64px)] bg-gray-100 dark:bg-gray-900 animate-pulse"></div>
 const CertificationsLoading = () => <div className="h-64 bg-gray-100 dark:bg-gray-900 animate-pulse my-8"></div>
 
-// Dynamic imports
+// Διόρθωση: Αφαίρεση του loading parameter για αποφυγή διπλών loading states
 const Navbar = dynamic(() => import('@/components/common/navbar'), { 
-  ssr: true, 
-  loading: NavbarLoading 
+  ssr: true
 })
 
 const Hero = dynamic(() => import('@/components/layout/hero'), { 
-  ssr: true,
-  loading: HeroLoading 
+  ssr: true
 })
 
 const Certifications = dynamic(() => import('@/components/features/certifications/certifications'), { 
-  ssr: true,
-  loading: CertificationsLoading 
+  ssr: true
 })
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Διόρθωση: Χρήση σωστής σειράς Suspense και dynamic components */}
       <Suspense fallback={<NavbarLoading />}>
         <Navbar />
       </Suspense>

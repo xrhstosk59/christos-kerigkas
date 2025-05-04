@@ -7,9 +7,28 @@ export const siteConfig = {
   url: 'https://christoskerigkas.com',
   author: {
     name: 'Christos Kerigkas',
-    image: '/profile.jpg',
+    image: '/uploads/profile.jpg',
+    jobTitle: 'Full Stack Developer',
+    email: 'contact@christoskerigkas.com',
+    location: 'Kavala, Greece',
+    sameAs: [
+      'https://github.com/christoskerigkas',
+      'https://linkedin.com/in/christoskerigkas',
+      // Συμπλήρωσε με τα πραγματικά social profiles
+    ]
   },
   description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js. Portfolio, blog, and professional experience.',
+  logo: {
+    url: '/logo.png',
+    width: 192,
+    height: 192,
+    alt: 'Christos Kerigkas Logo'
+  },
+  organization: {
+    name: 'Christos Kerigkas',
+    url: 'https://christoskerigkas.com',
+    logo: '/logo.png'
+  }
 };
 
 // Βασικό configuration για SEO
@@ -49,6 +68,7 @@ export const defaultMetadata: Metadata = {
     title: 'Christos Kerigkas | Full Stack Developer',
     description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js.',
     images: ['https://christoskerigkas.com/og-image.jpg'],
+    creator: '@christoskerigkas', // Συμπλήρωσε με το πραγματικό Twitter handle
   },
   robots: {
     index: true,
@@ -64,7 +84,6 @@ export const defaultMetadata: Metadata = {
   verification: {
     google: process.env.GOOGLE_VERIFICATION_ID || '',
     yandex: process.env.YANDEX_VERIFICATION_ID || '',
-    // Διόρθωση: Το 'bing' δεν είναι έγκυρο property, χρησιμοποιούμε το 'other'
     other: {
       'msvalidate.01': process.env.BING_VERIFICATION_ID || '',
     },
@@ -73,9 +92,54 @@ export const defaultMetadata: Metadata = {
     canonical: 'https://christoskerigkas.com',
     languages: {
       'en-US': 'https://christoskerigkas.com',
+      'el-GR': 'https://christoskerigkas.com/el'
     },
-  }
+  },
+  category: 'technology'
 };
+
+// Δημιουργία JSON-LD για Person schema
+export function generatePersonJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: siteConfig.author.name,
+    url: siteConfig.url,
+    image: `${siteConfig.url}${siteConfig.author.image}`,
+    jobTitle: siteConfig.author.jobTitle,
+    email: siteConfig.author.email,
+    sameAs: siteConfig.author.sameAs,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: siteConfig.author.location
+    },
+    worksFor: {
+      '@type': 'Organization',
+      name: siteConfig.organization.name,
+      url: siteConfig.organization.url
+    }
+  };
+}
+
+// Δημιουργία JSON-LD για WebSite schema
+export function generateWebsiteJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteConfig.name,
+    url: siteConfig.url,
+    description: siteConfig.description,
+    publisher: {
+      '@type': 'Person',
+      name: siteConfig.author.name
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteConfig.url}/blog/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string'
+    }
+  };
+}
 
 // Δημιουργία metadata για blog posts
 export function generateBlogPostMetadata(
@@ -84,7 +148,8 @@ export function generateBlogPostMetadata(
   slug: string,
   image: string,
   date: string,
-  author: string
+  author: string,
+  categories: string[] = []
 ): Metadata {
   const url = `https://christoskerigkas.com/blog/${slug}`;
   
@@ -106,53 +171,47 @@ export function generateBlogPostMetadata(
       ],
       publishedTime: date,
       authors: [author],
+      tags: categories,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
       images: [image.startsWith('http') ? image : `https://christoskerigkas.com${image}`],
+      creator: '@christoskerigkas', // Συμπλήρωσε με το πραγματικό Twitter handle
     },
     alternates: {
       canonical: url,
     },
+    keywords: [...categories, 'Christos Kerigkas', 'blog', 'web development'],
+    authors: [{ name: author, url: 'https://christoskerigkas.com' }],
+    category: categories[0] || 'technology'
   };
 }
 
-// Δημιουργία JSON-LD για SEO
-export function generatePersonJsonLd() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: 'Christos Kerigkas',
-    url: 'https://christoskerigkas.com',
-    jobTitle: 'Full Stack Developer',
-    sameAs: [
-      'https://github.com/christoskerigkas',
-      'https://linkedin.com/in/christoskerigkas',
-      // Πρόσθεσε τα δικά σου social media
-    ],
-    image: 'https://christoskerigkas.com/profile.jpg',
-    description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js.',
-  };
-}
-
+// Δημιουργία JSON-LD για Blog Post (Article schema)
 export function generateArticleJsonLd(post: {
   title: string;
   description: string;
   slug: string;
   date: string;
   author: { name: string; image: string };
+  categories?: string[];
+  modifiedDate?: string;
 }) {
+  const url = `https://christoskerigkas.com/blog/${post.slug}`;
+  const imageUrl = post.author.image.startsWith('http') 
+    ? post.author.image 
+    : `https://christoskerigkas.com${post.author.image}`;
+
   return {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: post.title,
     description: post.description,
-    image: post.author.image.startsWith('http') 
-      ? post.author.image 
-      : `https://christoskerigkas.com${post.author.image}`,
+    image: imageUrl,
     datePublished: post.date,
+    dateModified: post.modifiedDate || post.date,
     author: {
       '@type': 'Person',
       name: post.author.name,
@@ -160,15 +219,19 @@ export function generateArticleJsonLd(post: {
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Christos Kerigkas',
+      name: siteConfig.name,
       logo: {
         '@type': 'ImageObject',
-        url: 'https://christoskerigkas.com/logo.png',
+        url: `${siteConfig.url}${siteConfig.logo.url}`,
+        width: siteConfig.logo.width,
+        height: siteConfig.logo.height
       },
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://christoskerigkas.com/blog/${post.slug}`,
+      '@id': url,
     },
+    keywords: post.categories?.join(', ') || '',
+    articleSection: post.categories?.[0] || 'Technology'
   };
 }

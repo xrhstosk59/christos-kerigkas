@@ -6,7 +6,8 @@ import { Analytics } from "@/components/layout/analytics";
 import PageTransition from "@/components/common/page-transition";
 import ScrollProgress from "@/components/common/scroll-progress";
 import { AuthProvider } from "@/components/providers/auth-provider";
-import { defaultMetadata } from "@/lib/utils/seo";
+import ErrorBoundary from "@/components/common/error-boundary";
+import { defaultMetadata, generatePersonJsonLd, generateWebsiteJsonLd } from "@/lib/utils/seo";
 import "./globals.css";
 
 const geist = Geist({
@@ -37,7 +38,13 @@ export const metadata: Metadata = {
     googleBot: 'index,follow,max-image-preview:large,max-video-preview:-1,max-snippet:-1',
   },
   verification: {
-    google: 'YOUR-VERIFICATION-CODE'
+    google: process.env.GOOGLE_VERIFICATION_ID || ''
+  },
+  applicationName: "Christos Kerigkas Portfolio",
+  appleWebApp: {
+    title: "Christos Kerigkas",
+    statusBarStyle: "black-translucent",
+    capable: true
   }
 };
 
@@ -46,16 +53,50 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Δημιουργία των JSON-LD structured data
+  const personJsonLd = generatePersonJsonLd();
+  const websiteJsonLd = generateWebsiteJsonLd();
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head />
-      <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning className="scroll-smooth">
+      <head>
+        {/* Schema.org JSON-LD για Person */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(personJsonLd)
+          }}
+        />
+        
+        {/* Schema.org JSON-LD για Website */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd)
+          }}
+        />
+        
+        {/* Preconnect για εξωτερικές πηγές */}
+        <link rel="preconnect" href="https://tnwbnlbmlqoxypsqdqii.supabase.co" />
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <link rel="preconnect" href="https://www.googletagmanager.com" />
+        )}
+      </head>
+      <body className={`${geist.variable} ${geistMono.variable} antialiased min-h-screen`}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:top-2 focus:left-2 focus:rounded">
+          Skip to content
+        </a>
+        
         <AuthProvider>
           <ThemeProvider>
             <ScrollProgress />
-            <PageTransition>
-              {children}
-            </PageTransition>
+            <ErrorBoundary>
+              <PageTransition>
+                <main id="main-content">
+                  {children}
+                </main>
+              </PageTransition>
+            </ErrorBoundary>
             <Analytics />
           </ThemeProvider>
         </AuthProvider>
