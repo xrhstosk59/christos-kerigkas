@@ -8,7 +8,7 @@ export interface UserSession {
   user: {
     id: string;
     email: string;
-    role: 'admin' | 'user';
+    role: 'admin' | 'editor' | 'user'; // Προσθήκη του 'editor' ως έγκυρη τιμή
   } | null;
   isAuthenticated: boolean;
 }

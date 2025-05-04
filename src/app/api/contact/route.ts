@@ -1,5 +1,5 @@
 // src/app/api/contact/route.ts
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { createTransport, SentMessageInfo } from 'nodemailer'
 import { z } from 'zod'
 import { contactFormRateLimit } from '@/lib/utils/rate-limit'
@@ -18,7 +18,7 @@ const contactSchema = z.object({
   message: z.string().min(2, 'Message is too short').max(1000, 'Message is too long'),
 })
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     console.log('Received contact form submission');
     
@@ -118,9 +118,15 @@ export async function POST(req: Request) {
         
         // If we successfully stored in database, we still return success
         if (databaseSuccess) {
+          const headers = {
+            'X-RateLimit-Limit': String(rateLimitResult.limit),
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000))
+          };
+          
           return NextResponse.json(
             { message: 'Message saved successfully but email notification was not sent', databaseSuccess, emailSent: false },
-            { status: 200, headers: rateLimitResult.headers }
+            { status: 200, headers }
           );
         } else {
           return NextResponse.json(
@@ -197,6 +203,12 @@ export async function POST(req: Request) {
       
       console.log('Email sent successfully:', mailResult.messageId);
       
+      const headers = {
+        'X-RateLimit-Limit': String(rateLimitResult.limit),
+        'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+        'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000))
+      };
+      
       return NextResponse.json(
         { 
           message: databaseSuccess 
@@ -205,7 +217,7 @@ export async function POST(req: Request) {
           databaseSuccess,
           emailSent: true 
         },
-        { status: 200, headers: rateLimitResult.headers }
+        { status: 200, headers }
       );
     } catch (emailError) {
       console.error('Failed to send email notification:', 
@@ -213,9 +225,15 @@ export async function POST(req: Request) {
       
       // If we at least stored in database, that's a partial success
       if (databaseSuccess) {
+        const headers = {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000))
+        };
+        
         return NextResponse.json(
           { message: 'Message saved but email notification failed to send', databaseSuccess, emailSent: false },
-          { status: 200, headers: rateLimitResult.headers }
+          { status: 200, headers }
         );
       } else {
         return NextResponse.json(
