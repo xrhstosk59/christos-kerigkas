@@ -19,7 +19,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/public/globe.svg
 /Users/xrhstosk59/Projects/christos-kerigkas/public/manifest.json
 /Users/xrhstosk59/Projects/christos-kerigkas/public/next.svg
-/Users/xrhstosk59/Projects/christos-kerigkas/public/uploads/.gitkeep
 /Users/xrhstosk59/Projects/christos-kerigkas/public/uploads/certificates/ΚΕΡΙΓΚΑΣ ΧΡΗΣΤΟΣ.pdf
 /Users/xrhstosk59/Projects/christos-kerigkas/public/uploads/certificates/Certificate-of-Completion-24C014989-Univators-Skilling-Future-Digital-Innovators-CHRISTOS-KERIGKAS.pdf
 /Users/xrhstosk59/Projects/christos-kerigkas/public/uploads/certificates/Introduction_to_Cybersecurity_Badge20241109-27-40xb2m.pdf
@@ -194,6 +193,12 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/supabase/.branches/_current_branch
 /Users/xrhstosk59/Projects/christos-kerigkas/supabase/.gitignore
 /Users/xrhstosk59/Projects/christos-kerigkas/supabase/.temp/cli-latest
+/Users/xrhstosk59/Projects/christos-kerigkas/supabase/.temp/gotrue-version
+/Users/xrhstosk59/Projects/christos-kerigkas/supabase/.temp/pooler-url
+/Users/xrhstosk59/Projects/christos-kerigkas/supabase/.temp/postgres-version
+/Users/xrhstosk59/Projects/christos-kerigkas/supabase/.temp/project-ref
+/Users/xrhstosk59/Projects/christos-kerigkas/supabase/.temp/rest-version
+/Users/xrhstosk59/Projects/christos-kerigkas/supabase/.temp/storage-version
 /Users/xrhstosk59/Projects/christos-kerigkas/supabase/config.toml
 /Users/xrhstosk59/Projects/christos-kerigkas/tailwind.config.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/tsconfig.json
