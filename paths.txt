@@ -2,7 +2,6 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/.eslintrc.json
 /Users/xrhstosk59/Projects/christos-kerigkas/.gitignore
 /Users/xrhstosk59/Projects/christos-kerigkas/.vscode/settings.json
-/Users/xrhstosk59/Projects/christos-kerigkas/db_files.txt
 /Users/xrhstosk59/Projects/christos-kerigkas/drizzle.config.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/drizzle/0000_public_blockbuster.sql
 /Users/xrhstosk59/Projects/christos-kerigkas/drizzle/0001_lethal_machine_man.sql
