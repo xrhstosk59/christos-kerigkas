@@ -32,6 +32,7 @@
 /Users/xrhstosk59/Projects/christos-kerigkas/public/vercel.svg
 /Users/xrhstosk59/Projects/christos-kerigkas/public/window.svg
 /Users/xrhstosk59/Projects/christos-kerigkas/README.md
+/Users/xrhstosk59/Projects/christos-kerigkas/scripts/verify-schema.ts
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/layout.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/login/page.tsx
 /Users/xrhstosk59/Projects/christos-kerigkas/src/app/admin/page.tsx
