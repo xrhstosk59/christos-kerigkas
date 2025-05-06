@@ -1,7 +1,7 @@
 // src/app/api/admin/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { loginWithSupabase } from '@/lib/auth/server-auth';
-import { loginRateLimit } from '@/lib/utils/rate-limit';
+import { authRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 
@@ -29,12 +29,19 @@ async function logFailedLoginAttempt(req: NextRequest, email: string, reason: st
 export async function POST(req: NextRequest) {
   try {
     // Εφαρμογή rate limiting
-    const rateLimitResult = await loginRateLimit(req);
+    const rateLimitResult = await authRateLimit(req);
     
-    // Έλεγχος αν το αποτέλεσμα είναι NextResponse (σφάλμα rate limit)
-    if (rateLimitResult instanceof NextResponse) {
-      return rateLimitResult; // Επιστρέφει 429 Too Many Requests
+    // Έλεγχος αν έχει ξεπεραστεί το όριο
+    if (!rateLimitResult.success && rateLimitResult.response) {
+      return rateLimitResult.response; // Επιστρέφει 429 Too Many Requests
     }
+    
+    // Δημιουργία headers για rate limit
+    const rateLimitHeaders = {
+      'X-RateLimit-Limit': String(rateLimitResult.limit),
+      'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+      'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000))
+    };
     
     // Λήψη και επικύρωση δεδομένων
     const body = await req.json();
@@ -50,7 +57,7 @@ export async function POST(req: NextRequest) {
         },
         { 
           status: 400,
-          headers: rateLimitResult.headers
+          headers: rateLimitHeaders
         }
       );
     }
@@ -67,7 +74,7 @@ export async function POST(req: NextRequest) {
         { error: loginResult.error || 'Λάθος email ή κωδικός πρόσβασης' },
         { 
           status: 401,
-          headers: rateLimitResult.headers
+          headers: rateLimitHeaders
         }
       );
     }
@@ -77,7 +84,7 @@ export async function POST(req: NextRequest) {
       { success: true, message: 'Επιτυχής σύνδεση' },
       { 
         status: 200,
-        headers: rateLimitResult.headers
+        headers: rateLimitHeaders
       }
     );
   } catch (error) {
