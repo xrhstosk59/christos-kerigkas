@@ -1,7 +1,7 @@
 // src/app/api/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { protectApiRoute } from '@/lib/auth/server-auth';
-import { uploadRateLimit } from '@/lib/utils/rate-limit';
+import { authRateLimit } from '@/lib/utils/rate-limit';
 import path from 'path';
 import { writeFile } from 'fs/promises';
 import { ensureUploadsDir } from '@/lib/utils/ensure-uploads-dir';
@@ -84,13 +84,16 @@ export async function POST(req: NextRequest) {
     const authError = await protectApiRoute(req);
     if (authError) return authError;
     
-    // Έλεγχος rate limit
-    const rateLimitResult = await uploadRateLimit(req);
+    // Έλεγχος rate limit - χρησιμοποιούμε το authRateLimit αντί του uploadRateLimit
+    const rateLimitResult = await authRateLimit(req);
     
-    // Έλεγχος αν το αποτέλεσμα είναι NextResponse (σφάλμα rate limit)
-    if (rateLimitResult instanceof NextResponse) {
-      return rateLimitResult; // Επιστρέφει 429 Too Many Requests
+    // Έλεγχος αν το rate limit έχει ξεπεραστεί
+    if (!rateLimitResult.success && rateLimitResult.response) {
+      return rateLimitResult.response; // Επιστρέφει 429 Too Many Requests
     }
+    
+    // Δημιουργία headers για rate limit
+    const rateLimitHeaders = rateLimitResult.headers || {};
     
     // Παραλαβή των δεδομένων form
     const formData = await req.formData();
@@ -204,7 +207,7 @@ export async function POST(req: NextRequest) {
       },
       { 
         status: 200,
-        headers: rateLimitResult.headers 
+        headers: rateLimitHeaders
       }
     );
   } catch (error) {

@@ -1,11 +1,10 @@
 // src/app/admin/profile/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/providers/theme-provider'
 import { useAuth } from '@/components/providers/auth-provider'
-import { supabaseAuthManager } from '@/lib/auth/supabase-auth-client'
 import Link from 'next/link'
 import { 
   User as UserIcon, 
@@ -16,6 +15,18 @@ import {
 import { cn } from '@/lib/utils/utils'
 import { Button } from '@/components/ui/button'
 
+// Τύπος για το supabaseAuthManager
+interface SupabaseAuthManager {
+  isClientAvailable: () => boolean;
+  getClient: () => {
+    auth: {
+      updateUser: (options: { password: string }) => Promise<{ 
+        error: { message: string } | null 
+      }>;
+    };
+  };
+}
+
 export default function AdminProfile() {
   const { theme } = useTheme()
   const { user, signOut } = useAuth()
@@ -24,11 +35,25 @@ export default function AdminProfile() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [supabaseAuthManager, setSupabaseAuthManager] = useState<SupabaseAuthManager | null>(null)
   
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: '',
   })
+
+  // Δυναμική εισαγωγή του supabaseAuthManager μόνο στο client
+  useEffect(() => {
+    const importAuth = async () => {
+      try {
+        const { supabaseAuthManager } = await import('@/lib/auth/supabase-auth-client')
+        setSupabaseAuthManager(supabaseAuthManager as SupabaseAuthManager)
+      } catch (err) {
+        console.error('Failed to load auth manager:', err)
+      }
+    }
+    importAuth()
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -58,6 +83,11 @@ export default function AdminProfile() {
       setError(null)
       setSuccessMessage(null)
       
+      // Έλεγχος αν έχει φορτωθεί το supabaseAuthManager
+      if (!supabaseAuthManager) {
+        throw new Error('Authentication service is not available yet')
+      }
+      
       // Έλεγχος αν το client είναι διαθέσιμο
       if (!supabaseAuthManager.isClientAvailable()) {
         throw new Error('Authentication service is not available')
@@ -86,10 +116,20 @@ export default function AdminProfile() {
     }
   }
 
+  // Ανακατεύθυνση αν δεν υπάρχει χρήστης, αλλά μόνο στο client
+  useEffect(() => {
+    if (!user) {
+      router.push('/admin/login')
+    }
+  }, [user, router])
+
+  // Αν δεν έχουμε χρήστη, εμφανίζουμε ένα placeholder μέχρι να γίνει redirect
   if (!user) {
-    // Αν δεν υπάρχει χρήστης, ανακατεύθυνση στη σελίδα σύνδεσης
-    router.push('/admin/login')
-    return null
+    return (
+      <div className="min-h-screen pt-20 pb-12 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    )
   }
 
   return (
@@ -275,7 +315,7 @@ export default function AdminProfile() {
             
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !supabaseAuthManager}
               className="gap-2"
             >
               {isLoading && (

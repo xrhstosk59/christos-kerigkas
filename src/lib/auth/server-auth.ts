@@ -4,20 +4,11 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
+import type { CookieSerializeOptions } from 'cookie';
 import { UserSession, ADMIN_USERNAME, validatePassword, validateSecureToken, generateSecureToken } from './common';
 
-// Τύπος για τις επιλογές των cookies
-interface CookieOptions {
-  name?: string;
-  value?: string;
-  maxAge?: number;
-  expires?: Date;
-  path?: string;
-  domain?: string;
-  secure?: boolean;
-  httpOnly?: boolean;
-  sameSite?: 'strict' | 'lax' | 'none';
-}
+// Χρησιμοποιούμε τον τύπο που είναι συμβατός με το cookie store
+type CookieOptions = Partial<CookieSerializeOptions>;
 
 /**
  * Server-side Supabase client - χρησιμοποιεί next/headers και λειτουργεί μόνο σε Server Components
@@ -34,6 +25,13 @@ export async function createServerSupabaseClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
+          // Μετατροπή του sameSite σε τύπο που αναμένεται
+          if (options.sameSite === true) {
+            options.sameSite = 'strict';
+          } else if (options.sameSite === false) {
+            options.sameSite = 'lax';
+          }
+          
           cookieStore.set(name, value, options);
         },
         remove(name: string) {
