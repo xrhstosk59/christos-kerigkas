@@ -1,21 +1,59 @@
+'use client'
+
 // /src/components/features/certifications/index.tsx
-import { Suspense } from 'react'
+import { useEffect, useState } from 'react'
 import { studentCertifications } from '@/lib/data/mock-certifications'
 import CertificationList from './certification-list'
 import { cn } from '@/lib/utils/utils'
+import { Certification } from '@/types/certifications'
 
 // Ορίζουμε ρητά τον τύπο των props
 interface CertificationsProps {
   theme: 'dark' | 'light'
 }
 
-// Server Component που αντικαθιστά το παλιό certifications-server.tsx
-// αλλά χρησιμοποιεί την server-first προσέγγιση
-
-async function CertificationsContent({ theme }: CertificationsProps) {
-  // Για την ώρα, χρησιμοποιούμε απευθείας τα mock data αντί για repository
-  // καθώς υπάρχουν ασυμβατότητες τύπων
-  const certifications = studentCertifications;
+// Μετατροπή σε client component
+export default function Certifications({ theme }: CertificationsProps) {
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Χρησιμοποιούμε useEffect για να φορτώσουμε τα δεδομένα
+  useEffect(() => {
+    // Αρχικά χρησιμοποιούμε τα mock δεδομένα
+    setCertifications(studentCertifications);
+    setLoading(false);
+    
+    // Εδώ θα μπορούσαμε να κάνουμε fetch από το API αν χρειαστεί
+    /*
+    const fetchCertifications = async () => {
+      try {
+        const response = await fetch('/api/certifications');
+        if (response.ok) {
+          const data = await response.json();
+          setCertifications(data);
+        } else {
+          // Αν υπάρχει σφάλμα, χρησιμοποιούμε τα mock δεδομένα
+          setCertifications(studentCertifications);
+        }
+      } catch (error) {
+        console.error('Error fetching certifications:', error);
+        setCertifications(studentCertifications);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCertifications();
+    */
+  }, []);
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
   
   return (
     <div>
@@ -43,18 +81,5 @@ async function CertificationsContent({ theme }: CertificationsProps) {
         />
       </div>
     </div>
-  )
-}
-
-// Export το wrapper component που λαμβάνει το theme
-export default function Certifications({ theme }: CertificationsProps) {
-  return (
-    <Suspense fallback={
-      <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    }>
-      <CertificationsContent theme={theme} />
-    </Suspense>
-  )
+  );
 }
