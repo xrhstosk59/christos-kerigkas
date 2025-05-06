@@ -15,6 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx ./src/lib/db/seed.ts",
+    "db:seed-certifications": "tsx ./scripts/seed-certifications.ts",
     "db:apply-rls": "tsx ./scripts/apply-rls-policies.ts",
     "db:verify": "tsx ./scripts/verify-schema.ts",
     "db:introspect": "drizzle-kit introspect",

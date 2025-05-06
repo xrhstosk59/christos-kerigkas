@@ -1,85 +1,91 @@
-'use client'
+// src/components/features/certifications/index.tsx
+import React, { useEffect, useState } from 'react';
+import { Certification } from '@/types/certifications';
+import { getCertifications } from '@/lib/db/repositories/certifications-repository';
+import CertificationCard from './certification-card';
+import CertificationDialog from './certification-dialog';
 
-// /src/components/features/certifications/index.tsx
-import { useEffect, useState } from 'react'
-import { studentCertifications } from '@/lib/data/mock-certifications'
-import CertificationList from './certification-list'
-import { cn } from '@/lib/utils/utils'
-import { Certification } from '@/types/certifications'
-
-// Ορίζουμε ρητά τον τύπο των props
-interface CertificationsProps {
-  theme: 'dark' | 'light'
+interface CertificationsComponentProps {
+  theme: 'dark' | 'light';
 }
 
-// Μετατροπή σε client component
-export default function Certifications({ theme }: CertificationsProps) {
+export default function CertificationsComponent({ theme }: CertificationsComponentProps) {
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Χρησιμοποιούμε useEffect για να φορτώσουμε τα δεδομένα
+  const [error, setError] = useState<string | null>(null);
+  const [selectedCertification, setSelectedCertification] = useState<Certification | null>(null);
+
   useEffect(() => {
-    // Αρχικά χρησιμοποιούμε τα mock δεδομένα
-    setCertifications(studentCertifications);
-    setLoading(false);
-    
-    // Εδώ θα μπορούσαμε να κάνουμε fetch από το API αν χρειαστεί
-    /*
-    const fetchCertifications = async () => {
+    const loadCertifications = async () => {
       try {
-        const response = await fetch('/api/certifications');
-        if (response.ok) {
-          const data = await response.json();
-          setCertifications(data);
-        } else {
-          // Αν υπάρχει σφάλμα, χρησιμοποιούμε τα mock δεδομένα
-          setCertifications(studentCertifications);
-        }
-      } catch (error) {
-        console.error('Error fetching certifications:', error);
-        setCertifications(studentCertifications);
+        setLoading(true);
+        const data = await getCertifications();
+        setCertifications(data);
+      } catch (err) {
+        console.error('Error loading certifications:', err);
+        setError('Σφάλμα κατά τη φόρτωση των πιστοποιήσεων');
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchCertifications();
-    */
+
+    loadCertifications();
   }, []);
-  
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
-  
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-red-500">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (certifications.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500 dark:text-gray-400">Δεν βρέθηκαν πιστοποιήσεις</p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="mx-auto max-w-2xl lg:max-w-4xl text-center">
-        <h2 className={cn(
-          "text-3xl font-bold tracking-tight sm:text-4xl",
-          theme === 'dark' ? 'text-white' : 'text-gray-900'
-        )}>
-          Certifications
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+          Πιστοποιήσεις
         </h2>
-        
-        <p className={cn(
-          "mt-4 text-lg",
-          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-        )}>
-          Professional certifications and courses completed in various technologies and domains.
+        <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-400">
+          Επίσημες πιστοποιήσεις και προγράμματα εκπαίδευσης που έχω ολοκληρώσει
         </p>
       </div>
-      
-      <div className="mt-16">
-        {/* Περνάμε τα δεδομένα και το theme στο client component */}
-        <CertificationList 
-          certifications={certifications} 
-          theme={theme} 
-        />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {certifications.map((certification) => (
+          <CertificationCard
+            key={certification.id}
+            certification={certification}
+            theme={theme}
+            onClick={() => setSelectedCertification(certification)}
+          />
+        ))}
       </div>
+
+      {selectedCertification && (
+        <CertificationDialog 
+          certification={selectedCertification} 
+          isOpen={!!selectedCertification}
+          onClose={() => setSelectedCertification(null)}
+          theme={theme}
+        />
+      )}
     </div>
   );
 }

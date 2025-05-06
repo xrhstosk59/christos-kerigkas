@@ -1,7 +1,6 @@
 'use client'
 
 // src/components/features/certifications/certifications.tsx
-// Αντικαθιστά το παλιό certifications.tsx αρχείο
 import { useTheme } from '@/components/providers/theme-provider'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'

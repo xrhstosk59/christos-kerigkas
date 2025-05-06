@@ -2,11 +2,9 @@
 import { certifications as certificationsTable } from '@/lib/db/schema'
 import { ensureDatabaseConnection } from '@/lib/db/helpers'
 import { desc, eq, sql } from 'drizzle-orm'
-import { studentCertifications } from '@/lib/data/mock-certifications'
 import { Certification, CertificationType } from '@/types/certifications'
 
 // Τύπος που επιστρέφεται από τη βάση δεδομένων 
-// Διαφέρει από τον Certification τύπο στο types/certifications.ts
 type DBCertification = typeof certificationsTable.$inferSelect;
 
 // Συνάρτηση για μετατροπή από DBCertification σε Certification
@@ -28,7 +26,7 @@ function mapDBCertificationToCertification(dbCert: DBCertification): Certificati
     credentialUrl: dbCert.credentialUrl || undefined,
     description: dbCert.description || undefined,
     skills: dbCert.skills || [],
-    type: dbCert.type as CertificationType, // Σωστή μετατροπή του τύπου
+    type: dbCert.type as CertificationType,
     filename: dbCert.filename,
     featured: dbCert.featured || false
   };
@@ -46,7 +44,7 @@ export const certificationsRepository = {
         .orderBy(desc(certificationsTable.issueDate));
     } catch (error) {
       console.error('Database error when fetching certifications:', error);
-      return [];
+      return []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
     }
   },
 
@@ -76,7 +74,7 @@ export const certificationsRepository = {
         .orderBy(desc(certificationsTable.issueDate));
     } catch (error) {
       console.error('Database error when fetching featured certifications:', error);
-      return [];
+      return []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
     }
   },
 
@@ -90,7 +88,7 @@ export const certificationsRepository = {
         .orderBy(desc(certificationsTable.issueDate));
     } catch (error) {
       console.error(`Database error when fetching certifications for skill ${skill}:`, error);
-      return [];
+      return []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
     }
   }
 };
@@ -103,11 +101,10 @@ export const getCertifications = async (): Promise<Certification[]> => {
     // Μετατροπή των αποτελεσμάτων στον τύπο Certification
     return result.length > 0 
       ? result.map(mapDBCertificationToCertification) 
-      : studentCertifications;
+      : []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
   } catch (error) {
     console.error('Error in getCertifications:', error);
-    // Επιστροφή mock data σε περίπτωση σφάλματος
-    return studentCertifications;
+    return []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
   }
 }
 
@@ -118,11 +115,10 @@ export const getCertificationById = async (id: string): Promise<Certification | 
     // Μετατροπή του αποτελέσματος αν υπάρχει
     return certification 
       ? mapDBCertificationToCertification(certification) 
-      : studentCertifications.find(cert => cert.id === id);
+      : undefined; // Επιστρέφουμε undefined αντί για mock δεδομένα
   } catch (error) {
     console.error(`Error in getCertificationById:`, error);
-    // Επιστροφή του αντίστοιχου mock certification
-    return studentCertifications.find(cert => cert.id === id);
+    return undefined; // Επιστρέφουμε undefined αντί για mock δεδομένα
   }
 }
 
@@ -133,11 +129,10 @@ export const getFeaturedCertifications = async (): Promise<Certification[]> => {
     // Μετατροπή των αποτελεσμάτων
     return result.length > 0 
       ? result.map(mapDBCertificationToCertification) 
-      : studentCertifications.filter(cert => cert.featured);
+      : []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
   } catch (error) {
     console.error('Error in getFeaturedCertifications:', error);
-    // Επιστροφή των featured από τα mock data
-    return studentCertifications.filter(cert => cert.featured);
+    return []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
   }
 }
 
@@ -148,10 +143,9 @@ export const getCertificationsBySkill = async (skill: string): Promise<Certifica
     // Μετατροπή των αποτελεσμάτων
     return result.length > 0 
       ? result.map(mapDBCertificationToCertification) 
-      : studentCertifications.filter(cert => cert.skills?.includes(skill));
+      : []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
   } catch (error) {
     console.error(`Error in getCertificationsBySkill:`, error);
-    // Επιστροφή των αντίστοιχων mock data
-    return studentCertifications.filter(cert => cert.skills?.includes(skill));
+    return []; // Επιστρέφουμε κενό πίνακα αντί για mock δεδομένα
   }
 }
