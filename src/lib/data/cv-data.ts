@@ -8,8 +8,41 @@ import { CVData, Experience, Education, Skill } from '@/types/cv';
 import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
 import { Certification, CertificationType } from '@/types/certifications';
 import { studentProjects } from './mock-projects';
-import { studentCertifications } from './mock-certifications';
 import { Certification as DbCertification, Project as DbProject } from '../db/schema';
+
+// Δημιουργούμε ένα fallback array για όταν δεν υπάρχουν πιστοποιητικά
+const fallbackCertifications: Certification[] = [
+  {
+    id: 'univators-cloud',
+    title: 'Univators Skilling Future Digital Innovators - Cloud Engineering',
+    issuer: 'Univators & Democritus University of Thrace',
+    issueDate: '2024-11-08',
+    credentialId: '24C014989',
+    description: '24-hour course focused on delivering fundamental knowledge in Cloud Engineering',
+    skills: ['Cloud Engineering'],
+    type: 'course',
+    filename: 'Certificate-of-Completion-24C014989-Univators-Skilling-Future-Digital-Innovators-CHRISTOS-KERIGKAS.pdf',
+    featured: true
+  },
+  {
+    id: 'intro-cybersecurity',
+    title: 'Introduction to Cybersecurity',
+    issuer: 'Cisco Networking Academy',
+    issueDate: '2024-11-09',
+    type: 'badge',
+    skills: ['Cybersecurity'],
+    filename: 'Introduction_to_Cybersecurity_Badge20241109-27-40xb2m.pdf'
+  },
+  {
+    id: 'networking-basics',
+    title: 'Networking Basics',
+    issuer: 'Cisco Networking Academy',
+    issueDate: '2023-11-19',
+    type: 'badge',
+    skills: ['Networking'],
+    filename: 'Networking_Basics_Badge20240113-29-5ou4ck.pdf'
+  }
+];
 
 // Mock data for professional experience - tailored for a student
 const mockExperience: Experience[] = [
@@ -152,7 +185,7 @@ export async function getMockCVData(): Promise<CVData> {
     experience: mockExperience,
     education: mockEducation,
     skills: mockSkills,
-    certifications: studentCertifications,
+    certifications: fallbackCertifications, // Χρησιμοποιούμε το fallback αντί για studentCertifications
     projects: studentProjects,
     languages: [
       { language: "Greek", proficiency: "Native" },
@@ -222,7 +255,7 @@ export async function getCVData(): Promise<CVData> {
       // Convert certifications coming from the database
       const certifications = hasCertificationsInDb 
         ? mapCertificationsFromDb(certificationsFromDb)
-        : studentCertifications;
+        : fallbackCertifications; // Χρησιμοποιούμε το fallback αντί για studentCertifications
       
       // Convert projects coming from the database
       const projects = hasProjectsInDb
