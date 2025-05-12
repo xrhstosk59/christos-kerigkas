@@ -75,7 +75,7 @@ export async function seed() {
   ];
   
   try {
-    // Χρησιμοποιούμε το Drizzle API για όλες τις εισαγωγές
+    // Χρησιμοποιούμε το schema.blogCategories που προσθέσαμε στο blog.ts
     for (const category of categories) {
       await db.insert(schema.blogCategories)
         .values(category)

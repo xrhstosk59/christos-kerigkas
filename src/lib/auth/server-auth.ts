@@ -1,11 +1,10 @@
 // src/lib/auth/server-auth.ts
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 import type { CookieSerializeOptions } from 'cookie';
-import { UserSession, ADMIN_USERNAME, validatePassword, validateSecureToken, generateSecureToken } from './common';
+import { UserSession } from './common';
 
 // Χρησιμοποιούμε τον τύπο που είναι συμβατός με το cookie store
 type CookieOptions = Partial<CookieSerializeOptions>;
@@ -46,35 +45,22 @@ export async function createServerSupabaseClient() {
  * Αυθεντικοποίηση για προστατευμένες σελίδες (server-side μόνο)
  */
 export async function checkAuth() {
-  // Αν χρησιμοποιούμε Supabase
-  if (process.env.USE_SUPABASE_AUTH === 'true') {
-    const supabase = await createServerSupabaseClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      redirect('/admin/login');
-    }
-    
-    // Έλεγχος δικαιωμάτων admin
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-    
-    if (!userData || userData.role !== 'admin') {
-      redirect('/');
-    }
-    
-    return;
+  const supabase = await createServerSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    redirect('/admin/login');
   }
   
-  // Αλλιώς χρησιμοποιούμε το απλό σύστημα αυθεντικοποίησης
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get('auth_token')?.value;
+  // Έλεγχος δικαιωμάτων admin
+  const { data: userData } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single();
   
-  if (!authToken || !(await validateSecureToken(authToken))) {
-    redirect('/admin/login');
+  if (!userData || userData.role !== 'admin') {
+    redirect('/');
   }
 }
 
@@ -82,91 +68,57 @@ export async function checkAuth() {
  * Προστασία API routes (server-side)
  */
 export async function protectApiRoute(req: NextRequest): Promise<NextResponse | null> {
-  // Αν χρησιμοποιούμε Supabase
-  if (process.env.USE_SUPABASE_AUTH === 'true') {
-    const cookieHeader = req.headers.get('cookie') || '';
-    const cookiesObj: Record<string, string> = {};
-    
-    cookieHeader.split(';').forEach(cookie => {
-      const parts = cookie.trim().split('=');
-      if (parts.length === 2) {
-        cookiesObj[parts[0]] = decodeURIComponent(parts[1]);
-      }
-    });
-    
-    // Δημιουργία Supabase client με τα cookies
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: false
+  // Δημιουργία Supabase client από cookies στο αίτημα
+  // Χρησιμοποιούμε το req.cookies αντί για cookie header
+  
+  // Εναλλακτική δημιουργία cookies object
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          const cookie = req.cookies.get(name);
+          return cookie?.value;
         },
-        global: {
-          headers: {
-            cookie: cookieHeader
-          }
-        }
-      }
-    );
-    
-    // Έλεγχος session
-    const { data, error } = await supabase.auth.getSession();
-    
-    if (error || !data.session) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Authentication required' },
-        { status: 401 }
-      );
+        // Ορίζουμε dummy λειτουργίες που δεν χρησιμοποιούνται στο context του API
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        set(_name: string, _value: string, _options: CookieOptions) {
+          // Not used in API routes
+        },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        remove(_name: string) {
+          // Not used in API routes
+        },
+      },
     }
-    
-    // Έλεγχος ρόλου admin
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.session.user.id)
-      .single();
-    
-    if (userError || !userData || userData.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
-    
-    return null;
-  }
+  );
   
-  // Αλλιώς χρησιμοποιούμε το απλό σύστημα αυθεντικοποίησης
-  const cookieHeader = req.headers.get('cookie') || '';
-  const authTokenMatch = cookieHeader.match(/auth_token=([^;]+)/);
-  const authToken = authTokenMatch ? authTokenMatch[1] : null;
+  // Έλεγχος session
+  const { data, error } = await supabase.auth.getSession();
   
-  if (!authToken || !(await validateSecureToken(authToken))) {
+  if (error || !data.session) {
     return NextResponse.json(
       { error: 'Unauthorized: Authentication required' },
       { status: 401 }
     );
   }
   
-  return null;
-}
-
-/**
- * Server action για login με το απλό σύστημα
- */
-export async function loginAdmin(formData: FormData) {
-  const usernameInput = formData.get('username') as string;
-  const password = formData.get('password') as string;
+  // Έλεγχος ρόλου admin
+  const { data: userData, error: userError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.session.user.id)
+    .single();
   
-  if (usernameInput !== ADMIN_USERNAME || !validatePassword(password)) {
-    return { success: false, error: 'Invalid username or password' };
+  if (userError || !userData || userData.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Forbidden: Admin access required' },
+      { status: 403 }
+    );
   }
   
-  const token = await generateSecureToken(usernameInput);
-  
-  // Το token θα πρέπει να αποθηκευτεί σε cookie από τον controller
-  return { success: true, token };
+  return null;
 }
 
 /**
@@ -208,81 +160,40 @@ export async function loginWithSupabase(email: string, password: string) {
 }
 
 /**
- * Η συνάρτηση για την αποσύνδεση με το απλό σύστημα (server-side)
- */
-export async function logoutAdmin() {
-  const cookieStore = await cookies();
-  cookieStore.delete('auth_token');
-  redirect('/admin/login');
-}
-
-/**
  * Η συνάρτηση για την αποσύνδεση με Supabase (server-side)
  */
-export async function logoutWithSupabase() {
+export async function logout() {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
   redirect('/admin/login');
 }
 
 /**
- * Unified logout (server-side)
- */
-export async function logout() {
-  if (process.env.USE_SUPABASE_AUTH === 'true') {
-    await logoutWithSupabase();
-  } else {
-    await logoutAdmin();
-  }
-}
-
-/**
- * Current session info for both authentication methods (server-side)
+ * Current session info (server-side)
  */
 export async function getCurrentSession(): Promise<UserSession> {
-  // Αν χρησιμοποιούμε Supabase
-  if (process.env.USE_SUPABASE_AUTH === 'true') {
-    const supabase = await createServerSupabaseClient();
-    
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    
-    if (!session) {
-      return { user: null, isAuthenticated: false };
-    }
-    
-    // Έλεγχος ρόλου
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-    
-    return {
-      user: {
-        id: session.user.id,
-        email: session.user.email!,
-        role: userData?.role || 'user',
-      },
-      isAuthenticated: true,
-    };
-  }
+  const supabase = await createServerSupabaseClient();
   
-  // Αλλιώς χρησιμοποιούμε το απλό σύστημα αυθεντικοποίησης
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get('auth_token')?.value;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   
-  if (!authToken || !(await validateSecureToken(authToken))) {
+  if (!session) {
     return { user: null, isAuthenticated: false };
   }
   
-  // Επιστρέφουμε τις πληροφορίες χρήστη χωρίς να αποκωδικοποιήσουμε το token ξανά
+  // Έλεγχος ρόλου
+  const { data: userData } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single();
+  
   return {
     user: {
-      id: 'admin',
-      email: 'admin@example.com', // placeholder
-      role: 'admin',
+      id: session.user.id,
+      email: session.user.email!,
+      role: userData?.role || 'user',
     },
     isAuthenticated: true,
   };

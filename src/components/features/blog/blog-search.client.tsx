@@ -1,18 +1,21 @@
+// src/components/features/blog/blog-search.client.tsx
 'use client'
 
-// /src/components/blog/blog-search.tsx
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 
-interface BlogSearchProps {
+interface BlogSearchClientProps {
   theme: 'light' | 'dark'
   initialQuery?: string
 }
 
-// Client Component για την αναζήτηση στο blog
-export default function BlogSearch({ theme, initialQuery = '' }: BlogSearchProps) {
+/**
+ * Client Component για την αναζήτηση στο blog
+ * Υποστηρίζει διατήρηση του query στο URL και καθαρισμό του πεδίου αναζήτησης
+ */
+export function BlogSearchClient({ theme, initialQuery = '' }: BlogSearchClientProps) {
   const [searchQuery, setSearchQuery] = useState(initialQuery)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -66,7 +69,7 @@ export default function BlogSearch({ theme, initialQuery = '' }: BlogSearchProps
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search articles..."
+          placeholder="Αναζήτηση άρθρων..."
           className={cn(
             "w-full py-2 pl-10 pr-10 rounded-full border focus:ring-2 focus:ring-indigo-500 outline-none transition-colors",
             theme === 'dark'
@@ -87,7 +90,7 @@ export default function BlogSearch({ theme, initialQuery = '' }: BlogSearchProps
             type="button"
             onClick={handleClear}
             className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            aria-label="Clear search"
+            aria-label="Καθαρισμός αναζήτησης"
           >
             <X className={cn(
               "h-5 w-5",
@@ -99,3 +102,6 @@ export default function BlogSearch({ theme, initialQuery = '' }: BlogSearchProps
     </form>
   )
 }
+
+// Default export για συμβατότητα με τον υπάρχοντα κώδικα
+export default BlogSearchClient;

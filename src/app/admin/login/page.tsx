@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTheme } from '@/components/providers/theme-provider'
 import { cn } from '@/lib/utils/utils'
 import { Loader2 } from 'lucide-react'
-import { useAuth } from '@/components/providers/auth-provider'
+import { useAuth } from '@/components/client/providers/auth-provider'
 
 export default function AdminLoginPage() {
   const { theme } = useTheme()

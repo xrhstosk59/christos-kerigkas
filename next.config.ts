@@ -1,6 +1,7 @@
-// next.config.ts
+// src/next.config.ts - Διορθωμένο για συμβατότητα με Next.js 15
 import { type NextConfig } from "next"
 import { imageConfig } from "./src/lib/utils/image-config"
+import BundleAnalyzer from "@next/bundle-analyzer"
 
 // Ενισχυμένα security headers
 const securityHeaders = [
@@ -38,6 +39,11 @@ const securityHeaders = [
   }
 ];
 
+// Ρύθμιση Bundle Analyzer
+const withBundleAnalyzer = BundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -57,20 +63,39 @@ const nextConfig: NextConfig = {
     ],
   },
   typescript: {
-    // Remove ignoreBuildErrors to catch problems
-    // ignoreBuildErrors: true,
+    // Για αναπτυξιακό περιβάλλον, καλύτερα να μην παραβλέπονται τα σφάλματα
+    ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: false,
   },
   poweredByHeader: false,
   compress: true,
-  // Remove env object - Next.js automatically exposes NEXT_PUBLIC_ env vars
+  // Προσθήκη webpack configuration για τα Node.js modules
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        fs: false,
+        net: false,
+        tls: false,
+        perf_hooks: false,
+        crypto: false,
+        stream: false,
+        os: false,
+        path: false,
+      };
+    }
+    return config;
+  },
   experimental: {
+    // Ενεργοποίηση υποστήριξης για server components και server actions
+    serverActions: {
+      bodySizeLimit: '2mb', // Αύξηση ορίου μεγέθους για server actions
+    },
     optimizeCss: true,
     serverMinification: true,
+    // Η παράμετρος serverComponentsExternalPackages έχει αφαιρεθεί
   },
-  serverExternalPackages: ['pg-native'],
   headers: async () => [
     {
       source: '/:all*(svg|jpg|png|webp|avif)',
@@ -98,4 +123,5 @@ const nextConfig: NextConfig = {
   ],
 }
 
-export default nextConfig
+// Εξαγωγή του config με το BundleAnalyzer wrapper όταν χρειάζεται
+export default process.env.ANALYZE === 'true' ? withBundleAnalyzer(nextConfig) : nextConfig;

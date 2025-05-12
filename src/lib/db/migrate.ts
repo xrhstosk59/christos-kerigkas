@@ -56,88 +56,102 @@ async function runMigrations() {
 }
 
 // Seed function for database
-import { db } from './index';
 import * as schema from './schema';
+
+// Χρησιμοποιούμε το client απευθείας για seeds για να αποφύγουμε προβλήματα με types
+// στο DatabaseClient interface
+const seedClient = postgres(connectionString, { 
+  max: 1,
+  ssl: { rejectUnauthorized: false }
+});
+const seedDb = drizzle(seedClient, { schema });
 
 async function seed() {
   console.log('Seeding database...');
   
-  // Seed blog categories
-  const categories = [
-    { name: 'Next.js', slug: 'nextjs', description: 'Posts about Next.js framework' },
-    { name: 'TypeScript', slug: 'typescript', description: 'Posts about TypeScript language' },
-    { name: 'Web Development', slug: 'web-development', description: 'General web development topics' },
-    { name: 'Cryptocurrency', slug: 'cryptocurrency', description: 'Posts about cryptocurrency' },
-    { name: 'Trading', slug: 'trading', description: 'Posts about trading strategies' },
-  ];
-  
-  for (const category of categories) {
-    try {
-      await db.insert(schema.blogCategories).values(category).onConflictDoNothing();
-      console.log(`Added category ${category.name}`);
-    } catch (error) {
-      console.error(`Failed to insert category ${category.name}:`, error);
+  try {
+    // Seed blog categories
+    const categories = [
+      { name: 'Next.js', slug: 'nextjs', description: 'Posts about Next.js framework' },
+      { name: 'TypeScript', slug: 'typescript', description: 'Posts about TypeScript language' },
+      { name: 'Web Development', slug: 'web-development', description: 'General web development topics' },
+      { name: 'Cryptocurrency', slug: 'cryptocurrency', description: 'Posts about cryptocurrency' },
+      { name: 'Trading', slug: 'trading', description: 'Posts about trading strategies' },
+    ];
+    
+    for (const category of categories) {
+      try {
+        await seedDb.insert(schema.blogCategories).values(category).onConflictDoNothing();
+        console.log(`Added category ${category.name}`);
+      } catch (error) {
+        console.error(`Failed to insert category ${category.name}:`, error);
+      }
     }
-  }
-  console.log('Categories seeded');
-  
-  // Seed skills
-  const skills = [
-    { name: 'React', category: 'frontend' },
-    { name: 'Next.js', category: 'frontend' },
-    { name: 'TypeScript', category: 'frontend' },
-    { name: 'JavaScript', category: 'frontend' },
-    { name: 'Tailwind CSS', category: 'frontend' },
-    { name: 'HTML5/CSS3', category: 'frontend' },
-    { name: 'Node.js', category: 'backend' },
-    { name: 'Python', category: 'backend' },
-    { name: 'PostgreSQL', category: 'backend' },
-    { name: 'MongoDB', category: 'backend' },
-    { name: 'Supabase', category: 'backend' },
-    { name: 'Drizzle ORM', category: 'backend' },
-    { name: 'Git', category: 'tools' },
-    { name: 'VS Code', category: 'tools' },
-    { name: 'Docker', category: 'tools' },
-    { name: 'REST APIs', category: 'tools' },
-    { name: 'Telegram Bot API', category: 'tools' },
-    { name: 'Technical Analysis', category: 'trading' },
-    { name: 'Bot Development', category: 'trading' },
-    { name: 'Data Mining', category: 'trading' },
-    { name: 'Machine Learning', category: 'trading' },
-  ];
-  
-  for (const skill of skills) {
-    try {
-      await db.insert(schema.skills).values(skill).onConflictDoNothing();
-      console.log(`Added skill ${skill.name}`);
-    } catch (error) {
-      console.error(`Failed to insert skill ${skill.name}:`, error);
+    console.log('Categories seeded');
+    
+    // Seed skills
+    const skills = [
+      { name: 'React', category: 'frontend' },
+      { name: 'Next.js', category: 'frontend' },
+      { name: 'TypeScript', category: 'frontend' },
+      { name: 'JavaScript', category: 'frontend' },
+      { name: 'Tailwind CSS', category: 'frontend' },
+      { name: 'HTML5/CSS3', category: 'frontend' },
+      { name: 'Node.js', category: 'backend' },
+      { name: 'Python', category: 'backend' },
+      { name: 'PostgreSQL', category: 'backend' },
+      { name: 'MongoDB', category: 'backend' },
+      { name: 'Supabase', category: 'backend' },
+      { name: 'Drizzle ORM', category: 'backend' },
+      { name: 'Git', category: 'tools' },
+      { name: 'VS Code', category: 'tools' },
+      { name: 'Docker', category: 'tools' },
+      { name: 'REST APIs', category: 'tools' },
+      { name: 'Telegram Bot API', category: 'tools' },
+      { name: 'Technical Analysis', category: 'trading' },
+      { name: 'Bot Development', category: 'trading' },
+      { name: 'Data Mining', category: 'trading' },
+      { name: 'Machine Learning', category: 'trading' },
+    ];
+    
+    for (const skill of skills) {
+      try {
+        await seedDb.insert(schema.skills).values(skill).onConflictDoNothing();
+        console.log(`Added skill ${skill.name}`);
+      } catch (error) {
+        console.error(`Failed to insert skill ${skill.name}:`, error);
+      }
     }
-  }
-  console.log('Skills seeded');
-  
-  // Seed project categories
-  const projectCategories = [
-    { name: 'Web Development', slug: 'web-development' },
-    { name: 'Mobile', slug: 'mobile' },
-    { name: 'Crypto', slug: 'crypto' },
-    { name: 'Education', slug: 'education' },
-    { name: 'Data Analysis', slug: 'data-analysis' },
-    { name: 'Real Estate', slug: 'real-estate' },
-    { name: 'Portfolio', slug: 'portfolio' },
-  ];
-  
-  for (const category of projectCategories) {
-    try {
-      await db.insert(schema.projectCategories).values(category).onConflictDoNothing();
-      console.log(`Added project category ${category.name}`);
-    } catch (error) {
-      console.error(`Failed to insert project category ${category.name}:`, error);
+    console.log('Skills seeded');
+    
+    // Seed project categories
+    const projectCategories = [
+      { name: 'Web Development', slug: 'web-development' },
+      { name: 'Mobile', slug: 'mobile' },
+      { name: 'Crypto', slug: 'crypto' },
+      { name: 'Education', slug: 'education' },
+      { name: 'Data Analysis', slug: 'data-analysis' },
+      { name: 'Real Estate', slug: 'real-estate' },
+      { name: 'Portfolio', slug: 'portfolio' },
+    ];
+    
+    for (const category of projectCategories) {
+      try {
+        await seedDb.insert(schema.projectCategories).values(category).onConflictDoNothing();
+        console.log(`Added project category ${category.name}`);
+      } catch (error) {
+        console.error(`Failed to insert project category ${category.name}:`, error);
+      }
     }
+    console.log('Project categories seeded');
+    
+    console.log('Database seeding completed!');
+  } catch (error) {
+    console.error('Seeding failed:', error);
+  } finally {
+    // Κλείσιμο της σύνδεσης
+    await seedClient.end();
   }
-  console.log('Project categories seeded');
-  
-  console.log('Database seeding completed!');
 }
 
 // Εκτέλεση του migrate και μετά του seed αν κληθεί άμεσα

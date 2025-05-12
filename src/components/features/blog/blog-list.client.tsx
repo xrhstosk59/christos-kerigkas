@@ -1,15 +1,16 @@
-'use client'
+// src/components/features/blog/blog-list.client.tsx
+'use client';
 
-// /src/components/features/blog/blog-list.tsx
-import { motion } from 'framer-motion'
-import { Search } from 'lucide-react'
-import { Post } from '@/types/blog'
-import { cn } from '@/lib/utils/utils'
-import BlogCard from './blog-card'
-import BlogSearch from './blog-search'
-import BlogPagination from './blog-pagination'
+import { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Search } from 'lucide-react';
+import { Post } from '@/types/blog';
+import { cn } from '@/lib/utils/utils';
+import BlogCard from './blog-card';
+import { BlogSearchClient } from './blog-search.client';
+import { BlogPaginationClient } from './blog-pagination.client';
 
-interface BlogListProps {
+interface BlogListClientProps {
   posts: Post[]
   theme: 'light' | 'dark'
   currentPage: number
@@ -18,22 +19,25 @@ interface BlogListProps {
   selectedCategory?: string
 }
 
-// Client Component για τη λίστα του blog
-export default function BlogList({ 
+/**
+ * Client component για την παρουσίαση της λίστας των blog posts
+ * Υποστηρίζει κενή κατάσταση, αναζήτηση και pagination
+ */
+export function BlogListClient({ 
   posts, 
   theme,
   currentPage,
   totalPages,
   searchQuery,
   selectedCategory
-}: BlogListProps) {
+}: BlogListClientProps) {
   // Έλεγχος αν πρέπει να εμφανίσουμε μήνυμα "Δεν βρέθηκαν posts"
-  const showEmptyMessage = posts.length === 0;
+  const showEmptyMessage = useMemo(() => posts.length === 0, [posts]);
   
   return (
-    <div>
-      {/* Αναζήτηση - Client Component */}
-      <BlogSearch theme={theme} initialQuery={searchQuery} />
+    <div className="space-y-8">
+      {/* Αναζήτηση */}
+      <BlogSearchClient theme={theme} initialQuery={searchQuery} />
       
       {/* Μήνυμα αν δεν βρέθηκαν posts */}
       {showEmptyMessage ? (
@@ -50,17 +54,17 @@ export default function BlogList({
             "text-xl font-medium mb-2",
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           )}>
-            No posts found
+            Δεν βρέθηκαν άρθρα
           </h2>
           <p className={cn(
             "text-base",
             theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
           )}>
             {searchQuery 
-              ? `No posts match "${searchQuery}"` 
+              ? `Δεν βρέθηκαν άρθρα που να περιέχουν "${searchQuery}"` 
               : selectedCategory 
-                ? `No posts in "${selectedCategory}" category` 
-                : 'There are no blog posts available'}
+                ? `Δεν βρέθηκαν άρθρα στην κατηγορία "${selectedCategory}"` 
+                : 'Δεν υπάρχουν διαθέσιμα άρθρα'}
           </p>
         </motion.div>
       ) : (
@@ -80,14 +84,19 @@ export default function BlogList({
             ))}
           </div>
           
-          {/* Pagination component */}
-          <BlogPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            theme={theme}
-          />
+          {/* Pagination component - Περνάμε μόνο τα απαραίτητα props */}
+          {totalPages > 1 && (
+            <BlogPaginationClient
+              currentPage={currentPage}
+              totalPages={totalPages}
+              theme={theme}
+            />
+          )}
         </>
       )}
     </div>
-  )
+  );
 }
+
+// Default export για συμβατότητα με τον υπάρχοντα κώδικα
+export default BlogListClient;

@@ -1,22 +1,25 @@
+// src/components/features/blog/blog-categories.client.tsx
 'use client'
 
-// /src/components/blog/blog-categories.tsx
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/utils'
 
-interface BlogCategoriesProps {
+interface BlogCategoriesClientProps {
   categories: string[]
   selectedCategory?: string
   theme: 'light' | 'dark'
 }
 
-// Client Component για τις κατηγορίες του blog
-export default function BlogCategories({ 
+/**
+ * Client component για την εμφάνιση και επιλογή κατηγοριών blog
+ * Χρησιμοποιεί URL parameters για τη διατήρηση της επιλεγμένης κατηγορίας
+ */
+export function BlogCategoriesClient({ 
   categories, 
   selectedCategory, 
   theme 
-}: BlogCategoriesProps) {
+}: BlogCategoriesClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -58,7 +61,7 @@ export default function BlogCategories({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          All
+          Όλα
         </motion.button>
         
         {categories.map((category) => (
@@ -85,3 +88,6 @@ export default function BlogCategories({
     </div>
   )
 }
+
+// Default export για συμβατότητα με τον υπάρχοντα κώδικα
+export default BlogCategoriesClient;

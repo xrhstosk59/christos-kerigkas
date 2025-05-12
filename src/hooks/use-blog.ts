@@ -1,4 +1,3 @@
-// src/hooks/use-blog.ts
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
@@ -18,7 +17,19 @@ interface BlogResponse {
   pagination: PaginationInfo
 }
 
-export function useBlog(initialPage = 1, initialCategory = 'all') {
+interface UseBlogOptions {
+  initialPage?: number;
+  initialLimit?: number;
+  initialCategory?: string;
+}
+
+export function useBlog(options: UseBlogOptions = {}) {
+  const { 
+    initialPage = 1, 
+    initialLimit = 10,
+    initialCategory = 'all'
+  } = options;
+
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
   const [page, setPage] = useState(initialPage)
@@ -32,7 +43,7 @@ export function useBlog(initialPage = 1, initialCategory = 'all') {
       setError(null)
       
       const categoryParam = category !== 'all' ? `&category=${category}` : ''
-      const response = await fetch(`/api/blog?page=${page}${categoryParam}`)
+      const response = await fetch(`/api/blog?page=${page}&limit=${initialLimit}${categoryParam}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch blog posts')
@@ -47,12 +58,28 @@ export function useBlog(initialPage = 1, initialCategory = 'all') {
     } finally {
       setLoading(false)
     }
-  }, [page, category])
+  }, [page, category, initialLimit])
 
   useEffect(() => {
     fetchPosts()
   }, [fetchPosts])
 
+  // *** Επιπλέον συναρτήσεις για συμβατότητα με το blog-list-client ***
+  
+  // Για μετάβαση σε συγκεκριμένη σελίδα
+  const goToPage = useCallback((pageNumber: number) => {
+    if (pagination && pageNumber >= 1 && pageNumber <= pagination.totalPages) {
+      setPage(pageNumber);
+    }
+  }, [pagination]);
+
+  // Για καθαρισμό των φίλτρων
+  const clearFilters = useCallback(() => {
+    setCategory('all');
+    setPage(1);
+  }, []);
+
+  // Οι υπάρχουσες συναρτήσεις
   const nextPage = useCallback(() => {
     if (pagination?.hasNextPage) {
       setPage(prev => prev + 1)
@@ -77,6 +104,11 @@ export function useBlog(initialPage = 1, initialCategory = 'all') {
     error,
     page,
     category,
+    // Προσθήκη των νέων συναρτήσεων
+    goToPage,
+    setCategory,
+    clearFilters,
+    // Υπάρχουσες συναρτήσεις
     nextPage,
     prevPage,
     changeCategory,

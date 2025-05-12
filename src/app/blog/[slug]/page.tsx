@@ -1,5 +1,5 @@
 // src/app/blog/[slug]/page.tsx
-import BlogPostView from '@/components/features/blog/blog-post-view'
+import BlogPostView from '@/components/client/blog/blog-post-view'
 import type { BlogPost } from '@/types/blog'
 import { getBlogPostBySlug } from '@/lib/api/blog'
 

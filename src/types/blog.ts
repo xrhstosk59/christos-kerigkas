@@ -56,3 +56,29 @@ export interface BlogPost {
   categories?: string[];
   featured?: boolean;
 }
+
+/**
+ * Μετατρέπει ένα αντικείμενο BlogPost σε τύπο Post
+ */
+export function blogPostToPost(blogPost: BlogPost): Post {
+  return {
+    id: blogPost.id || blogPost.slug, // Αν δεν υπάρχει id, χρησιμοποιούμε το slug
+    slug: blogPost.slug,
+    title: blogPost.title,
+    description: blogPost.description,
+    content: blogPost.content,
+    date: blogPost.date,
+    image: blogPost.image,
+    authorName: blogPost.author?.name || '',
+    authorImage: blogPost.author?.image || '',
+    categories: blogPost.categories || [],
+    featured: blogPost.featured || false
+  };
+}
+
+/**
+ * Μετατρέπει έναν πίνακα αντικειμένων BlogPost σε πίνακα τύπου Post
+ */
+export function blogPostsToPostArray(blogPosts: BlogPost[]): Post[] {
+  return blogPosts.map(blogPostToPost);
+}

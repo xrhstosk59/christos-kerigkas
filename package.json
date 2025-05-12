@@ -2,6 +2,16 @@
   "name": "christos-kerigkas",
   "version": "0.1.0",
   "private": true,
+  "browser": {
+    "fs": false,
+    "net": false,
+    "tls": false,
+    "perf_hooks": false,
+    "crypto": false,
+    "stream": false,
+    "os": false,
+    "path": false
+  },
   "scripts": {
     "predev": "node -e \"require('fs').existsSync('./public/uploads') || require('fs').mkdirSync('./public/uploads', { recursive: true })\"",
     "dev": "next dev --turbo",
@@ -43,14 +53,14 @@
     "crypto-js": "^4.2.0",
     "cva": "^0.0.0",
     "drizzle-orm": "^0.43.1",
-    "framer-motion": "^11.0.6",
+    "framer-motion": "^11.18.2",
     "helmet": "^8.1.0",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.331.0",
     "next": "^15.3.1",
     "next-themes": "^0.2.1",
     "nodemailer": "^6.9.10",
-    "postgres": "^3.4.3",
+    "postgres": "^3.4.5",
     "prism-react-renderer": "^2.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -64,6 +74,7 @@
     "shadcn-ui": "^0.9.5",
     "tailwind-merge": "^2.2.1",
     "tsx": "^4.7.1",
+    "web-vitals": "^4.2.4",
     "zod": "^3.24.3"
   },
   "devDependencies": {

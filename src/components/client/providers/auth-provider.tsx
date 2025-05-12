@@ -3,9 +3,9 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import * as clientAuth from '@/lib/auth/client-auth' // ΧΡΗΣΙΜΟΠΟΙΟΥΜΕ client-auth αντί για supabase-auth-client
+import * as clientAuth from '@/lib/auth/client-auth'
 
-// Διατηρούμε τον τύπο όπως είναι στο υπάρχον αρχείο
+// Τύπος για το AuthContext
 type AuthContextType = {
   user: User | null
   session: Session | null
@@ -62,6 +62,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session)
           setUser(session?.user ?? null)
           setIsLoading(false)
+          
+          // Αποφεύγουμε άμεσο refresh του router κατά τη διάρκεια hydration
+          if (typeof window !== 'undefined') {
+            // Χρησιμοποιούμε setTimeout για να αποφύγουμε θέματα με το hydration
+            setTimeout(() => {
+              // Ανανεώνουμε το router μόνο αν αλλάξει η κατάσταση σύνδεσης
+              const wasLoggedIn = !!session
+              const isLoggedIn = session !== null
+              
+              if (wasLoggedIn !== isLoggedIn) {
+                router.refresh()
+              }
+            }, 0)
+          }
         }
       )
       
@@ -77,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [router])
 
   // Σύνδεση με email και κωδικό
   const signIn = async (email: string, password: string) => {
@@ -85,15 +99,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Authentication system is not available')
     }
     
-    // Χρησιμοποιούμε το νέο API
+    // Χρησιμοποιούμε το API του client auth
     const { error } = await clientAuth.auth.signInWithPassword(email, password)
 
     if (error) {
       throw error
     }
     
-    // Ανανέωση του router
-    router.refresh()
+    // Αντί για router.refresh(), που μπορεί να προκαλέσει προβλήματα, 
+    // επιτρέπουμε το onAuthStateChange να χειριστεί την ανανέωση
   }
 
   // Αποσύνδεση
@@ -101,8 +115,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (clientAuth.isAuthClientValid()) {
       await clientAuth.auth.signOut()
     }
+    
+    // Χρησιμοποιούμε push αντί για refresh για πιο αξιόπιστη πλοήγηση
     router.push('/admin/login')
-    router.refresh()
   }
 
   return (

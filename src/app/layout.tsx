@@ -5,8 +5,9 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Analytics } from "@/components/layout/analytics";
 import PageTransition from "@/components/common/page-transition";
 import ScrollProgress from "@/components/common/scroll-progress";
-import { AuthProvider } from "@/components/providers/auth-provider";
-import ErrorBoundary from "@/components/common/error-boundary";
+import { AuthProvider } from "@/components/client/providers/auth-provider"; // Διορθωμένη διαδρομή
+import ErrorBoundary from "@/_errors/boundaries/error-boundary";
+import PerformanceMonitor from "@/components/client/performance-monitor";
 import { defaultMetadata, generatePersonJsonLd, generateWebsiteJsonLd } from "@/lib/utils/seo";
 import "./globals.css";
 
@@ -98,6 +99,7 @@ export default function RootLayout({
               </PageTransition>
             </ErrorBoundary>
             <Analytics />
+            <PerformanceMonitor />
           </ThemeProvider>
         </AuthProvider>
       </body>

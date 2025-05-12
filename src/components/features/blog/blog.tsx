@@ -1,6 +1,6 @@
 'use client'
 
-// /src/components/features/blog/blog.tsx
+// src/components/features/blog/blog.tsx
 import { useTheme } from '@/components/providers/theme-provider'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
@@ -14,8 +14,8 @@ interface BlogProps {
   };
 }
 
-// Δυναμική εισαγωγή του index.tsx που βρίσκεται στον ίδιο φάκελο
-const BlogComponent = dynamic(() => import('./index'), {
+// Δυναμική εισαγωγή του blog.server.tsx
+const BlogServer = dynamic(() => import('./blog.server'), {
   ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">
@@ -36,8 +36,8 @@ export default function Blog({ searchParams }: BlogProps) {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
       }>
-        {/* Βεβαιωθείτε ότι το BlogComponent δέχεται τα σωστά props */}
-        <BlogComponent 
+        {/* Φορτώνουμε το BlogServer που περιέχει το server component */}
+        <BlogServer 
           theme={theme} 
           searchParams={searchParams} 
         />

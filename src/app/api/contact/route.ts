@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from 'next/server'
 import { createTransport, SentMessageInfo } from 'nodemailer'
 import { z } from 'zod'
 import { contactFormRateLimit } from '@/lib/utils/rate-limit'
-import { db, sql } from '@/lib/db'
+import { db, sql } from '@/lib/db/server-db-client' // Διορθωμένο import από db-client
 
 // Ορισμός τύπου για το αποτέλεσμα του SQL ερωτήματος
 type DbQueryResult = {

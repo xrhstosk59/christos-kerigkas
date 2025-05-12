@@ -1,6 +1,6 @@
 // src/app/api/blog/[slug]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { blogRepository } from '@/lib/db/repositories/blog-repository'
+import { blogRepository } from '@/domains/blog/repositories/blog.repository' // Διορθωμένο import path
 import { checkAuth } from '@/lib/auth/server-auth'
 import { z } from 'zod'
 
@@ -116,6 +116,14 @@ export async function PUT(
       authorImage: postData.author.image,
       categories: postData.categories,
       content: postData.content,
+      // Προσθήκη των υποχρεωτικών πεδίων του μοντέλου
+      published: true,
+      featured: false,
+      category: postData.categories[0],
+      excerpt: postData.description.slice(0, 160),
+      metaTitle: postData.title,
+      metaDescription: postData.description.slice(0, 160),
+      updatedAt: new Date()
     })
     
     if (!updatedPost) {

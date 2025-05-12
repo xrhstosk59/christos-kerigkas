@@ -1,5 +1,5 @@
 // src/lib/db/repositories/contact-repository.ts
-import { db } from '@/lib/db'
+import { ensureDatabaseConnection } from '@/lib/db/helpers'
 import { contactMessages, type NewContactMessage } from '@/lib/db/schema'
 import { desc, eq, count } from 'drizzle-orm'
 
@@ -8,11 +8,8 @@ export const contactRepository = {
     try {
       console.log('Repository: Creating contact message', message.name);
       
-      // Διασφαλίζουμε ότι το db είναι διαθέσιμο
-      if (!db) {
-        console.error('Repository: Database connection not available');
-        throw new Error('Database connection not available');
-      }
+      // Χρησιμοποιούμε την ensureDatabaseConnection αντί για απευθείας εισαγωγή του db
+      const database = ensureDatabaseConnection();
       
       // Βεβαιωνόμαστε ότι το ipAddress έχει τιμή, ακόμα και αν είναι προαιρετικό στο schema
       const messageToSave = {
@@ -21,7 +18,7 @@ export const contactRepository = {
         status: 'new' // Θέτουμε το status σε 'new' εφόσον είναι νέο μήνυμα
       };
       
-      const [result] = await db.insert(contactMessages)
+      const [result] = await database.insert(contactMessages)
         .values(messageToSave)
         .returning();
       
@@ -35,20 +32,17 @@ export const contactRepository = {
   
   async findAll(page: number = 1, limit: number = 10) {
     try {
-      if (!db) {
-        console.error('Repository: Database connection not available');
-        throw new Error('Database connection not available');
-      }
+      const database = ensureDatabaseConnection();
       
       const offset = (page - 1) * limit;
       
-      const messages = await db.select()
+      const messages = await database.select()
         .from(contactMessages)
         .orderBy(desc(contactMessages.createdAt))
         .limit(limit)
         .offset(offset);
       
-      const [result] = await db
+      const [result] = await database
         .select({ total: count() })
         .from(contactMessages);
       
@@ -68,12 +62,9 @@ export const contactRepository = {
   
   async delete(id: number) {
     try {
-      if (!db) {
-        console.error('Repository: Database connection not available');
-        throw new Error('Database connection not available');
-      }
+      const database = ensureDatabaseConnection();
       
-      return db.delete(contactMessages)
+      return database.delete(contactMessages)
         .where(eq(contactMessages.id, id));
     } catch (error) {
       console.error('Repository: Error deleting contact message:', error);

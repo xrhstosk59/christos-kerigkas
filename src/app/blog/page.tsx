@@ -1,4 +1,4 @@
-// /src/app/blog/page.tsx
+// src/app/blog/page.tsx 
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import dynamic from 'next/dynamic'
@@ -12,8 +12,18 @@ interface BlogPageProps {
   }>;
 }
 
-// Δυναμική εισαγωγή του BlogComponent για αποφυγή προβλημάτων με το 'use client' directive
-const BlogComponent = dynamic(() => import('@/components/features/blog'), { 
+// Τα props ακριβώς όπως ορίζονται στο blog.server.tsx
+interface BlogProps {
+  theme: 'light' | 'dark';
+  searchParams?: {
+    category?: string;
+    search?: string;
+    page?: string;
+  };
+}
+
+// Δυναμική εισαγωγή του Blog component με το σωστό type
+const BlogComponent = dynamic<BlogProps>(() => import('@/components/features/blog/blog.server').then(mod => mod.default), {
   ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">

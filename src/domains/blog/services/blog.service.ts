@@ -1,33 +1,15 @@
-// src/lib/services/blog-service.ts
-import { blogRepository } from '@/lib/db/repositories/blog-repository';
+// src/domains/blog/services/blog.service.ts
+import { blogRepository } from '../repositories/blog.repository';
 import { cache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
-import type { BlogPost, NewBlogPost } from '@/lib/db/schema/blog';
+import { blogCacheKeys } from '../utils/blog-cache-keys';
 import { Permission, UserWithRole, checkPermission } from '@/lib/auth/access-control';
-
-/**
- * Παράμετροι αναζήτησης για blog posts.
- */
-export interface BlogSearchParams {
-  query?: string;
-  category?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: 'date' | 'title';
-  sortOrder?: 'asc' | 'desc';
-}
-
-/**
- * Αποτέλεσμα με pagination για blog posts.
- */
-export interface PaginatedBlogResult {
-  posts: BlogPost[];
-  total: number;
-  totalPages: number;
-  currentPage: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
+import type { 
+  BlogPost, 
+  NewBlogPost, 
+  BlogSearchParams, 
+  PaginatedBlogResult 
+} from '../models/blog-post.model';
 
 /**
  * Service για τη διαχείριση των blog posts.
@@ -42,7 +24,7 @@ export const blogService = {
    * @returns Promise με τα αποτελέσματα
    */
   async getPosts(page: number = 1, limit: number = 10): Promise<PaginatedBlogResult> {
-    const cacheKey = `blogs:all:page:${page}:limit:${limit}`;
+    const cacheKey = blogCacheKeys.posts.all(page, limit);
     
     try {
       // Προσπάθεια ανάκτησης από το cache
@@ -76,15 +58,18 @@ export const blogService = {
       category, 
       page = 1, 
       limit = 10,
-      // Αφαιρούμε την αναφορά και χρήση αυτών των παραμέτρων αφού δεν τις χρησιμοποιούμε
-      // sortBy = 'date',
-      // sortOrder = 'desc'
     } = params;
     
     try {
       if (query) {
         // Αν υπάρχει query, χρησιμοποιούμε την αναζήτηση
-        const posts = await blogRepository.search(query, limit);
+        const cacheKey = blogCacheKeys.posts.search(query, limit);
+        
+        const posts = await cache.getOrSet<BlogPost[]>(
+          cacheKey,
+          () => blogRepository.search(query, limit),
+          { expireInSeconds: 60 * 15 } // 15 λεπτά
+        );
         
         return {
           posts,
@@ -96,7 +81,13 @@ export const blogService = {
         };
       } else if (category) {
         // Αν υπάρχει κατηγορία, φιλτράρουμε με βάση αυτή
-        return await blogRepository.findByCategory(category, page, limit);
+        const cacheKey = blogCacheKeys.posts.byCategory(category, page, limit);
+        
+        return await cache.getOrSet<PaginatedBlogResult>(
+          cacheKey,
+          () => blogRepository.findByCategory(category, page, limit),
+          { expireInSeconds: 60 * 15 } // 15 λεπτά
+        );
       } else {
         // Διαφορετικά, επιστρέφουμε όλα τα posts
         return await this.getPosts(page, limit);
@@ -121,7 +112,7 @@ export const blogService = {
    * @returns Promise με το blog post ή null αν δεν βρεθεί
    */
   async getPostBySlug(slug: string): Promise<BlogPost | null> {
-    const cacheKey = `blog:slug:${slug}`;
+    const cacheKey = blogCacheKeys.posts.bySlug(slug);
     
     try {
       return await cache.getOrSet<BlogPost | null>(
@@ -156,8 +147,16 @@ export const blogService = {
       // Δημιουργία του post
       const newPost = await blogRepository.create(post);
       
-      // Εκκαθάριση του cache για τη λίστα blog posts
-      await this.invalidateBlogListCache();
+      // Στοχευμένη εκκαθάριση του cache για τις λίστες posts
+      // Αντί να διαγράφουμε όλα τα κλειδιά, διαγράφουμε μόνο αυτά που επηρεάζονται
+      
+      // 1. Διαγραφή της πρώτης σελίδας της λίστας όλων των posts, η οποία επηρεάζεται πάντα
+      await cache.delete(blogCacheKeys.posts.all(1, 10)); // Συνηθισμένο μέγεθος σελίδας
+      
+      // 2. Διαγραφή των caches για τις κατηγορίες που περιέχονται στο νέο post
+      for (const category of post.categories) {
+        await cache.delete(blogCacheKeys.posts.byCategory(category, 1, 10));
+      }
       
       logger.info(`Δημιουργία νέου blog post με slug: ${newPost.slug}`, null, 'blog-service');
       
@@ -200,12 +199,33 @@ export const blogService = {
         throw new Error('Το blog post δεν βρέθηκε κατά την ενημέρωση');
       }
       
-      // Εκκαθάριση του cache για το συγκεκριμένο post και τη λίστα
-      await cache.delete(`blog:slug:${slug}`);
+      // Στοχευμένη εκκαθάριση του cache
+      
+      // 1. Διαγραφή του cache για το συγκεκριμένο post
+      await cache.delete(blogCacheKeys.posts.bySlug(slug));
+      
+      // 2. Αν άλλαξε το slug, διαγραφή και του cache για το νέο slug
       if (postData.slug && postData.slug !== slug) {
-        await cache.delete(`blog:slug:${postData.slug}`);
+        await cache.delete(blogCacheKeys.posts.bySlug(postData.slug));
       }
-      await this.invalidateBlogListCache();
+      
+      // 3. Διαγραφή του cache για τις κατηγορίες του παλιού και του νέου post
+      const oldCategories = existingPost.categories || [];
+      const newCategories = postData.categories || oldCategories;
+      
+      const uniqueCategories = [...new Set([...oldCategories, ...newCategories])];
+      for (const category of uniqueCategories) {
+        await cache.delete(blogCacheKeys.posts.byCategory(category, 1, 10));
+      }
+      
+      // 4. Διαγραφή του cache για τη λίστα όλων των posts (μόνο την πρώτη σελίδα)
+      await cache.delete(blogCacheKeys.posts.all(1, 10));
+      
+      // 5. Διαγραφή του cache για τα σχετικά posts
+      await cache.delete(blogCacheKeys.posts.related(slug, 3));
+      if (postData.slug && postData.slug !== slug) {
+        await cache.delete(blogCacheKeys.posts.related(postData.slug, 3));
+      }
       
       logger.info(`Ενημέρωση blog post με slug: ${slug} -> ${updatedPost.slug}`, null, 'blog-service');
       
@@ -231,12 +251,28 @@ export const blogService = {
     }
     
     try {
+      // Λήψη του post για να ξέρουμε τις κατηγορίες του
+      const post = await blogRepository.findBySlug(slug);
+      const categories = post?.categories || [];
+      
       // Διαγραφή του post
       await blogRepository.delete(slug);
       
-      // Εκκαθάριση του cache για το συγκεκριμένο post και τη λίστα
-      await cache.delete(`blog:slug:${slug}`);
-      await this.invalidateBlogListCache();
+      // Στοχευμένη εκκαθάριση του cache
+      
+      // 1. Διαγραφή του cache για το συγκεκριμένο post
+      await cache.delete(blogCacheKeys.posts.bySlug(slug));
+      
+      // 2. Διαγραφή του cache για τις κατηγορίες του post
+      for (const category of categories) {
+        await cache.delete(blogCacheKeys.posts.byCategory(category, 1, 10));
+      }
+      
+      // 3. Διαγραφή του cache για τη λίστα όλων των posts (μόνο την πρώτη σελίδα)
+      await cache.delete(blogCacheKeys.posts.all(1, 10));
+      
+      // 4. Διαγραφή του cache για τα σχετικά posts
+      await cache.delete(blogCacheKeys.posts.related(slug, 3));
       
       logger.info(`Διαγραφή blog post με slug: ${slug}`, null, 'blog-service');
     } catch (error) {
@@ -253,7 +289,7 @@ export const blogService = {
    * @returns Promise με τα σχετικά blog posts
    */
   async getRelatedPosts(slug: string, limit: number = 3): Promise<BlogPost[]> {
-    const cacheKey = `blog:related:${slug}:limit:${limit}`;
+    const cacheKey = blogCacheKeys.posts.related(slug, limit);
     
     try {
       return await cache.getOrSet<BlogPost[]>(
@@ -268,10 +304,11 @@ export const blogService = {
   },
   
   /**
-   * Εκκαθάριση του cache για τη λίστα των blog posts.
+   * Εκκαθάριση όλου του cache για blog posts.
+   * Χρήση μόνο σε περιπτώσεις που χρειάζεται πλήρης ανανέωση των δεδομένων.
    */
-  async invalidateBlogListCache(): Promise<void> {
-    await cache.invalidatePattern('blogs:all:*');
-    await cache.invalidatePattern('blogs:category:*');
+  async invalidateAllBlogCache(): Promise<void> {
+    await cache.invalidatePattern('blogs:*');
+    await cache.invalidatePattern('blog:*');
   }
 };

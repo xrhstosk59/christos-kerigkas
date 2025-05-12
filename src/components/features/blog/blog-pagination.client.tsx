@@ -1,23 +1,28 @@
+// src/components/features/blog/blog-pagination.client.tsx
 'use client'
 
-// /src/components/blog/blog-pagination.tsx
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 import { motion } from 'framer-motion'
 
-interface BlogPaginationProps {
+interface BlogPaginationClientProps {
   currentPage: number
   totalPages: number
   theme: 'light' | 'dark'
+  // Αφαιρούμε τα searchQuery και selectedCategory από το interface
+  // αφού ήδη τα παίρνουμε από το useSearchParams
 }
 
-// Client Component για το pagination του blog
-export default function BlogPagination({ 
+/**
+ * Client Component για το pagination του blog
+ * Υποστηρίζει διατήρηση των παραμέτρων αναζήτησης και κατηγορίας κατά την αλλαγή σελίδας
+ */
+export function BlogPaginationClient({ 
   currentPage, 
   totalPages, 
-  theme 
-}: BlogPaginationProps) {
+  theme
+}: BlogPaginationClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -40,7 +45,7 @@ export default function BlogPagination({
       params.set('page', page.toString())
     }
     
-    // Ενημέρωση του URL
+    // Ενημέρωση του URL - τα searchParams διατηρούνται αυτόματα
     router.push(`/blog?${params.toString()}`)
     
     // Scroll προς τα πάνω
@@ -154,3 +159,6 @@ export default function BlogPagination({
     </div>
   )
 }
+
+// Default export για συμβατότητα με τον υπάρχοντα κώδικα
+export default BlogPaginationClient;

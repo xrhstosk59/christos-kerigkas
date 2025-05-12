@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from '@/components/providers/theme-provider'
-import { useAuth } from '@/components/providers/auth-provider'
+import { useAuth } from '@/components/client/providers/auth-provider'
 import Link from 'next/link'
 import { 
   Layout, 

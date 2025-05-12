@@ -1,8 +1,9 @@
 // src/app/api/blog/search/route.ts
 import { NextResponse } from 'next/server'
-import { blogRepository } from '@/lib/db/repositories/blog-repository'
+import { blogRepository } from '@/domains/blog/repositories/blog.repository' // Διορθωμένο import path
 import { z } from 'zod'
 import { createEndpointRateLimit } from '@/lib/utils/rate-limit'
+import { BlogPost } from '@/domains/blog/models/blog-post.model' // Εισαγωγή του τύπου BlogPost
 
 // Χρήση του προκαθορισμένου rate limiter για αναζήτηση blog
 const blogSearchRateLimit = createEndpointRateLimit('blog-search', 10, 60); // 10 αιτήματα ανά λεπτό
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
     const dbPosts = await blogRepository.search(validatedQuery, validatedLimit)
     
     // Μετατροπή από το schema του database στο schema του frontend
-    const posts = dbPosts.map(post => ({
+    const posts = dbPosts.map((post: BlogPost) => ({
       slug: post.slug,
       title: post.title,
       description: post.description,
