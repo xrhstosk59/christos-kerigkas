@@ -5,7 +5,7 @@ import { eq, sql } from 'drizzle-orm'
 
 export const projectsRepository = {
   async findAll(limitCount?: number): Promise<Project[]> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     const query = database.select()
       .from(projects)
       .orderBy(projects.order);
@@ -18,7 +18,7 @@ export const projectsRepository = {
   },
   
   async findFeatured(): Promise<Project[]> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     return database.select()
       .from(projects)
       .where(eq(projects.featured, true))
@@ -26,7 +26,7 @@ export const projectsRepository = {
   },
   
   async findBySlug(slug: string): Promise<Project | undefined> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     const [project] = await database.select()
       .from(projects)
       .where(eq(projects.slug, slug))
@@ -36,7 +36,7 @@ export const projectsRepository = {
   },
   
   async findByCategory(category: string): Promise<Project[]> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     return database.select()
       .from(projects)
       .where(sql`${category} = ANY(${projects.categories})`)
@@ -44,7 +44,7 @@ export const projectsRepository = {
   },
   
   async create(project: NewProject): Promise<Project> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     const [result] = await database.insert(projects)
       .values(project)
       .returning();
@@ -53,7 +53,7 @@ export const projectsRepository = {
   },
   
   async update(slug: string, project: Partial<Omit<NewProject, 'createdAt'>>): Promise<Project | undefined> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     const [result] = await database.update(projects)
       .set({
         ...project,
@@ -66,7 +66,7 @@ export const projectsRepository = {
   },
   
   async delete(slug: string): Promise<void> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     await database.delete(projects)
       .where(eq(projects.slug, slug));
   }
@@ -74,14 +74,14 @@ export const projectsRepository = {
 
 export const cryptoProjectsRepository = {
   async findAll(): Promise<CryptoProject[]> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     return database.select()
       .from(cryptoProjects)
       .orderBy(cryptoProjects.id);
   },
   
   async findBySlug(slug: string): Promise<CryptoProject | undefined> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     const [project] = await database.select()
       .from(cryptoProjects)
       .where(eq(cryptoProjects.slug, slug))
@@ -91,7 +91,7 @@ export const cryptoProjectsRepository = {
   },
   
   async create(project: NewCryptoProject): Promise<CryptoProject> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     const [result] = await database.insert(cryptoProjects)
       .values(project)
       .returning();
@@ -100,7 +100,7 @@ export const cryptoProjectsRepository = {
   },
   
   async update(slug: string, project: Partial<Omit<NewCryptoProject, 'createdAt'>>): Promise<CryptoProject | undefined> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     const [result] = await database.update(cryptoProjects)
       .set({
         ...project,
@@ -113,7 +113,7 @@ export const cryptoProjectsRepository = {
   },
   
   async delete(slug: string): Promise<void> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     await database.delete(cryptoProjects)
       .where(eq(cryptoProjects.slug, slug));
   }

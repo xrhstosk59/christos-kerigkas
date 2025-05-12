@@ -87,7 +87,9 @@ export async function POST(req: NextRequest) {
       if (db) {
         console.log('Saving contact message to database');
         
-        const result = await db.execute(sql`
+        // Προσθέτουμε await πριν από το db
+        const dbClient = await db;
+        const result = await dbClient.execute(sql`
           INSERT INTO contact_messages (name, email, message, ip_address, status, created_at)
           VALUES (${name}, ${email}, ${message}, ${ipAddress}, ${'new'}, NOW())
           RETURNING id

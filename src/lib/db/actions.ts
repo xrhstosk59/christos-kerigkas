@@ -27,7 +27,7 @@ interface CountResult {
 
 // Ανάκτηση blog posts με pagination
 export async function getBlogPosts(page = 1, postsPerPage = 10, category?: string): Promise<BlogResponse> {
-  const db = getDbClient();
+  const db = await getDbClient(); // Προσθέτουμε await
   const offset = (page - 1) * postsPerPage;
   
   try {
@@ -81,7 +81,7 @@ export async function getBlogPosts(page = 1, postsPerPage = 10, category?: strin
 
 // Ανάκτηση ενός blog post με βάση το slug
 export async function getBlogPostBySlug(slug: string) {
-  const db = getDbClient();
+  const db = await getDbClient(); // Προσθέτουμε await
   
   try {
     const post = await db.select()
@@ -98,7 +98,7 @@ export async function getBlogPostBySlug(slug: string) {
 
 // Αναζήτηση blog posts
 export async function searchBlogPosts(searchTerm: string, page = 1, postsPerPage = 10): Promise<BlogResponse> {
-  const db = getDbClient();
+  const db = await getDbClient(); // Προσθέτουμε await
   const offset = (page - 1) * postsPerPage;
   
   try {
@@ -149,7 +149,7 @@ export async function searchBlogPosts(searchTerm: string, page = 1, postsPerPage
 
 // Δημιουργία νέου blog post (απαιτεί δικαιώματα admin)
 export async function createBlogPost(postData: typeof blogPosts.$inferInsert) {
-  const db = getAdminDbClient();
+  const db = await getAdminDbClient(); // Προσθέτουμε await
   
   try {
     const result = await db.insert(blogPosts).values(postData).returning();
@@ -162,7 +162,7 @@ export async function createBlogPost(postData: typeof blogPosts.$inferInsert) {
 
 // Ενημέρωση υπάρχοντος blog post (απαιτεί δικαιώματα admin)
 export async function updateBlogPost(id: string, postData: Partial<typeof blogPosts.$inferInsert>) {
-  const db = getAdminDbClient();
+  const db = await getAdminDbClient(); // Προσθέτουμε await
   
   try {
     // Μετατροπή του id σε αριθμό αν είναι string
@@ -183,7 +183,7 @@ export async function updateBlogPost(id: string, postData: Partial<typeof blogPo
 
 // Διαγραφή blog post (απαιτεί δικαιώματα admin)
 export async function deleteBlogPost(id: string) {
-  const db = getAdminDbClient();
+  const db = await getAdminDbClient(); // Προσθέτουμε await
   
   try {
     // Μετατροπή του id σε αριθμό αν είναι string

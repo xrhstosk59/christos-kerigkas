@@ -9,7 +9,7 @@ type TypedDatabase = PostgresJsDatabase<typeof schema>;
 
 export const newsletterRepository = {
   async subscribe(subscriber: NewNewsletterSubscriber): Promise<NewsletterSubscriber> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     
     // Χρησιμοποιούμε τυποποιημένες λειτουργίες αντί για να βασιζόμαστε στην επιστροφή της ensureDatabaseConnection
     const [result] = await database.insert(newsletterSubscribers)
@@ -20,7 +20,7 @@ export const newsletterRepository = {
   },
   
   async unsubscribe(email: string): Promise<void> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     
     // Ρητή τυποποίηση
     await (database as TypedDatabase).update(newsletterSubscribers)
@@ -32,7 +32,7 @@ export const newsletterRepository = {
   },
   
   async isSubscribed(email: string): Promise<boolean> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     
     // Ρητή τυποποίηση της επιστροφής
     const result = await (database as TypedDatabase).select()
@@ -44,7 +44,7 @@ export const newsletterRepository = {
   },
   
   async getAll(includeUnsubscribed = false): Promise<NewsletterSubscriber[]> {
-    const database = ensureDatabaseConnection();
+    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
     
     // Δημιουργία του αρχικού ερωτήματος με ρητό τύπο
     const query = (database as TypedDatabase).select().from(newsletterSubscribers);

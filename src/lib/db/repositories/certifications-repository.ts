@@ -38,7 +38,7 @@ export const certificationsRepository = {
   findAll: async (): Promise<DBCertification[]> => {
     try {
       // Προσπάθεια σύνδεσης με τη βάση δεδομένων
-      const database = ensureDatabaseConnection();
+      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
       return await database.select()
         .from(certificationsTable)
         .orderBy(desc(certificationsTable.issueDate));
@@ -51,7 +51,7 @@ export const certificationsRepository = {
   // Αναζήτηση πιστοποιητικού με βάση το id
   findById: async (id: string): Promise<DBCertification | undefined> => {
     try {
-      const database = ensureDatabaseConnection();
+      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
       const [certification] = await database.select()
         .from(certificationsTable)
         .where(eq(certificationsTable.id, id))
@@ -67,7 +67,7 @@ export const certificationsRepository = {
   // Αναζήτηση επιλεγμένων πιστοποιητικών
   findFeatured: async (): Promise<DBCertification[]> => {
     try {
-      const database = ensureDatabaseConnection();
+      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
       return await database.select()
         .from(certificationsTable)
         .where(eq(certificationsTable.featured, true))
@@ -81,7 +81,7 @@ export const certificationsRepository = {
   // Αναζήτηση πιστοποιητικών με βάση ένα skill
   findBySkill: async (skill: string): Promise<DBCertification[]> => {
     try {
-      const database = ensureDatabaseConnection();
+      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
       return await database.select()
         .from(certificationsTable)
         .where(sql`${skill} = ANY(${certificationsTable.skills})`)

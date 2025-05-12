@@ -9,7 +9,7 @@ export const contactRepository = {
       console.log('Repository: Creating contact message', message.name);
       
       // Χρησιμοποιούμε την ensureDatabaseConnection αντί για απευθείας εισαγωγή του db
-      const database = ensureDatabaseConnection();
+      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
       
       // Βεβαιωνόμαστε ότι το ipAddress έχει τιμή, ακόμα και αν είναι προαιρετικό στο schema
       const messageToSave = {
@@ -32,7 +32,7 @@ export const contactRepository = {
   
   async findAll(page: number = 1, limit: number = 10) {
     try {
-      const database = ensureDatabaseConnection();
+      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
       
       const offset = (page - 1) * limit;
       
@@ -62,7 +62,7 @@ export const contactRepository = {
   
   async delete(id: number) {
     try {
-      const database = ensureDatabaseConnection();
+      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
       
       return database.delete(contactMessages)
         .where(eq(contactMessages.id, id));
