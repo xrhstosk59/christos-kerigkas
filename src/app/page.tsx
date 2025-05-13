@@ -1,61 +1,46 @@
-// src/app/page.tsx
-// Αφαιρέθηκε το "use client" directive αφού μπορεί να είναι Server Component
-import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
-import { About } from '@/components/features/about/about'
-import { Experience } from '@/components/features/experience/experience'
-import { Skills } from '@/components/features/skills/skills'
-import { Projects } from '@/components/features/projects/projects'
-import { CryptoProjects } from '@/components/features/crypto/crypto-projects'
-import { Contact } from '@/components/features/contact/contact'
-import { Footer } from '@/components/common/footer'
+'use client';
 
-// Το Navbar και το Hero πρέπει να είναι client components λόγω των animations
-// Άρα γίνονται dynamic import
-const Navbar = dynamic(() => import('@/components/common/navbar'), { ssr: true })
-const Hero = dynamic(() => import('@/components/layout/hero'), { ssr: true })
-
-// Μόνο τα components που είναι "βαριά" ή χρειάζονται client-side λειτουργικότητα
-// πρέπει να φορτώνονται δυναμικά
-const Certifications = dynamic(
-  () => import('@/components/features/certifications/certifications'),
-  { ssr: true }
-)
-
-// Loading components για καλύτερο UX
-const NavbarLoading = () => (
-  <div className="h-16 bg-gray-100 dark:bg-gray-900 animate-pulse fixed top-0 left-0 right-0 z-50"></div>
-)
-const HeroLoading = () => (
-  <div className="min-h-[calc(100vh-64px)] bg-gray-100 dark:bg-gray-900 animate-pulse"></div>
-)
-const CertificationsLoading = () => (
-  <div className="h-64 bg-gray-100 dark:bg-gray-900 animate-pulse my-8"></div>
-)
+// src/app/page.tsx - Client Component solution με βάση την έρευνα
+import { useState, useEffect } from 'react';
+import Navbar from '@/components/common/navbar';
+import Hero from '@/components/layout/hero';
+import { About } from '@/components/features/about/about';
+import { Experience } from '@/components/features/experience/experience';
+import { Skills } from '@/components/features/skills/skills';
+import { Projects } from '@/components/features/projects/projects';
+import { CryptoProjects } from '@/components/features/crypto/crypto-projects';
+import { Contact } from '@/components/features/contact/contact';
+import { Footer } from '@/components/common/footer';
+import { Certifications } from '@/components/features/certifications/certifications';
 
 export default function Home() {
+  // Client-side hydration για αποφυγή flashing/hydration issues
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Suspense fallback={<NavbarLoading />}>
-        <Navbar />
-      </Suspense>
-
-      <Suspense fallback={<HeroLoading />}>
-        <Hero />
-      </Suspense>
-
+      <Navbar />
+      <Hero />
       <About />
       <Experience />
       <Skills />
-
-      <Suspense fallback={<CertificationsLoading />}>
-        <Certifications />
-      </Suspense>
-
+      <Certifications />
       <Projects />
       <CryptoProjects />
       <Contact />
       <Footer />
     </main>
-  )
+  );
 }

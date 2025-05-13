@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Mail, Phone, Github, Linkedin, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useTheme } from '@/components/providers/theme-provider'
 import { motion } from 'framer-motion'
@@ -14,11 +14,15 @@ type ErrorType = ValidationError | null
 
 export function Contact() {
   const { theme } = useTheme()
+  
+  // Αρχικοποίηση της φόρμας με κενό string για να αποφύγουμε το hydration mismatch
+  // μεταξύ server και client rendering
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     message: ''
   })
+  
   const [status, setStatus] = useState<StatusType>('idle')
   const [errors, setErrors] = useState<ErrorType>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -26,6 +30,14 @@ export function Contact() {
     databaseSuccess?: boolean;
     emailSent?: boolean;
   }>({})
+
+  // Χρησιμοποιούμε το mounted για να αποφύγουμε επιπλέον hydration issues
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    // Σημειώνουμε ότι το component έχει mounted στον client
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,6 +140,36 @@ export function Contact() {
     }
     
     return ''
+  }
+
+  // Αν δεν έχει γίνει ακόμα mounted στον client, επιστρέφουμε μια skeleton έκδοση
+  // του component για να αποφύγουμε hydration issues
+  if (!mounted) {
+    return (
+      <section id="contact" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:max-w-4xl">
+            <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              Contact
+            </h2>
+            <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+              <div className="space-y-4 animate-pulse">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/5"></div>
+              </div>
+              <div className="space-y-6 animate-pulse">
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -256,6 +298,8 @@ export function Contact() {
                   }`}
                   required
                   disabled={status === 'loading'}
+                  spellCheck="false"
+                  data-ms-editor="true"
                 />
                 {getFieldError('message') && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">{getFieldError('message')}</p>

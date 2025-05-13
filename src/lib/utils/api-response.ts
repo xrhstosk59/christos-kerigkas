@@ -1,6 +1,5 @@
 // src/lib/utils/api-response.ts
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { logger } from './logger';
 
 /**
@@ -28,6 +27,7 @@ export interface ApiErrorResponse {
     message: string;
     details?: unknown;
     requestId?: string;
+    timestamp?: string;
   };
 }
 
@@ -84,6 +84,7 @@ export const apiResponse = {
   ) {
     // Δημιουργία μοναδικού αναγνωριστικού για το σφάλμα
     const requestId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
     
     // Καταγραφή του σφάλματος για εσωτερική χρήση
     logger.error(message, details, 'api-response', requestId);
@@ -96,7 +97,7 @@ export const apiResponse = {
     return NextResponse.json<ApiErrorResponse>(
       { 
         success: false,
-        error: { code, message, details, requestId }
+        error: { code, message, details, requestId, timestamp }
       },
       { status }
     );
@@ -133,11 +134,11 @@ export const apiResponse = {
   /**
    * Δημιουργία απόκρισης σφάλματος επικύρωσης (από Zod).
    */
-  validationError(error: z.ZodError) {
+  validationError(error: unknown) {
     return this.error(
       'VALIDATION_ERROR',
       'Λάθος στην επικύρωση των δεδομένων',
-      error.flatten(),
+      error,
       400
     );
   },
@@ -170,19 +171,26 @@ export const apiResponse = {
     // Καταγραφή του πραγματικού σφάλματος εσωτερικά
     logger.error('Εσωτερικό σφάλμα εφαρμογής:', error, 'api-response');
     
-    return this.error('INTERNAL_ERROR', message, undefined, 500);
+    // Σε production, μην επιστρέφεις τις λεπτομέρειες του σφάλματος
+    const isProd = process.env.NODE_ENV === 'production';
+    const errorDetails = isProd ? undefined : error;
+    
+    return this.error('INTERNAL_ERROR', message, errorDetails, 500);
   },
   
   /**
    * Δημιουργία απόκρισης περιορισμού ρυθμού (rate limiting).
    */
   rateLimited(message = 'Πολλές αιτήσεις, παρακαλώ δοκιμάστε αργότερα', resetTime?: number) {
-    return this.error(
-      'RATE_LIMITED',
-      message,
-      resetTime ? { resetTime } : undefined,
-      429
-    );
+    const details = resetTime ? { resetTime, retryAfter: Math.ceil((resetTime - Date.now()) / 1000) } : undefined;
+    const response = this.error('RATE_LIMITED', message, details, 429);
+    
+    // Προσθήκη Retry-After header αν υπάρχει resetTime
+    if (resetTime) {
+      response.headers.set('Retry-After', String(Math.ceil((resetTime - Date.now()) / 1000)));
+    }
+    
+    return response;
   },
   
   /**
@@ -197,5 +205,12 @@ export const apiResponse = {
    */
   conflict(message = 'Σύγκρουση δεδομένων', details?: unknown) {
     return this.error('CONFLICT', message, details, 409);
+  },
+  
+  /**
+   * Δημιουργία απόκρισης μη διαθέσιμης υπηρεσίας.
+   */
+  serviceUnavailable(message = 'Η υπηρεσία δεν είναι διαθέσιμη αυτή τη στιγμή') {
+    return this.error('SERVICE_UNAVAILABLE', message, undefined, 503);
   }
 };

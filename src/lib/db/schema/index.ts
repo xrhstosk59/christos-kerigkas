@@ -8,3 +8,15 @@ export * from './projects';
 export * from './certifications';
 export * from './contact';
 export * from './common';
+
+// Εξαγωγή των relations
+export {
+  projectsRelations,
+  projectTechnologiesRelations,
+  projectCategoriesRelations,
+  projectsToTechRelations,
+  projectsToCategoriesRelations
+} from './projects';
+
+// Βοηθητικές συναρτήσεις για schema
+export { generateSlug, createSlugIndex, createTimestampIndexes } from './common';

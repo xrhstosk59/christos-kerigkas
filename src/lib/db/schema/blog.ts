@@ -1,6 +1,6 @@
 // src/lib/db/schema/blog.ts
 
-import { pgTable, serial, varchar, text, timestamp, jsonb, boolean as pgBoolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, timestamp, jsonb, boolean as pgBoolean, index, primaryKey } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 // Ορισμός του schema του πίνακα blog_categories
@@ -11,6 +11,13 @@ export const blogCategories = pgTable('blog_categories', {
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    // Προσθήκη index στο slug για γρηγορότερες αναζητήσεις
+    slugIdx: index('blog_categories_slug_idx').on(table.slug),
+    // Προσθήκη index στο name για γρηγορότερες αναζητήσεις με το όνομα
+    nameIdx: index('blog_categories_name_idx').on(table.name)
+  }
 });
 
 // Zod schema για τις κατηγορίες blog
@@ -59,6 +66,19 @@ export const blogPosts = pgTable('blog_posts', {
   
   // Κατηγορία ως string για συμβατότητα με υπάρχοντα κώδικα
   category: varchar('category', { length: 100 }).default('general'),
+}, (table) => {
+  return {
+    // Προσθήκη index στο slug για γρηγορότερες αναζητήσεις με το slug
+    slugIdx: index('blog_posts_slug_idx').on(table.slug),
+    // Προσθήκη index στο category για γρηγορότερες αναζητήσεις με κατηγορία
+    categoryIdx: index('blog_posts_category_idx').on(table.category),
+    // Προσθήκη composite index για published + featured για γρηγορότερες αναζητήσεις δημοσιευμένων & προτεινόμενων άρθρων
+    publishedFeaturedIdx: index('blog_posts_published_featured_idx').on(table.published, table.featured),
+    // Προσθήκη index στο date για γρηγορότερη ταξινόμηση και αναζήτηση με ημερομηνία
+    dateIdx: index('blog_posts_date_idx').on(table.date),
+    // Προσθήκη index στο author_name για γρηγορότερη αναζήτηση με συγγραφέα
+    authorNameIdx: index('blog_posts_author_name_idx').on(table.authorName)
+  }
 });
 
 // Zod schema για τα blog posts
@@ -90,3 +110,28 @@ export type NewBlogPost = Omit<BlogPost, 'id'>;
 // Προσθήκη τύπων για τις επιλογές και εισαγωγές στη βάση
 export type SelectBlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+// Προσθήκη ενός πίνακα για τα tags για μελλοντική χρήση
+export const blogTags = pgTable('blog_tags', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 50 }).notNull().unique(),
+  slug: varchar('slug', { length: 50 }).notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    slugIdx: index('blog_tags_slug_idx').on(table.slug)
+  }
+});
+
+// Πίνακας σύνδεσης posts και tags (many-to-many relationship)
+export const blogPostsTags = pgTable('blog_posts_tags', {
+  postId: serial('post_id').references(() => blogPosts.id, { onDelete: 'cascade' }),
+  tagId: serial('tag_id').references(() => blogTags.id, { onDelete: 'cascade' }),
+}, (table) => {
+  return {
+    // Διόρθωση - Χρήση του primaryKey αντί για index().primaryKey()
+    pk: primaryKey({ columns: [table.postId, table.tagId] }),
+    // Index για γρηγορότερη αναζήτηση με tag
+    tagIdx: index('blog_posts_tags_tag_idx').on(table.tagId)
+  }
+});

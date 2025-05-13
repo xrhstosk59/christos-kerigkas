@@ -166,10 +166,10 @@
 ./src/lib/data/mock-projects.ts
 ./src/lib/data/projects.ts
 ./src/lib/db/actions.ts
+./src/lib/db/client-db.ts
 ./src/lib/db/clients.ts
 ./src/lib/db/database.types.ts
 ./src/lib/db/db-actions.ts
-./src/lib/db/db-client.ts
 ./src/lib/db/helpers.ts
 ./src/lib/db/index.ts
 ./src/lib/db/migrate.ts
@@ -187,6 +187,7 @@
 ./src/lib/db/schema/projects.ts
 ./src/lib/db/seed.ts
 ./src/lib/db/server-db-actions.ts
+./src/lib/db/server-db-client.ts
 ./src/lib/db/server-db.ts
 ./src/lib/monitoring/performance.ts
 ./src/lib/services/projects-service.ts

@@ -1,4 +1,4 @@
-// src/components/hero.tsx
+// src/components/layout/hero.tsx
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
@@ -141,13 +141,18 @@ export default function Hero() {
     }
   }
 
-  // Βελτιωμένο loader για χειρισμό εξωτερικών URLs του Supabase
-  const imageLoader = useCallback(({ src }: { src: string }) => {
+  // ΔΙΟΡΘΩΣΗ: Ο imageLoader τώρα χρησιμοποιεί πραγματικά το width parameter
+  const imageLoader = useCallback(({ src, width }: { src: string; width: number }) => {
     // Αν είναι Supabase URL, επέστρεψέ το ως έχει
     if (isSupabaseUrl(src)) {
       return src
     }
-    // Αλλιώς χρησιμοποίησε το κανονικό path
+    // Αλλιώς, αν είναι σχετικό path, προσθέτουμε το width ως παράμετρο 
+    // για καλύτερη προσαρμογή (αν και δεν θα επηρεάσει την απόδοση στην τρέχουσα υλοποίηση)
+    if (src.startsWith('/')) {
+      return `${src}?w=${width}`
+    }
+    // Αλλιώς επέστρεψε το κανονικό path
     return src
   }, [])
 
@@ -193,17 +198,30 @@ export default function Hero() {
                       Image failed to load
                     </div>
                   )}
-                  <Image
-                    loader={imageLoader}
-                    src={profileImage}
-                    alt="Christos Kerigkas Profile Picture"
-                    fill
-                    sizes="(max-width: 768px) 96px, 128px"
-                    priority
-                    className="object-cover w-full h-full"
-                    onError={handleImageError}
-                    unoptimized={isSupabaseUrl(profileImage)} // Απενεργοποίηση του Next.js optimization για Supabase URLs
-                  />
+                  {/* ΔΙΟΡΘΩΣΗ: Χρησιμοποίησε unoptimized={true} για το Supabase URL και loader μόνο αν χρειάζεται */}
+                  {isSupabaseUrl(profileImage) ? (
+                    <Image
+                      src={profileImage}
+                      alt="Christos Kerigkas Profile Picture"
+                      fill
+                      sizes="(max-width: 768px) 96px, 128px"
+                      priority
+                      className="object-cover w-full h-full"
+                      onError={handleImageError}
+                      unoptimized={true}
+                    />
+                  ) : (
+                    <Image
+                      loader={imageLoader}
+                      src={profileImage}
+                      alt="Christos Kerigkas Profile Picture"
+                      fill
+                      sizes="(max-width: 768px) 96px, 128px"
+                      priority
+                      className="object-cover w-full h-full"
+                      onError={handleImageError}
+                    />
+                  )}
                 </div>
               )}
             </div>

@@ -44,7 +44,8 @@ export function EnhancedImage({
           duration-700 ease-in-out
           ${isLoading ? 'scale-110 blur-lg' : 'scale-100 blur-0'}
         `}
-        onLoadingComplete={() => setIsLoading(false)}
+        // ΔΙΟΡΘΩΣΗ: Αντικατάσταση του onLoadingComplete με onLoad
+        onLoad={() => setIsLoading(false)}
         // Next.js 15 new image cache options
         {...(process.env.NODE_ENV === 'production' ? {
           fetchPriority: priority ? 'high' : 'auto',

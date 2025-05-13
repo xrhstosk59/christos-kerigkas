@@ -6,10 +6,8 @@ import { motion } from 'framer-motion'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 
-// Δυναμική εισαγωγή του Experience component
-// Διόρθωση του μονοπατιού εισαγωγής
+// ΔΙΟΡΘΩΣΗ: Αφαίρεση της επιλογής ssr: true
 const ExperienceComponent = dynamic(() => import('./index'), {
-  ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -37,7 +35,7 @@ export function Experience() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
           }>
-            {/* Διόρθωση type casting για το theme prop */}
+            {/* Περνάμε μόνο τη τιμή string για ασφαλή σειριοποίηση */}
             <ExperienceComponent theme={theme === 'dark' ? 'dark' : 'light'} />
           </Suspense>
         </motion.div>

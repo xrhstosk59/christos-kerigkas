@@ -1,17 +1,14 @@
 'use client'
 
 // src/components/features/projects/projects.tsx
-// Διόρθωση μονοπατιού εισαγωγής
 import { useTheme } from '@/components/providers/theme-provider'
 import { motion } from 'framer-motion'
 import { Suspense } from 'react'
 import { cn } from '@/lib/utils/utils'
 import dynamic from 'next/dynamic'
 
-// Δυναμική εισαγωγή του Projects component
-// Διόρθωση μονοπατιού εισαγωγής
+// ΔΙΟΡΘΩΣΗ: Αφαίρεση της επιλογής ssr: true
 const ProjectsComponent = dynamic(() => import('./index'), {
-  ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -41,7 +38,7 @@ export function Projects() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
           }>
-            {/* Διόρθωση type casting για το theme prop */}
+            {/* Περνάμε μόνο τη τιμή string για ασφαλή σειριοποίηση */}
             <ProjectsComponent theme={theme === 'dark' ? 'dark' : 'light'} />
           </Suspense>
         </motion.div>

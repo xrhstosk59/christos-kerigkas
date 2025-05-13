@@ -1,5 +1,5 @@
 // src/lib/db/schema/common.ts
-import { timestamp, varchar, pgEnum } from 'drizzle-orm/pg-core';
+import { timestamp, varchar, pgEnum, index } from 'drizzle-orm/pg-core';
 
 // Κοινοί τύποι και enums για χρήση σε όλο το schema
 
@@ -43,3 +43,37 @@ export const timestampFields = {
 export const slugField = {
   slug: varchar('slug', { length: 255 }).notNull().unique()
 };
+
+// Τύπος για τα table objects του Drizzle για να αποφύγουμε το any
+type DrizzleTable = {
+  slug: { name: string };
+  createdAt?: { name: string };
+  updatedAt?: { name: string };
+};
+
+// Βοηθητική συνάρτηση για δημιουργία index στο slug
+export function createSlugIndex(table: DrizzleTable, tableName: string) {
+  return index(`${tableName}_slug_idx`).on(table.slug);
+}
+
+// Βοηθητική συνάρτηση για δημιουργία indexes σε timestamp πεδία
+export function createTimestampIndexes(table: DrizzleTable, tableName: string) {
+  if (!table.createdAt || !table.updatedAt) {
+    throw new Error(`Table ${tableName} doesn't have timestamp fields`);
+  }
+  
+  return {
+    createdAtIdx: index(`${tableName}_created_at_idx`).on(table.createdAt),
+    updatedAtIdx: index(`${tableName}_updated_at_idx`).on(table.updatedAt)
+  };
+}
+
+// Βοηθητική συνάρτηση για δημιουργία slug από string
+export function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Αφαίρεση ειδικών χαρακτήρων
+    .replace(/[\s_]+/g, '-')  // Αντικατάσταση κενών και underscores με παύλες
+    .replace(/^-+|-+$/g, ''); // Αφαίρεση παυλών από την αρχή και το τέλος
+}

@@ -5,9 +5,8 @@ import { useTheme } from '@/components/providers/theme-provider'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 
-// Δυναμική εισαγωγή του νέου Certifications component
+// ΔΙΟΡΘΩΣΗ: Αφαίρεση της επιλογής ssr: true
 const CertificationsComponent = dynamic(() => import('@/components/features/certifications/index'), {
-  ssr: true,
   loading: () => (
     <div className="flex justify-center items-center py-20">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -15,7 +14,7 @@ const CertificationsComponent = dynamic(() => import('@/components/features/cert
   )
 })
 
-export default function Certifications() {
+export function Certifications() {
   const { theme } = useTheme()
   
   return (
@@ -26,7 +25,8 @@ export default function Certifications() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
           </div>
         }>
-          <CertificationsComponent theme={theme} />
+          {/* Περνάμε μόνο τη τιμή string για ασφαλή σειριοποίηση */}
+          <CertificationsComponent theme={theme === 'dark' ? 'dark' : 'light'} />
         </Suspense>
       </div>
     </section>
