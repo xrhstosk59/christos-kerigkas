@@ -3,13 +3,13 @@ import BlogPostView from '@/components/client/blog/blog-post-view'
 import type { BlogPost } from '@/types/blog'
 import { getBlogPostBySlug } from '@/lib/api/blog'
 
+// Διορθωμένη τυπολογία props χωρίς Promise
 interface PageProps {
-  params: Promise<{ slug: string }>
+  params: { slug: string }
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const resolvedParams = await params;
-  const { slug } = resolvedParams;
+  const { slug } = params;
   
   try {
     // First try fetching from API

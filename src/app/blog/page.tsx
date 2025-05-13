@@ -3,18 +3,17 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 
-// Τύπος για τα props της σελίδας
+// Τύπος για τα props της σελίδας - Διορθωμένο χωρίς Promise
 interface BlogPageProps {
-  searchParams?: Promise<{
+  searchParams?: {
     category?: string;
     search?: string;
     page?: string;
-  }>;
+  };
 }
 
 // Τα props ακριβώς όπως ορίζονται στο blog.server.tsx
 interface BlogProps {
-  theme: 'light' | 'dark';
   searchParams?: {
     category?: string;
     search?: string;
@@ -55,9 +54,6 @@ export const metadata: Metadata = {
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
-  // Αναλύουμε τα searchParams από το Promise
-  const params = searchParams ? await searchParams : undefined;
-  
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-20">
       <Suspense fallback={
@@ -65,7 +61,8 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
       }>
-        <BlogComponent theme="light" searchParams={params} />
+        {/* Αφαιρούμε το στατικό theme="light" ώστε να λειτουργεί το dark mode */}
+        <BlogComponent searchParams={searchParams} />
       </Suspense>
     </main>
   )

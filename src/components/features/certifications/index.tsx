@@ -1,9 +1,24 @@
+'use client';
+
 // src/components/features/certifications/index.tsx
 import React, { useEffect, useState } from 'react';
 import { Certification } from '@/types/certifications';
-import { getCertifications } from '@/lib/db/repositories/certifications-repository';
 import CertificationCard from './certification-card';
 import CertificationDialog from './certification-dialog';
+
+// ΔΙΟΡΘΩΣΗ: Αντικατάσταση της απευθείας χρήσης του repository με fetch API
+// Αφαιρέθηκε: import { getCertifications } from '@/lib/db/repositories/certifications-repository';
+
+// Συνάρτηση για λήψη certifications μέσω API
+async function fetchCertifications(): Promise<Certification[]> {
+  const response = await fetch('/api/certifications');
+  
+  if (!response.ok) {
+    throw new Error(`Σφάλμα κατά τη φόρτωση των πιστοποιήσεων: ${response.status}`);
+  }
+  
+  return response.json();
+}
 
 interface CertificationsComponentProps {
   theme: 'dark' | 'light';
@@ -19,7 +34,8 @@ export default function CertificationsComponent({ theme }: CertificationsCompone
     const loadCertifications = async () => {
       try {
         setLoading(true);
-        const data = await getCertifications();
+        // ΔΙΟΡΘΩΣΗ: Χρήση του fetchCertifications αντί του getCertifications
+        const data = await fetchCertifications();
         setCertifications(data);
       } catch (err) {
         console.error('Error loading certifications:', err);

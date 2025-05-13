@@ -6,12 +6,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 import { motion } from 'framer-motion'
 
-interface BlogPaginationClientProps {
+export interface BlogPaginationClientProps {
   currentPage: number
   totalPages: number
   theme: 'light' | 'dark'
-  // Αφαιρούμε τα searchQuery και selectedCategory από το interface
-  // αφού ήδη τα παίρνουμε από το useSearchParams
 }
 
 /**

@@ -10,16 +10,19 @@ export enum ErrorType {
   UNKNOWN = 'UNKNOWN'       // Άγνωστα σφάλματα
 }
 
-// Δομή αναφοράς σφάλματος
+// Δομή αναφοράς σφάλματος - Διόρθωση των προαιρετικών ιδιοτήτων για exactOptionalPropertyTypes
 interface ErrorReport {
-  message: string
-  stack?: string
-  type: ErrorType
-  timestamp: string
-  url: string
-  userAgent: string
-  componentStack?: string
-  additionalData?: Record<string, unknown>
+  message: string;
+  // Το stack είναι πάντα string (αν είναι undefined, θα αποθηκεύσουμε κενό string)
+  stack: string;
+  type: ErrorType;
+  timestamp: string;
+  url: string;
+  userAgent: string;
+  // Στο componentStack θα αποθηκεύσουμε κενό string αν είναι undefined
+  componentStack: string;
+  // Στο additionalData θα αποθηκεύσουμε κενό αντικείμενο αν είναι undefined
+  additionalData: Record<string, unknown>;
 }
 
 /**
@@ -65,19 +68,23 @@ function determineErrorType(error: Error): ErrorType {
  * Κύρια συνάρτηση αναφοράς σφαλμάτων
  * Καταγράφει το σφάλμα και το αποστέλλει στην υπηρεσία αναφοράς σφαλμάτων
  */
-export function reportError(error: Error, errorInfo?: ErrorInfo, additionalData?: Record<string, unknown>): void {
+export function reportError(
+  error: Error, 
+  errorInfo?: ErrorInfo, 
+  additionalData?: Record<string, unknown>
+): void {
   const errorType = determineErrorType(error)
   
-  // Δημιουργία του report object
+  // Δημιουργία του report object με ασφαλή αρχικοποίηση των προαιρετικών πεδίων
   const report: ErrorReport = {
     message: error.message,
-    stack: error.stack,
+    stack: error.stack || '',  // Default σε κενό string αν είναι undefined
     type: errorType,
     timestamp: new Date().toISOString(),
     url: typeof window !== 'undefined' ? window.location.href : '',
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-    componentStack: errorInfo?.componentStack || undefined,
-    additionalData
+    componentStack: errorInfo?.componentStack || '', // Default σε κενό string
+    additionalData: additionalData || {} // Default σε κενό αντικείμενο
   }
   
   // Console log για development
@@ -93,7 +100,7 @@ export function reportError(error: Error, errorInfo?: ErrorInfo, additionalData?
   
   // Αποστολή του report στην υπηρεσία αναφοράς σφαλμάτων
   // Θα μπορούσαμε να χρησιμοποιήσουμε Sentry, LogRocket, κτλ
-  sendErrorToReportingService(report).catch(err => {
+  void sendErrorToReportingService(report).catch(err => {
     console.error('Failed to send error report:', err)
   })
 }
@@ -102,15 +109,16 @@ export function reportError(error: Error, errorInfo?: ErrorInfo, additionalData?
  * Αποστολή του σφάλματος σε external service
  * Προς το παρόν, απλά προσομοιώνουμε την αποστολή
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function sendErrorToReportingService(report: ErrorReport): Promise<void> {
+async function sendErrorToReportingService(_report: ErrorReport): Promise<void> {
+  // Προσθήκα underscore στην παράμετρο για να αποφευχθεί το warning για αχρησιμοποίητη μεταβλητή
+  
   // Σε παραγωγικό περιβάλλον, θα κάναμε κάτι σαν:
   // await fetch('/api/error-reporting', {
   //   method: 'POST',
   //   headers: {
   //     'Content-Type': 'application/json',
   //   },
-  //   body: JSON.stringify(report),
+  //   body: JSON.stringify(_report),
   // })
   
   // Για τώρα, απλά κάνουμε ένα fake delay

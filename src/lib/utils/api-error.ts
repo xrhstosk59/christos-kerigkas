@@ -4,7 +4,8 @@
 export class APIError extends Error {
   public status: number;
   public code: string;
-  public details?: Record<string, unknown>;
+  // Διόρθωση για exactOptionalPropertyTypes - Η ιδιότητα είναι πάντα ορισμένη
+  public details: Record<string, unknown>;
 
   constructor(
     message: string,
@@ -16,7 +17,8 @@ export class APIError extends Error {
     this.name = 'APIError';
     this.status = status;
     this.code = code;
-    this.details = details;
+    // Εάν το details είναι undefined, αρχικοποιούμε με κενό αντικείμενο
+    this.details = details || {};
   }
 
   static fromError(error: Error, defaultStatus: number = 500): APIError {
@@ -124,12 +126,14 @@ export class InternalServerError extends APIError {
   }
 }
 
+// Βελτιωμένος τύπος για ErrorResponse
 export type ErrorResponse = {
   error: {
     message: string;
     code: string;
     status: number;
-    details?: Record<string, unknown>;
+    // Διόρθωση για exactOptionalPropertyTypes: αν δεν υπάρχει, θα είναι κενό αντικείμενο
+    details: Record<string, unknown>;
   };
 };
 
@@ -144,7 +148,8 @@ export function createErrorResponse(error: unknown): ErrorResponse {
       message: apiError.message,
       code: apiError.code,
       status: apiError.status,
-      details: apiError.details,
+      // Διασφαλίζουμε ότι το details είναι πάντα ορισμένο
+      details: apiError.details || {},
     },
   };
 }

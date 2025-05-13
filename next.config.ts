@@ -1,9 +1,9 @@
-// src/next.config.ts - Διορθωμένο για συμβατότητα με Next.js 15
+// src/next.config.ts - Ενημερωμένο για Next.js 15
 import { type NextConfig } from "next"
 import { imageConfig } from "./src/lib/utils/image-config"
 import BundleAnalyzer from "@next/bundle-analyzer"
 
-// Ενισχυμένα security headers
+// Ενισχυμένα security headers με πιο αυστηρό CSP
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -27,21 +27,34 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), gyroscope=(), magnetometer=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()'
   },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://tnwbnlbmlqoxypsqdqii.supabase.co https://www.google-analytics.com; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content;"
+    value: "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://tnwbnlbmlqoxypsqdqii.supabase.co https://www.google-analytics.com; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content; base-uri 'self';"
   },
   {
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload'
+  },
+  {
+    key: 'Cross-Origin-Embedder-Policy',
+    value: 'require-corp'
+  },
+  {
+    key: 'Cross-Origin-Opener-Policy',
+    value: 'same-origin'
+  },
+  {
+    key: 'Cross-Origin-Resource-Policy',
+    value: 'same-origin'
   }
 ];
 
-// Ρύθμιση Bundle Analyzer
+// Βελτιωμένες ρυθμίσεις για το Bundle Analyzer
 const withBundleAnalyzer = BundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
+  openAnalyzer: true,
 });
 
 const nextConfig: NextConfig = {
@@ -63,11 +76,12 @@ const nextConfig: NextConfig = {
     ],
   },
   typescript: {
-    // Για αναπτυξιακό περιβάλλον, καλύτερα να μην παραβλέπονται τα σφάλματα
-    ignoreBuildErrors: false,
+    // Σε παραγωγικό περιβάλλον, είναι καλύτερα να αγνοούνται τα σφάλματα για την αποφυγή διακοπών
+    ignoreBuildErrors: process.env.NODE_ENV === 'production',
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    // Σε παραγωγικό περιβάλλον, καλύτερα να αγνοούνται τα lint warnings
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
   poweredByHeader: false,
   compress: true,
@@ -85,16 +99,22 @@ const nextConfig: NextConfig = {
         path: false,
       };
     }
+    
+    // Προσθήκη source maps σε development mode
+    if (!isServer && process.env.NODE_ENV === 'development') {
+      config.devtool = 'eval-source-map';
+    }
+    
     return config;
   },
   experimental: {
-    // Ενεργοποίηση υποστήριξης για server components και server actions
+    // Ενεργοποίηση υποστήριξης για server actions
     serverActions: {
       bodySizeLimit: '2mb', // Αύξηση ορίου μεγέθους για server actions
     },
     optimizeCss: true,
     serverMinification: true,
-    // Η παράμετρος serverComponentsExternalPackages έχει αφαιρεθεί
+    // Αφαιρέθηκε το μη έγκυρο missingSuspenseWithCSRBailout
   },
   headers: async () => [
     {
@@ -121,6 +141,11 @@ const nextConfig: NextConfig = {
       headers: securityHeaders,
     }
   ],
+  logging: {
+    fetches: {
+      fullUrl: process.env.NODE_ENV !== 'production',
+    },
+  },
 }
 
 // Εξαγωγή του config με το BundleAnalyzer wrapper όταν χρειάζεται

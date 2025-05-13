@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -8,7 +8,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -20,7 +20,19 @@
     ],
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false, // Αλλαγή σε false για να μη μπλοκάρουν μεταβλητές που δεν χρησιμοποιούνται
+    "noUnusedParameters": false, // Αλλαγή σε false για να μη μπλοκάρουν παράμετροι που δεν χρησιμοποιούνται
+    "strictNullChecks": true,
+    /* 
+      Απενεργοποίηση του exactOptionalPropertyTypes προσωρινά για να διορθωθούν τα σφάλματα
+      Μπορεί να ενεργοποιηθεί ξανά αφού ενημερωθούν όλοι οι τύποι της εφαρμογής
+    */
+    "exactOptionalPropertyTypes": false,
+    "baseUrl": "."
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

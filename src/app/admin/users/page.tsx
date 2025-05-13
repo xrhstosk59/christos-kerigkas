@@ -4,8 +4,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/components/providers/theme-provider'
 import { useAuth } from '@/components/client/providers/auth-provider'
-import { supabaseAuthManager } from '@/lib/auth/supabase-auth-client'
-import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { 
   Users, 
@@ -34,6 +32,9 @@ type AdminUser = {
   role: string
 }
 
+// Εισαγωγή server-action για ασφαλή διαχείριση χρηστών
+import { createUser, deleteUser, getAdminUsers } from '@/lib/auth/admin-actions'
+
 export default function AdminUsers() {
   const { theme } = useTheme()
   const { user, signOut } = useAuth()
@@ -55,35 +56,14 @@ export default function AdminUsers() {
       setLoading(true)
       setError(null)
       
-      // Έλεγχος αν το client είναι διαθέσιμο
-      if (!supabaseAuthManager.isClientAvailable()) {
-        throw new Error('Authentication service is not available')
+      // Καλούμε το server-action αντί να χρησιμοποιούμε απευθείας το Supabase Admin API
+      const result = await getAdminUsers();
+      
+      if ('error' in result) {
+        throw new Error(result.error);
       }
       
-      // Χρησιμοποιούμε τη λειτουργία του Supabase για ανάκτηση χρηστών
-      // Σημείωση: Αυτό απαιτεί Supabase service role key για να λειτουργήσει
-      const client = supabaseAuthManager.getClient()
-      const { data, error } = await client.auth.admin.listUsers()
-      
-      if (error) {
-        throw new Error(error.message)
-      }
-      
-      // Φιλτράρουμε μόνο τους χρήστες με ρόλο admin
-      // Χρησιμοποιούμε τη σωστή δομή για πρόσβαση στα metadata
-      const adminUsers = data.users.filter((supabaseUser: User) => {
-        const appRole = supabaseUser.app_metadata?.role;
-        const userRole = supabaseUser.user_metadata?.role;
-        return appRole === 'admin' || userRole === 'admin';
-      });
-      
-      // Μετατροπή των χρηστών Supabase σε AdminUser τύπο για εμφάνιση
-      setUsers(adminUsers.map((supabaseUser: User) => ({
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        created_at: supabaseUser.created_at,
-        role: (supabaseUser.app_metadata?.role || supabaseUser.user_metadata?.role || 'user') as string
-      })));
+      setUsers(result.users);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users')
       console.error('Error fetching users:', err)
@@ -106,23 +86,15 @@ export default function AdminUsers() {
     setCreateUserError(null)
     
     try {
-      // Έλεγχος αν το client είναι διαθέσιμο
-      if (!supabaseAuthManager.isClientAvailable()) {
-        throw new Error('Authentication service is not available')
-      }
-      
-      // Χρήση του Supabase Auth API για τη δημιουργία νέου χρήστη
-      const client = supabaseAuthManager.getClient()
-      const { error } = await client.auth.admin.createUser({
+      // Χρησιμοποιούμε το server action για ασφαλή δημιουργία χρήστη
+      const result = await createUser({
         email: newUserEmail,
         password: newUserPassword,
-        email_confirm: true, // Επιβεβαίωση του email αυτόματα
-        app_metadata: { role: 'admin' },
-        user_metadata: { role: 'admin' }
-      })
+        role: 'admin'
+      });
       
-      if (error) {
-        throw new Error(error.message)
+      if ('error' in result) {
+        throw new Error(result.error);
       }
       
       // Επιτυχής δημιουργία
@@ -145,17 +117,11 @@ export default function AdminUsers() {
     try {
       setLoading(true)
       
-      // Έλεγχος αν το client είναι διαθέσιμο
-      if (!supabaseAuthManager.isClientAvailable()) {
-        throw new Error('Authentication service is not available')
-      }
+      // Χρησιμοποιούμε το server action για ασφαλή διαγραφή χρήστη
+      const result = await deleteUser(userId);
       
-      // Χρήση του Supabase Auth API για τη διαγραφή χρήστη
-      const client = supabaseAuthManager.getClient()
-      const { error } = await client.auth.admin.deleteUser(userId)
-      
-      if (error) {
-        throw new Error(error.message)
+      if ('error' in result) {
+        throw new Error(result.error);
       }
       
       // Ανανέωση της λίστας χρηστών

@@ -15,9 +15,16 @@ type CookieOptions = Partial<CookieSerializeOptions>;
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
   
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {
@@ -46,20 +53,20 @@ export async function createServerSupabaseClient() {
  */
 export async function checkAuth() {
   const supabase = await createServerSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   
-  if (!session) {
+  if (sessionError || !session) {
     redirect('/admin/login');
   }
   
   // Έλεγχος δικαιωμάτων admin
-  const { data: userData } = await supabase
+  const { data: userData, error: userError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', session.user.id)
     .single();
   
-  if (!userData || userData.role !== 'admin') {
+  if (userError || !userData || userData.role !== 'admin') {
     redirect('/');
   }
 }
@@ -69,12 +76,20 @@ export async function checkAuth() {
  */
 export async function protectApiRoute(req: NextRequest): Promise<NextResponse | null> {
   // Δημιουργία Supabase client από cookies στο αίτημα
-  // Χρησιμοποιούμε το req.cookies αντί για cookie header
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.json(
+      { error: 'Server configuration error' },
+      { status: 500 }
+    );
+  }
   
   // Εναλλακτική δημιουργία cookies object
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {
@@ -82,11 +97,9 @@ export async function protectApiRoute(req: NextRequest): Promise<NextResponse | 
           return cookie?.value;
         },
         // Ορίζουμε dummy λειτουργίες που δεν χρησιμοποιούνται στο context του API
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         set(_name: string, _value: string, _options: CookieOptions) {
           // Not used in API routes
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         remove(_name: string) {
           // Not used in API routes
         },
@@ -140,6 +153,10 @@ export async function loginWithSupabase(email: string, password: string) {
       return { success: false, error: error.message };
     }
     
+    if (!data.user || !data.user.id) {
+      return { success: false, error: 'Authentication failed' };
+    }
+    
     // Έλεγχος ρόλου
     const { data: userData, error: userError } = await supabase
       .from('profiles')
@@ -182,6 +199,9 @@ export async function getCurrentSession(): Promise<UserSession> {
     return { user: null, isAuthenticated: false };
   }
   
+  // Ασφαλής έλεγχος για το email
+  const email = session.user.email || '';
+  
   // Έλεγχος ρόλου
   const { data: userData } = await supabase
     .from('profiles')
@@ -192,7 +212,7 @@ export async function getCurrentSession(): Promise<UserSession> {
   return {
     user: {
       id: session.user.id,
-      email: session.user.email!,
+      email: email,
       role: userData?.role || 'user',
     },
     isAuthenticated: true,

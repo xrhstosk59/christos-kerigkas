@@ -1,91 +1,134 @@
 // src/components/features/blog/blog.server.tsx
 import { Suspense } from 'react'
+import { cookies } from 'next/headers'
+import { Post } from '@/types/blog'
+import BlogList from './blog-list.client'
+import BlogSearch from './blog-search.client'
+import BlogCategories from './blog-categories.client'
+import BlogPagination from './blog-pagination.client'
 import { getBlogPosts } from '@/lib/api/blog'
-import { BlogListClient } from './blog-list.client'
-import { BlogCategoriesClient } from './blog-categories.client'
-import { cn } from '@/lib/utils/utils'
+import { ALL_CATEGORIES } from '@/domains/blog/utils/blog-constants'
 
-// Τύπος των props
-interface BlogProps {
-  theme: 'light' | 'dark'
+// Διορθωμένος τύπος props
+interface BlogServerProps {
   searchParams?: {
-    category?: string
-    search?: string
-    page?: string
-  }
+    category?: string;
+    search?: string;
+    page?: string;
+  };
 }
 
-// Ορίζουμε το πόσα posts θα εμφανίζονται ανά σελίδα
-const POSTS_PER_PAGE = 9;
+// Σταθερά για το πόσα posts θα εμφανίζονται ανά σελίδα
+const POSTS_PER_PAGE = 6
 
-/**
- * Server Component που φορτώνει τα δεδομένα του blog
- * Χρησιμοποιεί απευθείας το server action για ανάκτηση δεδομένων
- */
-async function BlogContent({ theme, searchParams }: BlogProps) {
-  // Παίρνουμε τις παραμέτρους αναζήτησης από τα props
-  const { category, search, page = '1' } = searchParams || {};
+// Κύριο component που θα χρησιμοποιείται στο page.tsx
+const BlogServer = async ({ searchParams }: BlogServerProps) => {
+  // ΔΙΟΡΘΩΣΗ: Χρήση await στο searchParams
+  const params = await Promise.resolve(searchParams || {});
   
-  // Μετατροπή του page σε αριθμό
-  const currentPage = parseInt(page, 10) || 1;
+  // Προετοιμασία παραμέτρων με τις τιμές από το awaited params
+  const currentPage = params.page ? parseInt(params.page) : 1
+  const selectedCategory = params.category || 'all'
+  const searchQuery = params.search || ''
   
-  // Φορτώνουμε τα posts από το server μέσω του lib/api/blog.ts
-  const { posts, categories, totalPosts } = await getBlogPosts({
-    category,
-    search,
-    page: currentPage,
-    postsPerPage: POSTS_PER_PAGE
-  });
+  // Ανάκτηση theme preference από cookies
+  const cookieStore = await cookies()
+  const themeCookie = cookieStore.get('theme')
+  const theme = themeCookie?.value === 'dark' ? 'dark' : 'light'
   
-  // Υπολογισμός του συνολικού αριθμού σελίδων
-  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+  // Λήψη των posts με τις σωστές παραμέτρους
+  const allPosts = await getBlogPosts({
+    category: selectedCategory !== 'all' ? selectedCategory : null,
+    search: searchQuery || null,
+    page: 1,
+    postsPerPage: 100  // Παίρνουμε αρκετά posts για client-side filtering
+  })
+  
+  // Φιλτράρισμα posts βάσει κατηγορίας (αν δεν έχει γίνει server-side)
+  const filteredByCategory = selectedCategory === 'all' 
+    ? allPosts 
+    : allPosts.filter((post: Post) => post.categories?.includes(selectedCategory))
+  
+  // Φιλτράρισμα posts βάσει αναζήτησης (αν δεν έχει γίνει server-side)
+  const filteredPosts = searchQuery 
+    ? filteredByCategory.filter((post: Post) => 
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        post.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : filteredByCategory
+  
+  // Υπολογισμός πλήθους σελίδων
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE)
+  
+  // Λήψη posts για την τρέχουσα σελίδα
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE
+  )
+  
+  // Κατηγορίες με πλήθος posts
+  const categories = ALL_CATEGORIES.map((category: string) => {
+    const count = allPosts.filter((post: Post) => post.categories?.includes(category)).length
+    return { name: category, count }
+  })
+  
+  // Προσθήκη της κατηγορίας "all" με το συνολικό πλήθος posts
+  categories.unshift({ name: 'all', count: allPosts.length })
   
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="py-8">
-        <h1 className={cn(
-          "text-3xl font-bold mb-8 text-center",
-          theme === 'dark' ? 'text-white' : 'text-gray-900'
-        )}>
-          Blog
-        </h1>
+    <div className="container mx-auto py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Blog</h1>
+        <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          Thoughts, tutorials, and insights about software development, crypto trading, and technology.
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1">
+          <div className="space-y-8 sticky top-24">
+            <Suspense fallback={<div className="h-10 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md"></div>}>
+              <BlogSearch 
+                initialQuery={searchQuery} 
+                theme={theme} 
+              />
+            </Suspense>
+            
+            <Suspense fallback={<div className="h-40 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md"></div>}>
+              <BlogCategories 
+                categories={categories} 
+                selectedCategory={selectedCategory} 
+                theme={theme}
+              />
+            </Suspense>
+          </div>
+        </div>
         
-        {/* Κατηγορίες - Client Component */}
-        <BlogCategoriesClient 
-          categories={categories} 
-          selectedCategory={category} 
-          theme={theme} 
-        />
-        
-        {/* Λίστα Posts - Client Component */}
-        <BlogListClient 
-          posts={posts} 
-          theme={theme}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          searchQuery={search}
-          selectedCategory={category}
-        />
+        <div className="lg:col-span-3">
+          <Suspense fallback={<div className="h-96 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md"></div>}>
+            <BlogList 
+              posts={paginatedPosts} 
+              theme={theme}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              searchQuery={searchQuery}
+              selectedCategory={selectedCategory}
+            />
+          </Suspense>
+          
+          {totalPages > 1 && (
+            <Suspense fallback={<div className="h-10 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md mt-8"></div>}>
+              <BlogPagination 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                theme={theme} 
+              />
+            </Suspense>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-/**
- * Blog component με Suspense wrapper
- * Εμφανίζει ένα loading spinner κατά τη φόρτωση
- */
-export function Blog({ theme, searchParams }: BlogProps) {
-  return (
-    <Suspense fallback={
-      <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    }>
-      <BlogContent theme={theme} searchParams={searchParams} />
-    </Suspense>
-  )
-}
-
-// Default export για συμβατότητα με τον υπάρχοντα κώδικα
-export default Blog;
+export default BlogServer

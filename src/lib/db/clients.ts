@@ -58,7 +58,9 @@ if (isNode) {
     } else {
       // Regular client για κανονικές λειτουργίες (σέβεται το RLS)
       regularPgClient = postgres(connectionString, regularPoolOptions);
-      regularDbClient = drizzle(regularPgClient, { schema });
+      if (regularPgClient) {
+        regularDbClient = drizzle(regularPgClient, { schema });
+      }
       
       // Admin client για διαχειριστικές λειτουργίες (παρακάμπτει το RLS)
       if (serviceRoleKey) {
@@ -73,7 +75,9 @@ if (isNode) {
           // όπως η χρήση του Supabase REST API με το service role key
         });
         
-        adminDbClient = drizzle(adminPgClient, { schema });
+        if (adminPgClient) {
+          adminDbClient = drizzle(adminPgClient, { schema });
+        }
       }
       
       connectionsActive = true;
@@ -118,28 +122,46 @@ function transformResult<T>(result: unknown): T[] {
 // Εξαγωγή του regular db client (με πλήρες σεβασμό στο RLS)
 export const db: DatabaseClient = regularDbClient ? {
   execute: <T>(query: unknown) => {
-    return regularDbClient!.execute(query as never)
+    if (!regularDbClient) {
+      return Promise.reject(new Error('Database client not initialized'));
+    }
+    return regularDbClient.execute(query as never)
       .then(result => transformResult<T>(result));
   },
   query: <T>(query: unknown) => {
-    return regularDbClient!.execute(query as never)
+    if (!regularDbClient) {
+      return Promise.reject(new Error('Database client not initialized'));
+    }
+    return regularDbClient.execute(query as never)
       .then(result => transformResult<T>(result));
   },
   select: <T>(args: unknown) => {
+    if (!regularDbClient) {
+      throw new Error('Database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return regularDbClient!.select(args as never) as unknown as T;
+    return regularDbClient.select(args as never) as unknown as T;
   },
   insert: <T>(args: unknown) => {
+    if (!regularDbClient) {
+      throw new Error('Database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return regularDbClient!.insert(args as never) as unknown as T;
+    return regularDbClient.insert(args as never) as unknown as T;
   },
   update: <T>(args: unknown) => {
+    if (!regularDbClient) {
+      throw new Error('Database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return regularDbClient!.update(args as never) as unknown as T;
+    return regularDbClient.update(args as never) as unknown as T;
   },
   delete: <T>(args: unknown) => {
+    if (!regularDbClient) {
+      throw new Error('Database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return regularDbClient!.delete(args as never) as unknown as T;
+    return regularDbClient.delete(args as never) as unknown as T;
   }
 } : {
   execute: notInitializedError,
@@ -153,28 +175,46 @@ export const db: DatabaseClient = regularDbClient ? {
 // Εξαγωγή του admin db client (παρακάμπτει το RLS)
 export const adminDb: DatabaseClient = adminDbClient ? {
   execute: <T>(query: unknown) => {
-    return adminDbClient!.execute(query as never)
+    if (!adminDbClient) {
+      return Promise.reject(new Error('Admin database client not initialized'));
+    }
+    return adminDbClient.execute(query as never)
       .then(result => transformResult<T>(result));
   },
   query: <T>(query: unknown) => {
-    return adminDbClient!.execute(query as never)
+    if (!adminDbClient) {
+      return Promise.reject(new Error('Admin database client not initialized'));
+    }
+    return adminDbClient.execute(query as never)
       .then(result => transformResult<T>(result));
   },
   select: <T>(args: unknown) => {
+    if (!adminDbClient) {
+      throw new Error('Admin database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return adminDbClient!.select(args as never) as unknown as T;
+    return adminDbClient.select(args as never) as unknown as T;
   },
   insert: <T>(args: unknown) => {
+    if (!adminDbClient) {
+      throw new Error('Admin database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return adminDbClient!.insert(args as never) as unknown as T;
+    return adminDbClient.insert(args as never) as unknown as T;
   },
   update: <T>(args: unknown) => {
+    if (!adminDbClient) {
+      throw new Error('Admin database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return adminDbClient!.update(args as never) as unknown as T;
+    return adminDbClient.update(args as never) as unknown as T;
   },
   delete: <T>(args: unknown) => {
+    if (!adminDbClient) {
+      throw new Error('Admin database client not initialized');
+    }
     // Αντί για spreading, περνάμε το args ως έχει
-    return adminDbClient!.delete(args as never) as unknown as T;
+    return adminDbClient.delete(args as never) as unknown as T;
   }
 } : {
   execute: notInitializedError,

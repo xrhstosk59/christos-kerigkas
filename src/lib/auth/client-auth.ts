@@ -138,7 +138,7 @@ export async function getClientSession(): Promise<UserSession> {
     return {
       user: {
         id: data.session.user.id,
-        email: data.session.user.email!,
+        email: data.session.user.email || '', // Διορθώθηκε το non-null assertion
         role: 'admin', // Απλοποιημένο - θα πρέπει να έρχεται από τη βάση
       },
       isAuthenticated: true,

@@ -11,8 +11,22 @@ export const size = {
 export const contentType = 'image/png';
 export const alt = 'Blog Post';
 
+// Διορθωμένο για χειρισμό relative URLs στο server environment
 export default async function Image({ params }: { params: { slug: string } }) {
   const post = await getBlogPostBySlug(params.slug);
+  
+  // Βοηθητική συνάρτηση για απόλυτα URLs (χρειάζεται στην edge runtime)
+  const getAbsoluteUrl = (path: string) => {
+    // Αφαιρούμε τυχόν προηγούμενες absolute URLs 
+    const relativePath = path.startsWith('http') ? 
+      new URL(path).pathname : 
+      path.startsWith('/') ? path : `/${path}`;
+    
+    // Χρησιμοποιούμε το process.env.NEXT_PUBLIC_SITE_URL αν είναι διαθέσιμο
+    // ή fallback σε ένα σχετικό URL που θα διαχειριστεί το Next.js
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    return `${baseUrl}${relativePath}`;
+  };
   
   if (!post) {
     return new ImageResponse(
@@ -51,9 +65,9 @@ export default async function Image({ params }: { params: { slug: string } }) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-          {/* Το img element χρησιμοποιείται εδώ μέσα στο ImageResponse */}
+          {/* Διορθωμένο για χρήση σχετικών URLs αντί για απόλυτα */}
           <img
-            src={`${siteConfig.url}/profile.jpg`}
+            src={getAbsoluteUrl('/profile.jpg')}
             width={60}
             height={60}
             style={{ borderRadius: 30 }}

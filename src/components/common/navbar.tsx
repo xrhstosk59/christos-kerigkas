@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useTransition } from 'react'
 import { Menu, X } from 'lucide-react'
 import { useTheme } from '@/components/providers/theme-provider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/utils'
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 
 const navigation = [
   { name: 'About', href: '#about', ariaLabel: 'Learn about Christos Kerigkas' },
@@ -21,6 +22,9 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { theme } = useTheme()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [, startTransition] = useTransition()
 
   // Χρήση του useCallback για τη βελτιστοποίηση των event handlers
   const handleScroll = useCallback(() => {
@@ -44,32 +48,37 @@ export default function Navbar() {
     }
   }, [handleScroll])
 
-  // Χρήση useCallback για την αποφυγή περιττών re-renders
-  const handleLinkClick = useCallback(() => {
+  // Βελτιωμένο link click handler με Next.js Router API
+  const handleLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     setMobileMenuOpen(false)
-  }, [])
-
-  // Χρήση useCallback για το smooth scroll
-  const handleAnchorClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    // Μόνο για hash links (#)
+    
+    // Χειρισμός hash links
     if (href.startsWith('#')) {
       e.preventDefault()
-      const targetId = href.slice(1)
-      const targetElement = document.getElementById(targetId)
       
-      if (targetElement) {
-        targetElement.scrollIntoView({
-          behavior: 'smooth'
+      // Εάν είμαστε στην αρχική σελίδα
+      if (pathname === '/') {
+        const targetId = href.slice(1)
+        const targetElement = document.getElementById(targetId)
+        
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth'
+          })
+          
+          // Ενημέρωση URL με startTransition για React 19
+          startTransition(() => {
+            window.history.pushState({}, '', href)
+          })
+        }
+      } else {
+        // Εάν είμαστε σε άλλη σελίδα, επιστροφή στην αρχική και μετά στο anchor
+        startTransition(() => {
+          router.push(`/${href}`)
         })
-        
-        // Ενημέρωση URL χωρίς refresh της σελίδας
-        window.history.pushState({}, '', href)
-        
-        // Κλείσιμο του mobile menu
-        setMobileMenuOpen(false)
       }
     }
-  }, [])
+  }, [pathname, router])
 
   const headerClasses = cn(
     'fixed w-full z-50 transition-all duration-200 backdrop-blur-md',
@@ -78,17 +87,17 @@ export default function Navbar() {
   )
 
   const linkClasses = cn(
-    'text-sm font-semibold transition-colors duration-200',
+    'text-sm font-semibold transition-colors duration-200 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
     theme === 'dark' 
-      ? 'text-gray-400 hover:text-white focus:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900' 
-      : 'text-gray-600 hover:text-gray-900 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:ring-offset-white'
+      ? 'text-gray-400 hover:text-white focus-visible:text-white focus-visible:ring-white focus-visible:ring-offset-gray-900' 
+      : 'text-gray-600 hover:text-gray-900 focus-visible:text-gray-900 focus-visible:ring-gray-900 focus-visible:ring-offset-white'
   )
 
   const mobileMenuClasses = cn(
-    'block rounded-lg px-3 py-2 text-base font-semibold transition-colors duration-200',
+    'block rounded-lg px-3 py-2 text-base font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2',
     theme === 'dark'
-      ? 'text-gray-400 hover:bg-gray-800 hover:text-white focus:bg-gray-800 focus:text-white focus:outline-none'
-      : 'text-gray-900 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none'
+      ? 'text-gray-400 hover:bg-gray-800 hover:text-white focus-visible:bg-gray-800 focus-visible:text-white focus-visible:ring-white'
+      : 'text-gray-900 hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:ring-gray-900'
   )
 
   return (
@@ -96,15 +105,15 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 sm:p-6 lg:px-8" aria-label="Main navigation">
         <div className="flex lg:flex-1">
           <Link 
-            href="#" 
+            href="/" 
             className={cn(
-              'text-lg font-bold sm:text-xl transition-colors duration-200',
+              'text-lg font-bold sm:text-xl transition-colors duration-200 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
               theme === 'dark' 
-                ? 'text-white hover:text-gray-300 focus:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900' 
-                : 'text-gray-900 hover:text-gray-600 focus:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:ring-offset-white'
+                ? 'text-white hover:text-gray-300 focus-visible:text-gray-300 focus-visible:ring-white focus-visible:ring-offset-gray-900' 
+                : 'text-gray-900 hover:text-gray-600 focus-visible:text-gray-600 focus-visible:ring-gray-900 focus-visible:ring-offset-white'
             )}
-            onClick={(e) => handleAnchorClick(e, '#')}
-            aria-label="Go to top of page"
+            onClick={(e) => pathname === '/' && handleLinkClick(e, '#')}
+            aria-label="Go to home page"
           >
             CK
           </Link>
@@ -114,10 +123,10 @@ export default function Navbar() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className={cn(
-              'rounded-md p-2 transition-colors duration-200',
+              'rounded-md p-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2',
               theme === 'dark' 
-                ? 'text-gray-400 hover:text-white focus:text-white focus:outline-none focus:ring-2 focus:ring-white' 
-                : 'text-gray-700 hover:text-gray-900 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900'
+                ? 'text-gray-400 hover:text-white focus-visible:text-white focus-visible:ring-white' 
+                : 'text-gray-700 hover:text-gray-900 focus-visible:text-gray-900 focus-visible:ring-gray-900'
             )}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"
@@ -133,7 +142,7 @@ export default function Navbar() {
               key={item.name}
               href={item.href}
               className={linkClasses}
-              onClick={(e) => handleAnchorClick(e, item.href)}
+              onClick={(e) => handleLinkClick(e, item.href)}
               aria-label={item.ariaLabel}
             >
               {item.name}
@@ -159,10 +168,7 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={(e) => {
-                    handleAnchorClick(e, item.href)
-                    handleLinkClick()
-                  }}
+                  onClick={(e) => handleLinkClick(e, item.href)}
                   className={mobileMenuClasses}
                   aria-label={item.ariaLabel}
                 >

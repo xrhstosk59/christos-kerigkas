@@ -15,15 +15,15 @@ export type ProjectStatus = 'In Development' | 'Active' | 'Completed' | 'Mainten
 
 export interface TechStack {
   name: string;
-  icon?: string;
-  url?: string;
+  icon?: string | null; // Προσθήκη null για exactOptionalPropertyTypes
+  url?: string | null; // Προσθήκη null για exactOptionalPropertyTypes
 }
 
 export interface ProjectImage {
   src: string;
   alt: string;
-  width?: number;
-  height?: number;
+  width?: number | null; // Προσθήκη null για exactOptionalPropertyTypes
+  height?: number | null; // Προσθήκη null για exactOptionalPropertyTypes
 }
 
 export interface Project {
@@ -33,10 +33,11 @@ export interface Project {
   categories: ProjectCategory[];
   tech: string[];
   github: string;
-  demo?: string;
+  demo?: string | null; // Προσθήκη null για exactOptionalPropertyTypes
   image: string;
-  featured?: boolean;
-  status?: ProjectStatus;
+  featured?: boolean | null; // Προσθήκη null για exactOptionalPropertyTypes
+  status?: ProjectStatus | null; // Προσθήκη null για exactOptionalPropertyTypes
+  id?: number | null; // Συχνά χρειάζεται το id
 }
 
 export interface CryptoProject {
@@ -48,4 +49,13 @@ export interface CryptoProject {
   tech: string[];
   github: string;
   status: ProjectStatus;
+}
+
+// Ενημερωμένος τύπος για τις παραμέτρους αναζήτησης
+export interface ProjectsSearchParams {
+  sortBy: "title" | "order";
+  sortOrder: "desc" | "asc";
+  featured: boolean | null; // Προσθήκη null για exactOptionalPropertyTypes
+  category: string | null; // Προσθήκη null για exactOptionalPropertyTypes
+  limit: number | null; // Προσθήκη null για exactOptionalPropertyTypes
 }

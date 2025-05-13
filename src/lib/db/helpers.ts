@@ -1,22 +1,16 @@
-'use server';
-
 // src/lib/db/helpers.ts
-import { getDbClient, getAdminDbClient } from './server-db';
+
+import { getRegularDatabase } from './database-service';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from './schema';
 
 /**
- * Βοηθητική συνάρτηση που διασφαλίζει την ύπαρξη σύνδεσης με τη βάση δεδομένων.
- * 
- * @returns Το database client
+ * Συνάρτηση που διασφαλίζει τη σύνδεση με τη βάση δεδομένων.
+ * Χρησιμοποιείται από τα repositories.
  */
-export async function ensureDatabaseConnection() {
-  return getDbClient();
+export async function ensureDatabaseConnection(): Promise<PostgresJsDatabase<typeof schema>> {
+  return await getRegularDatabase();
 }
 
-/**
- * Βοηθητική συνάρτηση που διασφαλίζει την ύπαρξη admin σύνδεσης με τη βάση δεδομένων.
- * 
- * @returns Το admin database client
- */
-export async function ensureAdminDatabaseConnection() {
-  return getAdminDbClient();
-}
+// Εξαγωγή του sql tag για διευκόλυνση
+export { sql } from 'drizzle-orm';

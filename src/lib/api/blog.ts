@@ -1,32 +1,72 @@
-// /src/lib/blog.ts
+// /src/lib/api/blog.ts
 import { Post, BlogQueryParams, BlogResponse } from '@/types/blog'
 
 /**
  * Fetches blog posts with optional filtering and pagination
  */
-export async function getBlogPosts({
-  category,
-  search,
-  page = 1,
-  postsPerPage = 9
-}: BlogQueryParams): Promise<BlogResponse> {
+export async function getBlogPosts(params?: Partial<BlogQueryParams>): Promise<Post[]> {
   try {
     // Build the URL with query parameters
-    const params = new URLSearchParams()
+    const searchParams = new URLSearchParams()
     
-    if (category && category !== 'all') {
-      params.set('category', category)
+    if (params?.category && params.category !== 'all') {
+      searchParams.set('category', params.category)
     }
     
-    if (search) {
-      params.set('search', search)
+    if (params?.search) {
+      searchParams.set('search', params.search)
     }
     
-    params.set('page', page.toString())
-    params.set('limit', postsPerPage.toString())
+    if (params?.page) {
+      searchParams.set('page', params.page.toString())
+    }
+    
+    if (params?.postsPerPage) {
+      searchParams.set('limit', params.postsPerPage.toString())
+    }
     
     // Fetch from the API
-    const response = await fetch(`/api/blog/search?${params.toString()}`)
+    const response = await fetch(`/api/blog/search?${searchParams.toString()}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch blog posts: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    
+    // Return posts array directly
+    return data.posts || []
+  } catch (error) {
+    console.error('Error fetching blog posts:', error)
+    // Return empty array in case of error
+    return []
+  }
+}
+
+/**
+ * Επιστρέφει blog posts με πλήρη απόκριση (posts, categories, pagination)
+ */
+export async function getBlogPostsWithMeta(params?: Partial<BlogQueryParams>): Promise<BlogResponse> {
+  try {
+    // Build the URL with query parameters
+    const searchParams = new URLSearchParams()
+    
+    if (params?.category && params.category !== 'all') {
+      searchParams.set('category', params.category)
+    }
+    
+    if (params?.search) {
+      searchParams.set('search', params.search)
+    }
+    
+    const page = params?.page || 1
+    searchParams.set('page', page.toString())
+    
+    const postsPerPage = params?.postsPerPage || 9
+    searchParams.set('limit', postsPerPage.toString())
+    
+    // Fetch from the API
+    const response = await fetch(`/api/blog/search?${searchParams.toString()}`)
     
     if (!response.ok) {
       throw new Error(`Failed to fetch blog posts: ${response.statusText}`)
@@ -46,7 +86,7 @@ export async function getBlogPosts({
         postsPerPage,
         hasNextPage: page < Math.ceil(data.totalPosts / postsPerPage),
         hasPrevPage: page > 1
-      } : undefined
+      } : null
     }
   } catch (error) {
     console.error('Error fetching blog posts:', error)
@@ -55,7 +95,8 @@ export async function getBlogPosts({
     return {
       posts: [],
       categories: [],
-      totalPosts: 0
+      totalPosts: 0,
+      pagination: null
     }
   }
 }

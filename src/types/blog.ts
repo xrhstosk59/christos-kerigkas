@@ -1,4 +1,4 @@
-// /src/types/blog.ts
+// src/types/blog.ts
 
 export interface Post {
   id: number | string;
@@ -30,17 +30,25 @@ export interface BlogResponse {
   posts: Post[];
   categories: string[];
   totalPosts: number;
-  pagination?: BlogPagination;
+  pagination: BlogPagination | null;
 }
 
 export interface BlogQueryParams {
-  category?: string;
-  search?: string;
-  page?: number;
-  postsPerPage?: number;
+  category: string | null;
+  search: string | null;
+  page: number;
+  postsPerPage: number;
 }
 
-// Προσθήκη του τύπου BlogPost που λείπει
+export interface BlogSearchParams {
+  page: number;
+  limit: number;
+  sortBy: "title" | "date";
+  sortOrder: "desc" | "asc";
+  category: string | null;
+  query: string | null;
+}
+
 export interface BlogPost {
   id?: number | string;
   title: string;
@@ -51,10 +59,10 @@ export interface BlogPost {
   image: string;
   author?: {
     name: string;
-    image?: string;
-  };
-  categories?: string[];
-  featured?: boolean;
+    image?: string | null;
+  } | null;
+  categories?: string[] | null;
+  featured?: boolean | null;
 }
 
 /**
@@ -62,7 +70,7 @@ export interface BlogPost {
  */
 export function blogPostToPost(blogPost: BlogPost): Post {
   return {
-    id: blogPost.id || blogPost.slug, // Αν δεν υπάρχει id, χρησιμοποιούμε το slug
+    id: blogPost.id || blogPost.slug,
     slug: blogPost.slug,
     title: blogPost.title,
     description: blogPost.description,

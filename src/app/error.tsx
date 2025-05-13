@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { reportError } from '@/_errors/boundaries/reporting'  // Διόρθωση: αλλαγή από '@/_errors/reporting'
+// Διορθωμένο import path
+import { reportError } from '@/_errors/boundaries/reporting'
 
 export default function Error({
   error,

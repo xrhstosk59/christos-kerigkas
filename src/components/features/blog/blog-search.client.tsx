@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 
-interface BlogSearchClientProps {
+export interface BlogSearchClientProps {
   theme: 'light' | 'dark'
   initialQuery?: string
 }

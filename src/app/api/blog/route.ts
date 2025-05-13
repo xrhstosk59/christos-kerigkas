@@ -42,7 +42,6 @@ const searchParamsSchema = z.object({
  */
 export const GET = createApiHandler(
   searchParamsSchema,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async (req, validData, _context) => {
     try {
       logger.info(`Αναζήτηση blog posts`, validData, 'api-blog-GET');
@@ -98,7 +97,6 @@ export const GET = createApiHandler(
  */
 export const POST = createApiHandler(
   postSchema,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async (req, validData, _context) => {
     try {
       // Λήψη του τρέχοντος χρήστη

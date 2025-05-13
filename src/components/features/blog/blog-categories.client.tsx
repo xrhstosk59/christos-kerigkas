@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/utils'
 
-interface BlogCategoriesClientProps {
-  categories: string[]
-  selectedCategory?: string
+export interface BlogCategoriesClientProps {
+  categories: { name: string; count: number }[]
+  selectedCategory: string
   theme: 'light' | 'dark'
 }
 
@@ -33,7 +33,7 @@ export function BlogCategoriesClient({
     
     // Αν επιλέχθηκε κατηγορία, την προσθέτουμε στις παραμέτρους
     // Αν επιλέχθηκε "All" (null), αφαιρούμε την παράμετρο category
-    if (category) {
+    if (category && category !== 'all') {
       params.set('category', category)
     } else {
       params.delete('category')
@@ -46,31 +46,13 @@ export function BlogCategoriesClient({
   return (
     <div className="mb-8">
       <div className="flex flex-wrap gap-2 justify-center">
-        <motion.button
-          onClick={() => handleCategorySelect(null)}
-          className={cn(
-            "px-4 py-2 rounded-full text-sm font-medium transition-colors",
-            !selectedCategory
-              ? theme === 'dark'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-indigo-600 text-white'
-              : theme === 'dark'
-                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-          )}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Όλα
-        </motion.button>
-        
         {categories.map((category) => (
           <motion.button
-            key={category}
-            onClick={() => handleCategorySelect(category)}
+            key={category.name}
+            onClick={() => handleCategorySelect(category.name === 'all' ? null : category.name)}
             className={cn(
               "px-4 py-2 rounded-full text-sm font-medium transition-colors",
-              selectedCategory === category
+              selectedCategory === category.name
                 ? theme === 'dark'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-indigo-600 text-white'
@@ -81,7 +63,8 @@ export function BlogCategoriesClient({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            {category}
+            {category.name === 'all' ? 'Όλα' : category.name} 
+            <span className="ml-1 text-xs">({category.count})</span>
           </motion.button>
         ))}
       </div>
