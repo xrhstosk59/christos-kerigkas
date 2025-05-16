@@ -3,12 +3,12 @@
 'use server';
 
 import { projectsRepository } from '../db/repositories/projects-repository';
-import { certificationsRepository } from '../db/repositories/certifications-repository';
+import { getCertifications } from '../db/repositories/certifications-repository';
 import { CVData, Experience, Education, Skill } from '@/types/cv';
 import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
-import { Certification, CertificationType } from '@/types/certifications';
+import { Certification } from '@/types/certifications';
 import { studentProjects } from './mock-projects';
-import { Certification as DbCertification, Project as DbProject } from '../db/schema';
+import { Project as DbProject } from '../db/schema';
 
 // Δημιουργούμε ένα fallback array για όταν δεν υπάρχουν πιστοποιητικά
 const fallbackCertifications: Certification[] = [
@@ -185,7 +185,7 @@ export async function getMockCVData(): Promise<CVData> {
     experience: mockExperience,
     education: mockEducation,
     skills: mockSkills,
-    certifications: fallbackCertifications, // Χρησιμοποιούμε το fallback αντί για studentCertifications
+    certifications: fallbackCertifications,
     projects: studentProjects,
     languages: [
       { language: "Greek", proficiency: "Native" },
@@ -201,25 +201,6 @@ export async function getMockCVData(): Promise<CVData> {
   };
 }
 
-// Μετατροπή των πιστοποιητικών από το σχήμα της βάσης δεδομένων στον τύπο Certification
-function mapCertificationsFromDb(certifications: DbCertification[]): Certification[] {
-  return certifications.map(cert => ({
-    id: cert.id,
-    title: cert.title,
-    issuer: cert.issuer,
-    issueDate: cert.issueDate instanceof Date ? cert.issueDate.toISOString() : String(cert.issueDate),
-    expirationDate: cert.expirationDate === null ? undefined : 
-      (cert.expirationDate instanceof Date ? cert.expirationDate.toISOString() : String(cert.expirationDate)),
-    credentialId: cert.credentialId === null ? undefined : cert.credentialId,
-    credentialUrl: cert.credentialUrl === null ? undefined : cert.credentialUrl,
-    description: cert.description === null ? undefined : cert.description,
-    skills: cert.skills === null ? undefined : cert.skills,
-    type: cert.type as CertificationType,
-    filename: cert.filename,
-    featured: cert.featured === null ? false : cert.featured // Διασφαλίζουμε ότι το featured είναι πάντα boolean
-  }));
-}
-
 // Μετατροπή των projects από το σχήμα της βάσης δεδομένων στον τύπο Project
 function mapProjectsFromDb(projects: DbProject[]): Project[] {
   return projects.map(project => ({
@@ -231,7 +212,7 @@ function mapProjectsFromDb(projects: DbProject[]): Project[] {
     github: project.github,
     demo: project.demo === null ? undefined : project.demo,
     image: project.image,
-    featured: project.featured === null ? false : project.featured, // Διασφαλίζουμε ότι το featured είναι πάντα boolean
+    featured: project.featured === null ? false : Boolean(project.featured),
     status: 'Active' as ProjectStatus
   }));
 }
@@ -241,7 +222,8 @@ export async function getCVData(): Promise<CVData> {
   try {
     // Try to get data from the database
     const projectsFromDb = await projectsRepository.findAll();
-    const certificationsFromDb = await certificationsRepository.findAll();
+    // Χρησιμοποιούμε την έτοιμη συνάρτηση getCertifications() που ήδη κάνει τη σωστή μετατροπή
+    const certificationsFromDb = await getCertifications();
     
     // Καταγραφή των αποτελεσμάτων για αποσφαλμάτωση
     console.log(`[getCVData] Found ${certificationsFromDb.length} certifications in database`);
@@ -252,10 +234,10 @@ export async function getCVData(): Promise<CVData> {
     const hasCertificationsInDb = certificationsFromDb.length > 0;
     
     if (hasProjectsInDb || hasCertificationsInDb) {
-      // Convert certifications coming from the database
+      // Χρησιμοποιούμε απευθείας τα μετατραπέντα δεδομένα από τη getCertifications()
       const certifications = hasCertificationsInDb 
-        ? mapCertificationsFromDb(certificationsFromDb)
-        : fallbackCertifications; // Χρησιμοποιούμε το fallback αντί για studentCertifications
+        ? certificationsFromDb
+        : fallbackCertifications;
       
       // Convert projects coming from the database
       const projects = hasProjectsInDb
