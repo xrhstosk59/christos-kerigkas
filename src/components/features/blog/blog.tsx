@@ -38,7 +38,6 @@ export default function Blog({ searchParams }: BlogProps) {
       }>
         {/* Φορτώνουμε το BlogServer που περιέχει το server component */}
         <BlogServer 
-          theme={theme} 
           searchParams={searchParams} 
         />
       </Suspense>

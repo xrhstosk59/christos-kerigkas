@@ -22,11 +22,14 @@ interface Certification {
 // Φόρτωση περιβαλλοντικών μεταβλητών
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Δημιουργία client Supabase
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  supabaseUrl || '', 
+  supabaseKey || ''
+);
 
 // Δεδομένα πιστοποιήσεων από το src/content/certifications.ts
 const certifications: Certification[] = [

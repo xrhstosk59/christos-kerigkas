@@ -118,14 +118,17 @@ export async function PUT(
       return apiResponse.notFound('Το project δεν βρέθηκε');
     }
     
+    // Μετατροπή των ημερομηνιών σε string μόνο αν υπάρχουν
+    const formattedProject = {
+      ...updatedProject,
+      createdAt: updatedProject.createdAt ? updatedProject.createdAt.toISOString() : undefined,
+      updatedAt: updatedProject.updatedAt ? updatedProject.updatedAt.toISOString() : undefined,
+    };
+    
     return apiResponse.success(
       { 
         message: 'Το project ενημερώθηκε επιτυχώς', 
-        project: {
-          ...updatedProject,
-          createdAt: updatedProject.createdAt.toISOString(),
-          updatedAt: updatedProject.updatedAt.toISOString(),
-        }
+        project: formattedProject
       },
       undefined,
       200

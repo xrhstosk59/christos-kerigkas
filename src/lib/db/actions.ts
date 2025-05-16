@@ -1,11 +1,12 @@
 'use server';
 
-import { getDbClient, getAdminDbClient, sql } from './server-db';
-import { eq, and, desc, or, like } from 'drizzle-orm';
-import { blogPosts } from './schema/blog';
-import { BlogPost } from '@/types/blog';
+// src/lib/db/actions.ts
+import { getDb, getAdminDb, sql, DbConnectionType, transaction } from './database';
+import { and, desc, eq, exists, ilike, or } from 'drizzle-orm';
+import { blogPosts, blogCategories, blogPostsToCategories, SelectBlogPost, BlogPost } from './schema/blog';
+import { mapDbPostToBlogPost } from './utils/mappers';
 
-// Μορφή απόκρισης που αναμένει το υπάρχον useBlog hook
+// Τύποι για την απόκριση του API
 export interface PaginationInfo {
   totalPosts: number;
   totalPages: number;
@@ -20,52 +21,93 @@ export interface BlogResponse {
   pagination: PaginationInfo;
 }
 
-// Διεπαφή για το αποτέλεσμα μέτρησης
-interface CountResult {
-  count: string | number;
-}
-
-// Ανάκτηση blog posts με pagination
-export async function getBlogPosts(page = 1, postsPerPage = 10, category?: string): Promise<BlogResponse> {
-  const db = await getDbClient(); // Προσθέτουμε await
+// Ανάκτηση blog posts με pagination και βελτιστοποιημένα queries
+export async function getBlogPosts(
+  page = 1, 
+  postsPerPage = 10, 
+  category?: string
+): Promise<BlogResponse> {
+  const db = getDb();
   const offset = (page - 1) * postsPerPage;
   
   try {
-    // Δημιουργία συνθηκών αναζήτησης
-    const conditions = [];
-    
-    // Προσθήκη φίλτρου κατηγορίας αν δεν είναι 'all'
-    if (category && category !== 'all') {
-      conditions.push(eq(blogPosts.category, category));
-    }
-    
-    // Συνδυασμός συνθηκών
-    const whereCondition = conditions.length > 0 
-      ? and(...conditions) 
-      : undefined;
-    
-    // Εκτέλεση του query με pagination
-    const posts = await db.select()
+    // Δημιουργία βασικού query - χρησιμοποιούμε συγκεκριμένους τύπους
+    const baseQuery = db
+      .select({
+        post: blogPosts,
+        categories: sql<string[]>`array_agg(distinct ${blogCategories.name})`
+      })
       .from(blogPosts)
-      .where(whereCondition)
-      .orderBy(desc(blogPosts.createdAt))
-      .limit(postsPerPage)
-      .offset(offset);
-    
-    // Μέτρηση συνολικών αποτελεσμάτων για pagination
-    const countResult = await db.execute(
-      sql`SELECT COUNT(*) as count FROM blog_posts ${whereCondition ? sql`WHERE ${whereCondition}` : sql``}`
+      .leftJoin(
+        blogPostsToCategories, 
+        eq(blogPostsToCategories.postId, blogPosts.id)
+      )
+      .leftJoin(
+        blogCategories, 
+        eq(blogCategories.id, blogPostsToCategories.categoryId)
+      );
+
+    // Εφαρμογή φίλτρου με διαφορετική προσέγγιση (χωρίς τροποποίηση μεταβλητής)
+    const postsResults = await (category && category !== 'all'
+      ? baseQuery
+          .where(
+            exists(
+              db.select({ value: sql<number>`1` })
+                .from(blogPostsToCategories)
+                .innerJoin(
+                  blogCategories, 
+                  eq(blogCategories.id, blogPostsToCategories.categoryId)
+                )
+                .where(
+                  and(
+                    eq(blogPostsToCategories.postId, blogPosts.id),
+                    eq(blogCategories.slug, category)
+                  )
+                )
+            )
+          )
+          .groupBy(blogPosts.id)
+          .orderBy(desc(blogPosts.date))
+          .limit(postsPerPage)
+          .offset(offset)
+      : baseQuery
+          .groupBy(blogPosts.id)
+          .orderBy(desc(blogPosts.date))
+          .limit(postsPerPage)
+          .offset(offset)
     );
     
-    // Χρήση του as unknown για να μετατρέψουμε σωστά τους τύπους
-    const countValue = (countResult[0] as unknown as CountResult)?.count;
-    const totalPosts = Number(countValue || 0);
-    const totalPages = Math.ceil(totalPosts / postsPerPage);
+    // Ανάκτηση συνολικών αποτελεσμάτων για pagination - με διαφορετική δομή query
+    const countResult = await (category && category !== 'all' 
+      ? db
+          .select({ count: sql<number>`count(distinct ${blogPosts.id})` })
+          .from(blogPosts)
+          .leftJoin(
+            blogPostsToCategories, 
+            eq(blogPostsToCategories.postId, blogPosts.id)
+          )
+          .leftJoin(
+            blogCategories, 
+            eq(blogCategories.id, blogPostsToCategories.categoryId)
+          )
+          .where(eq(blogCategories.slug, category))
+      : db
+          .select({ count: sql<number>`count(distinct ${blogPosts.id})` })
+          .from(blogPosts)
+    );
+    
+    const totalPosts = countResult[0]?.count || 0;
+    const totalPages = Math.ceil(Number(totalPosts) / postsPerPage);
+    
+    // Μετασχηματισμός των αποτελεσμάτων στην κατάλληλη μορφή
+    const transformedPosts = postsResults.map(result => 
+      mapDbPostToBlogPost(result.post, result.categories || [])
+    );
     
     return {
-      posts: posts as unknown as BlogPost[],
+      posts: transformedPosts,
       pagination: {
-        totalPosts,
+        totalPosts: Number(totalPosts),
         totalPages,
         currentPage: page,
         postsPerPage,
@@ -80,60 +122,97 @@ export async function getBlogPosts(page = 1, postsPerPage = 10, category?: strin
 }
 
 // Ανάκτηση ενός blog post με βάση το slug
-export async function getBlogPostBySlug(slug: string) {
-  const db = await getDbClient(); // Προσθέτουμε await
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  const db = getDb();
   
   try {
-    const post = await db.select()
+    // Ανάκτηση του post με τις κατηγορίες του με ένα query
+    const result = await db
+      .select({
+        post: blogPosts,
+        categories: sql<string[]>`array_agg(${blogCategories.name})`
+      })
       .from(blogPosts)
+      .leftJoin(
+        blogPostsToCategories, 
+        eq(blogPostsToCategories.postId, blogPosts.id)
+      )
+      .leftJoin(
+        blogCategories, 
+        eq(blogCategories.id, blogPostsToCategories.categoryId)
+      )
       .where(eq(blogPosts.slug, slug))
-      .limit(1);
+      .groupBy(blogPosts.id);
     
-    return post[0] || null;
+    if (result.length === 0) {
+      return null;
+    }
+    
+    // Μετατροπή του αποτελέσματος στον τύπο BlogPost
+    return mapDbPostToBlogPost(result[0].post, result[0].categories || []);
   } catch (error) {
     console.error(`Error fetching blog post with slug ${slug}:`, error);
     throw new Error(`Failed to fetch blog post with slug ${slug}`);
   }
 }
 
-// Αναζήτηση blog posts
-export async function searchBlogPosts(searchTerm: string, page = 1, postsPerPage = 10): Promise<BlogResponse> {
-  const db = await getDbClient(); // Προσθέτουμε await
+// Αναζήτηση blog posts με βελτιστοποιημένα queries
+export async function searchBlogPosts(
+  searchTerm: string, 
+  page = 1, 
+  postsPerPage = 10
+): Promise<BlogResponse> {
+  const db = getDb();
   const offset = (page - 1) * postsPerPage;
   
   try {
-    // Δημιουργία συνθήκης αναζήτησης με χρήση του LIKE operator
+    // Δημιουργία συνθήκης αναζήτησης
     const searchCondition = or(
-      like(blogPosts.title, `%${searchTerm}%`),
-      like(blogPosts.content, `%${searchTerm}%`),
-      like(blogPosts.excerpt, `%${searchTerm}%`)
+      ilike(blogPosts.title, `%${searchTerm}%`),
+      ilike(blogPosts.content, `%${searchTerm}%`),
+      ilike(blogPosts.excerpt || '', `%${searchTerm}%`),
+      ilike(blogPosts.description, `%${searchTerm}%`)
     );
     
-    // Εκτέλεση του query με pagination
-    const posts = await db.select()
+    // Ανάκτηση των posts με τις κατηγορίες τους
+    const postsResults = await db
+      .select({
+        post: blogPosts,
+        categories: sql<string[]>`array_agg(distinct ${blogCategories.name})`
+      })
       .from(blogPosts)
+      .leftJoin(
+        blogPostsToCategories, 
+        eq(blogPostsToCategories.postId, blogPosts.id)
+      )
+      .leftJoin(
+        blogCategories, 
+        eq(blogCategories.id, blogPostsToCategories.categoryId)
+      )
       .where(searchCondition)
-      .orderBy(desc(blogPosts.createdAt))
+      .groupBy(blogPosts.id)
+      .orderBy(desc(blogPosts.date))
       .limit(postsPerPage)
       .offset(offset);
     
     // Μέτρηση συνολικών αποτελεσμάτων για pagination
-    const countResult = await db.execute(
-      sql`SELECT COUNT(*) as count FROM blog_posts WHERE 
-        title LIKE ${`%${searchTerm}%`} OR 
-        content LIKE ${`%${searchTerm}%`} OR 
-        excerpt LIKE ${`%${searchTerm}%`}`
+    const countResult = await db
+      .select({ count: sql<number>`count(distinct ${blogPosts.id})` })
+      .from(blogPosts)
+      .where(searchCondition);
+    
+    const totalPosts = countResult[0]?.count || 0;
+    const totalPages = Math.ceil(Number(totalPosts) / postsPerPage);
+    
+    // Μετασχηματισμός των αποτελεσμάτων
+    const transformedPosts = postsResults.map(result => 
+      mapDbPostToBlogPost(result.post, result.categories || [])
     );
     
-    // Χρήση του as unknown για να μετατρέψουμε σωστά τους τύπους
-    const countValue = (countResult[0] as unknown as CountResult)?.count;
-    const totalPosts = Number(countValue || 0);
-    const totalPages = Math.ceil(totalPosts / postsPerPage);
-    
     return {
-      posts: posts as unknown as BlogPost[],
+      posts: transformedPosts,
       pagination: {
-        totalPosts,
+        totalPosts: Number(totalPosts),
         totalPages,
         currentPage: page,
         postsPerPage,
@@ -147,51 +226,94 @@ export async function searchBlogPosts(searchTerm: string, page = 1, postsPerPage
   }
 }
 
-// Δημιουργία νέου blog post (απαιτεί δικαιώματα admin)
-export async function createBlogPost(postData: typeof blogPosts.$inferInsert) {
-  const db = await getAdminDbClient(); // Προσθέτουμε await
-  
-  try {
-    const result = await db.insert(blogPosts).values(postData).returning();
-    return result[0];
-  } catch (error) {
-    console.error('Error creating blog post:', error);
-    throw new Error('Failed to create blog post');
-  }
+// Δημιουργία νέου blog post (απαιτεί δικαιώματα admin) με transaction
+export async function createBlogPost(
+  postData: Omit<typeof blogPosts.$inferInsert, 'id'>,
+  categoryIds: number[]
+): Promise<SelectBlogPost> {
+  return transaction(async (tx) => {
+    try {
+      // Εισαγωγή του blog post
+      const [newPost] = await tx
+        .insert(blogPosts)
+        .values(postData)
+        .returning();
+      
+      // Εισαγωγή των συσχετίσεων με κατηγορίες
+      if (categoryIds.length > 0) {
+        const categoryRelations = categoryIds.map(categoryId => ({
+          postId: newPost.id,
+          categoryId
+        }));
+        
+        await tx
+          .insert(blogPostsToCategories)
+          .values(categoryRelations);
+      }
+      
+      return newPost;
+    } catch (error) {
+      console.error('Error creating blog post:', error);
+      throw new Error('Failed to create blog post');
+    }
+  }, DbConnectionType.ADMIN);
 }
 
-// Ενημέρωση υπάρχοντος blog post (απαιτεί δικαιώματα admin)
-export async function updateBlogPost(id: string, postData: Partial<typeof blogPosts.$inferInsert>) {
-  const db = await getAdminDbClient(); // Προσθέτουμε await
-  
-  try {
-    // Μετατροπή του id σε αριθμό αν είναι string
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    
-    const result = await db
-      .update(blogPosts)
-      .set(postData)
-      .where(eq(blogPosts.id, numericId))
-      .returning();
+// Ενημέρωση υπάρχοντος blog post (απαιτεί δικαιώματα admin) με transaction
+export async function updateBlogPost(
+  id: number,
+  postData: Partial<typeof blogPosts.$inferInsert>,
+  categoryIds?: number[]
+): Promise<SelectBlogPost> {
+  return transaction(async (tx) => {
+    try {
+      // Ενημέρωση του blog post
+      const [updatedPost] = await tx
+        .update(blogPosts)
+        .set({
+          ...postData,
+          updatedAt: new Date()
+        })
+        .where(eq(blogPosts.id, id))
+        .returning();
       
-    return result[0];
-  } catch (error) {
-    console.error(`Error updating blog post with id ${id}:`, error);
-    throw new Error(`Failed to update blog post with id ${id}`);
-  }
+      // Ενημέρωση των συσχετίσεων με κατηγορίες αν παρέχονται
+      if (categoryIds !== undefined) {
+        // Διαγραφή των υπαρχόντων συσχετίσεων
+        await tx
+          .delete(blogPostsToCategories)
+          .where(eq(blogPostsToCategories.postId, id));
+        
+        // Εισαγωγή των νέων συσχετίσεων
+        if (categoryIds.length > 0) {
+          const categoryRelations = categoryIds.map(categoryId => ({
+            postId: id,
+            categoryId
+          }));
+          
+          await tx
+            .insert(blogPostsToCategories)
+            .values(categoryRelations);
+        }
+      }
+      
+      return updatedPost;
+    } catch (error) {
+      console.error(`Error updating blog post with id ${id}:`, error);
+      throw new Error(`Failed to update blog post with id ${id}`);
+    }
+  }, DbConnectionType.ADMIN);
 }
 
 // Διαγραφή blog post (απαιτεί δικαιώματα admin)
-export async function deleteBlogPost(id: string) {
-  const db = await getAdminDbClient(); // Προσθέτουμε await
+export async function deleteBlogPost(id: number): Promise<{ success: boolean }> {
+  const db = getAdminDb();
   
   try {
-    // Μετατροπή του id σε αριθμό αν είναι string
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    
+    // Οι συσχετίσεις θα διαγραφούν αυτόματα λόγω του CASCADE constraint
     await db
       .delete(blogPosts)
-      .where(eq(blogPosts.id, numericId));
+      .where(eq(blogPosts.id, id));
       
     return { success: true };
   } catch (error) {
@@ -199,6 +321,3 @@ export async function deleteBlogPost(id: string) {
     throw new Error(`Failed to delete blog post with id ${id}`);
   }
 }
-
-// Εξαγωγή επιπλέον συναρτήσεων αν χρειάζονται
-export { sql };

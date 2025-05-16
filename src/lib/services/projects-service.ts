@@ -133,17 +133,9 @@ export const projectsService = {
     }
     
     try {
-      // Υπολογισμός αυτόματης σειράς ταξινόμησης
-      if (!project.order) {
-        const allProjects = await projectsRepository.findAll();
-        // Αν δεν υπάρχουν projects, ξεκινάμε από το 1
-        // Αλλιώς, βρίσκουμε τη μέγιστη τιμή και προσθέτουμε 1
-        project.order = allProjects.length === 0 
-          ? 1 
-          : Math.max(...allProjects.map(p => p.order || 0)) + 1;
-      }
-      
       // Δημιουργία του project
+      // Υπολογισμός αυτόματης σειράς ταξινόμησης μέσω του repository
+      // Το πεδίο order δεν υπάρχει στον τύπο NewProject, οπότε δεν το χρησιμοποιούμε εδώ
       const newProject = await projectsRepository.create(project);
       
       // Εκκαθάριση του cache για τη λίστα projects
@@ -167,7 +159,7 @@ export const projectsService = {
    * @returns Promise με το ενημερωμένο project
    * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα ή αν το project δεν βρεθεί
    */
-  async updateProject(slug: string, projectData: Partial<NewProject>, user: UserWithRole): Promise<Project | null> {
+  async updateProject(slug: string, projectData: Partial<Omit<NewProject, "createdAt">>, user: UserWithRole): Promise<Project | null> {
     // Έλεγχος δικαιωμάτων
     if (!checkPermission(user, Permission.WRITE_PROJECTS)) {
       throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για την ενημέρωση project');
@@ -181,10 +173,9 @@ export const projectsService = {
       }
       
       // Ενημέρωση του project
-      const updatedProject = await projectsRepository.update(slug, {
-        ...projectData,
-        updatedAt: new Date()
-      });
+      // Το πεδίο updatedAt δεν υπάρχει στον τύπο Partial<Omit<NewProject, "createdAt">>, 
+      // οπότε το διαχειριζόμαστε μέσω του repository
+      const updatedProject = await projectsRepository.update(slug, projectData);
       
       if (!updatedProject) {
         throw new Error('Το project δεν βρέθηκε κατά την ενημέρωση');
@@ -325,7 +316,7 @@ export const projectsService = {
    * @returns Promise με το ενημερωμένο crypto project
    * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα ή αν το project δεν βρεθεί
    */
-  async updateCryptoProject(slug: string, projectData: Partial<NewCryptoProject>, user: UserWithRole): Promise<CryptoProject | null> {
+  async updateCryptoProject(slug: string, projectData: Partial<Omit<NewCryptoProject, "createdAt">>, user: UserWithRole): Promise<CryptoProject | null> {
     // Έλεγχος δικαιωμάτων
     if (!checkPermission(user, Permission.WRITE_PROJECTS)) {
       throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για την ενημέρωση crypto project');
@@ -339,10 +330,9 @@ export const projectsService = {
       }
       
       // Ενημέρωση του crypto project
-      const updatedProject = await cryptoProjectsRepository.update(slug, {
-        ...projectData,
-        updatedAt: new Date()
-      });
+      // Το πεδίο updatedAt δεν υπάρχει στον τύπο Partial<Omit<NewCryptoProject, "createdAt">>, 
+      // οπότε το διαχειριζόμαστε μέσω του repository
+      const updatedProject = await cryptoProjectsRepository.update(slug, projectData);
       
       if (!updatedProject) {
         throw new Error('Το crypto project δεν βρέθηκε κατά την ενημέρωση');

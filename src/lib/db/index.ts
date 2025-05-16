@@ -1,33 +1,70 @@
 // src/lib/db/index.ts
-// Αυτό το αρχείο είναι ο κεντρικός άξονας για τα exports της βάσης δεδομένων
-// Αφαιρέθηκε η χρήση 'use client' ή 'use server' για να επιτρέπει επιλεκτικά imports
+export * from './database';
+export * from './schema';
+export * from './utils/mappers';
 
-// Re-export των server-side utilities - αυτά θα είναι διαθέσιμα μόνο στον server
-export * from './server-db-actions';
+// Εξαγωγή των τύπων για ευκολότερη πρόσβαση
+import type { 
+  BlogPost,
+  SelectBlogPost, 
+  InsertBlogPost,
+  BlogCategory,
+  SelectBlogCategory,
+  InsertBlogCategory
+} from './schema/blog';
 
-// Re-export των client-safe συναρτήσεων από το client-db αρχείο
-export { clientDb, clientAdminDb, getClientDbHelper, type ClientDatabaseInterface } from './client-db';
+import type {
+  Certification,
+  SelectCertification,
+  InsertCertification,
+  Skill,
+  SelectSkill,
+  InsertSkill,
+  CertificationType
+} from './schema/certifications';
 
-// Εξαγωγή των τύπων από το schema
-export type * from './schema';
+import type {
+  Project,
+  SelectProject,
+  InsertProject,
+  ProjectCategory,
+  SelectProjectCategory,
+  InsertProjectCategory,
+  ProjectTechnology,
+  SelectProjectTechnology,
+  InsertProjectTechnology,
+  CryptoProject,
+  SelectCryptoProject,
+  InsertCryptoProject,
+  ProjectStatus
+} from './schema/projects';
 
-// ΣΗΜΑΝΤΙΚΗ ΣΗΜΕΙΩΣΗ:
-// Το παρακάτω σχόλιο εξηγεί στους developers πώς να χρησιμοποιούν σωστά
-// τις λειτουργίες της βάσης δεδομένων:
-
-/*
- * ΟΔΗΓΟΣ ΧΡΗΣΗΣ:
- * 
- * 1. Για Server Components:
- *    - Χρησιμοποιήστε απευθείας τις server-only συναρτήσεις και τα repositories
- *    - Παράδειγμα: import { selectFromTable } from '@/lib/db'
- * 
- * 2. Για Client Components:
- *    - Χρησιμοποιήστε μόνο τις ασφαλείς client συναρτήσεις και τα server actions
- *    - Παράδειγμα: import { clientDb } from '@/lib/db'
- *    - Καλύτερα ακόμα, χρησιμοποιήστε τα repositories μέσω server actions
- * 
- * 3. Για νέες λειτουργίες:
- *    - Αν είναι συνάρτηση που καλείται από client, προσθέστε τη στο server-db-actions.ts
- *    - Αν είναι συνάρτηση που καλείται μόνο από server, προσθέστε τη στο server-db.ts
- */
+// Επανεξαγωγή για ευκολία
+export type {
+  BlogPost,
+  SelectBlogPost,
+  InsertBlogPost,
+  BlogCategory,
+  SelectBlogCategory,
+  InsertBlogCategory,
+  Certification,
+  SelectCertification,
+  InsertCertification,
+  Skill,
+  SelectSkill,
+  InsertSkill,
+  CertificationType,
+  Project,
+  SelectProject,
+  InsertProject,
+  ProjectCategory,
+  SelectProjectCategory,
+  InsertProjectCategory,
+  ProjectTechnology,
+  SelectProjectTechnology,
+  InsertProjectTechnology,
+  CryptoProject,
+  SelectCryptoProject,
+  InsertCryptoProject,
+  ProjectStatus
+};

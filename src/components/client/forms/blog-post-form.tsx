@@ -89,7 +89,7 @@ export default function BlogPostForm({ post, categories }: BlogPostFormProps) {
             name="slug"
             type="text"
             required
-            defaultValue={post?.slug}
+            defaultValue={post?.slug ?? ''}
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2"
             placeholder="my-blog-post"
           />
@@ -105,7 +105,7 @@ export default function BlogPostForm({ post, categories }: BlogPostFormProps) {
             name="title"
             type="text"
             required
-            defaultValue={post?.title}
+            defaultValue={post?.title ?? ''}
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2"
             placeholder="Ο τίτλος του άρθρου"
           />
@@ -121,7 +121,7 @@ export default function BlogPostForm({ post, categories }: BlogPostFormProps) {
           id="description"
           name="description"
           required
-          defaultValue={post?.description}
+          defaultValue={post?.description ?? ''}
           rows={3}
           className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2"
           placeholder="Μια σύντομη περιγραφή του άρθρου..."
@@ -156,7 +156,7 @@ export default function BlogPostForm({ post, categories }: BlogPostFormProps) {
             name="image"
             type="url"
             required
-            defaultValue={post?.image}
+            defaultValue={post?.image ?? ''}
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2"
             placeholder="https://example.com/image.jpg"
           />
@@ -174,7 +174,7 @@ export default function BlogPostForm({ post, categories }: BlogPostFormProps) {
             name="authorName"
             type="text"
             required
-            defaultValue={post?.author?.name}
+            defaultValue={post?.author?.name ?? ''}
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2"
             placeholder="Christos Kerigkas"
           />
@@ -190,7 +190,7 @@ export default function BlogPostForm({ post, categories }: BlogPostFormProps) {
             name="authorImage"
             type="url"
             required
-            defaultValue={post?.author?.image}
+            defaultValue={post?.author?.image ?? ''}
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2"
             placeholder="https://example.com/author.jpg"
           />
@@ -232,7 +232,7 @@ export default function BlogPostForm({ post, categories }: BlogPostFormProps) {
           id="content"
           name="content"
           required
-          defaultValue={post?.content}
+          defaultValue={post?.content ?? ''}
           rows={12}
           className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 font-mono"
           placeholder="# Τίτλος άρθρου

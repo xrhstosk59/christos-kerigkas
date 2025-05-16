@@ -101,6 +101,7 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
       metaDescription: postData.description.slice(0, 160), // Χρήση της περιγραφής ως meta description
       createdAt: new Date(),
       updatedAt: new Date(),
+      status: 'published' // Προσθήκη του πεδίου status που έλειπε
     };
     
     const newPost = await blogService.createPost(blogPostData, {
@@ -204,6 +205,7 @@ export async function updateBlogPost(slug: string, formData: FormData): Promise<
       metaTitle: postData.title, // Ενημέρωση meta title
       metaDescription: postData.description.slice(0, 160), // Ενημέρωση meta description
       updatedAt: new Date(),
+      status: 'published' // Προσθήκη του πεδίου status που έλειπε
     };
     
     const updatedPost = await blogService.updatePost(slug, updateData, {

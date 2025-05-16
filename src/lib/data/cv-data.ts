@@ -216,7 +216,7 @@ function mapCertificationsFromDb(certifications: DbCertification[]): Certificati
     skills: cert.skills === null ? undefined : cert.skills,
     type: cert.type as CertificationType,
     filename: cert.filename,
-    featured: cert.featured === null ? undefined : cert.featured
+    featured: cert.featured === null ? false : cert.featured // Διασφαλίζουμε ότι το featured είναι πάντα boolean
   }));
 }
 
@@ -231,7 +231,7 @@ function mapProjectsFromDb(projects: DbProject[]): Project[] {
     github: project.github,
     demo: project.demo === null ? undefined : project.demo,
     image: project.image,
-    featured: project.featured === null ? undefined : project.featured,
+    featured: project.featured === null ? false : project.featured, // Διασφαλίζουμε ότι το featured είναι πάντα boolean
     status: 'Active' as ProjectStatus
   }));
 }

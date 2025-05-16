@@ -19,7 +19,8 @@ const projectSchema = z.object({
   github: z.string().url('Το GitHub URL πρέπει να είναι έγκυρο URL'),
   demo: z.string().url('Το Demo URL πρέπει να είναι έγκυρο URL').optional(),
   image: z.string().url('Η εικόνα πρέπει να είναι έγκυρο URL'),
-  featured: z.boolean().optional(),
+  featured: z.boolean().optional().default(false),
+  status: z.string().min(1, 'Η κατάσταση είναι υποχρεωτική').default('active'),
 });
 
 // Search schema για επικύρωση παραμέτρων αναζήτησης
@@ -88,11 +89,8 @@ export const POST = createApiHandler(
         );
       }
       
-      const newProject = await projectsService.createProject({
-        ...validData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }, {
+      // Δεν περνάμε πλέον τα createdAt και updatedAt, θα τα διαχειριστεί το Drizzle
+      const newProject = await projectsService.createProject(validData, {
         id: '1', // Mock ID for demonstration
         email: 'admin@example.com',
         role: Role.ADMIN

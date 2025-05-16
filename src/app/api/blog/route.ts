@@ -141,7 +141,8 @@ export const POST = createApiHandler(
         featured: false, // Default τιμή για featured
         excerpt: validData.description.slice(0, 160), // Δημιουργία excerpt από την περιγραφή
         metaTitle: validData.title, // Χρήση του τίτλου ως meta title
-        metaDescription: validData.description.slice(0, 160) // Χρήση της περιγραφής ως meta description
+        metaDescription: validData.description.slice(0, 160), // Χρήση της περιγραφής ως meta description
+        status: 'published' // Προσθήκη του πεδίου status που έλειπε
       }, {
         id: session.user.id,
         email: session.user.email,

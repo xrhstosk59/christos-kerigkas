@@ -8,6 +8,7 @@
 ./drizzle/meta/_journal.json
 ./drizzle/meta/0000_snapshot.json
 ./drizzle/meta/0001_snapshot.json
+./drizzle/migration_002_schema_improvements.sql
 ./eslint.config.mjs
 ./next-env.d.ts
 ./next.config.ts
@@ -34,6 +35,7 @@
 ./public/vercel.svg
 ./public/window.svg
 ./README.md
+./scripts/apply-migrations.sh
 ./scripts/seed-certifications.ts
 ./scripts/verify-schema.ts
 ./src/_actions/blog.ts
@@ -50,6 +52,7 @@
 ./src/app/api/blog/[slug]/route.ts
 ./src/app/api/blog/route.ts
 ./src/app/api/blog/search/route.ts
+./src/app/api/certifications/route.ts
 ./src/app/api/contact/route.ts
 ./src/app/api/newsletter/route.ts
 ./src/app/api/projects/[slug]/route.ts
@@ -183,8 +186,7 @@
 ./src/lib/data/projects.ts
 ./src/lib/db/actions.ts
 ./src/lib/db/client-db.ts
-./src/lib/db/clients.ts
-./src/lib/db/database-service.ts
+./src/lib/db/database.ts
 ./src/lib/db/database.types.ts
 ./src/lib/db/db-actions.ts
 ./src/lib/db/helpers.ts
@@ -206,6 +208,7 @@
 ./src/lib/db/server-db-actions.ts
 ./src/lib/db/server-db-client.ts
 ./src/lib/db/server-db.ts
+./src/lib/db/utils/mappers.ts
 ./src/lib/monitoring/performance.ts
 ./src/lib/services/projects-service.ts
 ./src/lib/supabase/client.ts
