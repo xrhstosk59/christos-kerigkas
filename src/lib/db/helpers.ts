@@ -1,6 +1,6 @@
 // src/lib/db/helpers.ts
 
-import { getRegularDatabase } from './database-service';
+import { getDb } from './database';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from './schema';
 
@@ -9,7 +9,7 @@ import * as schema from './schema';
  * Χρησιμοποιείται από τα repositories.
  */
 export async function ensureDatabaseConnection(): Promise<PostgresJsDatabase<typeof schema>> {
-  return await getRegularDatabase();
+  return getDb();
 }
 
 // Εξαγωγή του sql tag για διευκόλυνση
