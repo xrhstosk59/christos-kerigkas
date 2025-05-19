@@ -1,7 +1,9 @@
 //src/app/not-found.tsx
 import Link from 'next/link'
+import { Suspense } from 'react'
 
-export default function NotFound() {
+// Wrapper component που θα τυλιχθεί σε Suspense
+function NotFoundContent() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-center px-4">
       <h1 className="text-6xl font-bold mb-4">404</h1>
@@ -14,5 +16,17 @@ export default function NotFound() {
         Επιστροφή στην αρχική
       </Link>
     </div>
+  )
+}
+
+export default function NotFound() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen text-center px-4">
+        <h1 className="text-4xl font-bold mb-4">Φόρτωση...</h1>
+      </div>
+    }>
+      <NotFoundContent />
+    </Suspense>
   )
 }

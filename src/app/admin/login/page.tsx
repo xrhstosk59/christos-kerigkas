@@ -1,14 +1,15 @@
 // src/app/admin/login/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTheme } from '@/components/providers/theme-provider'
 import { cn } from '@/lib/utils/utils'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/components/client/providers/auth-provider'
 
-export default function AdminLoginPage() {
+// Το κύριο component που χρησιμοποιεί το useSearchParams
+function LoginForm() {
   const { theme } = useTheme()
   const { signIn } = useAuth()
   const router = useRouter()
@@ -136,5 +137,28 @@ export default function AdminLoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+// Το Fallback UI που θα εμφανίζεται κατά τη φόρτωση
+function LoginFormFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8 rounded-lg shadow-md bg-white">
+        <div className="flex justify-center items-center h-40">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <span className="ml-2 text-gray-700">Φόρτωση...</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Το κύριο component της σελίδας που εξάγεται
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
   )
 }

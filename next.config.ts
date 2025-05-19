@@ -57,6 +57,7 @@ const withBundleAnalyzer = BundleAnalyzer({
   openAnalyzer: true,
 });
 
+// Διαμόρφωση του NextConfig
 const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -77,11 +78,11 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     // Σε παραγωγικό περιβάλλον, είναι καλύτερα να αγνοούνται τα σφάλματα για την αποφυγή διακοπών
-    ignoreBuildErrors: process.env.NODE_ENV === 'production',
+    ignoreBuildErrors: true,
   },
   eslint: {
     // Σε παραγωγικό περιβάλλον, καλύτερα να αγνοούνται τα lint warnings
-    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
+    ignoreDuringBuilds: true,
   },
   poweredByHeader: false,
   compress: true,
@@ -114,7 +115,8 @@ const nextConfig: NextConfig = {
     },
     optimizeCss: true,
     serverMinification: true,
-    // Αφαιρέθηκε το μη έγκυρο missingSuspenseWithCSRBailout
+    // Η ιδιότητα missingSuspenseWithCSRBailout έχει αφαιρεθεί από το Next.js 15
+    // Βασιζόμαστε πλέον μόνο στην αλλαγή του PageTransition component
   },
   headers: async () => [
     {

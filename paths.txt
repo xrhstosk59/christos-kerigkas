@@ -181,6 +181,7 @@
 ./src/lib/auth/supabase.ts
 ./src/lib/cache/cache-service.ts
 ./src/lib/cache/index.ts
+./src/lib/config/index.ts
 ./src/lib/data/cv-data.ts
 ./src/lib/data/mock-projects.ts
 ./src/lib/data/projects.ts

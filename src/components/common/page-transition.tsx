@@ -1,16 +1,25 @@
 // src/components/common/page-transition.tsx
 "use client"
 
-import { useRef, useEffect, useState, useMemo } from "react"
+import { useRef, useEffect, useState, useMemo, Suspense } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { usePathname } from "next/navigation"
-import { useSearchParams } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 
 interface PageTransitionProps {
   children: React.ReactNode
 }
 
-export default function PageTransition({ children }: PageTransitionProps) {
+// Το LoadingFallback component που θα εμφανίζεται κατά τη φόρτωση
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-700 border-l-blue-600 border-r-blue-600 rounded-full animate-spin"></div>
+    </div>
+  )
+}
+
+// Το κύριο component που περιέχει την λογική μετάβασης
+function PageTransitionContent({ children }: PageTransitionProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   
@@ -99,5 +108,16 @@ export default function PageTransition({ children }: PageTransitionProps) {
         {children}
       </motion.div>
     </AnimatePresence>
+  )
+}
+
+// Το wrapper component που εξάγεται, το οποίο τυλίγει το περιεχόμενο σε Suspense
+export default function PageTransition({ children }: PageTransitionProps) {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <PageTransitionContent>
+        {children}
+      </PageTransitionContent>
+    </Suspense>
   )
 }

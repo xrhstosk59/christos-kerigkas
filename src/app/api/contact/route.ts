@@ -3,7 +3,8 @@ import { NextResponse, NextRequest } from 'next/server'
 import { createTransport, SentMessageInfo } from 'nodemailer'
 import { z } from 'zod'
 import { contactFormRateLimit } from '@/lib/utils/rate-limit'
-import { db, sql } from '@/lib/db/server-db-client' // Διορθωμένο import από db-client
+import { getDbClient } from '@/lib/db/server-db-client' // Ενημερωμένο import
+import { sql } from 'drizzle-orm' // Απευθείας εισαγωγή από drizzle-orm
 
 // Ορισμός τύπου για το αποτέλεσμα του SQL ερωτήματος
 type DbQueryResult = {
@@ -84,27 +85,23 @@ export async function POST(req: NextRequest) {
 
     try {
       // Attempt to store in database directly with SQL
-      if (db) {
-        console.log('Saving contact message to database');
-        
-        // Προσθέτουμε await πριν από το db
-        const dbClient = await db;
-        const result = await dbClient.execute(sql`
-          INSERT INTO contact_messages (name, email, message, ip_address, status, created_at)
-          VALUES (${name}, ${email}, ${message}, ${ipAddress}, ${'new'}, NOW())
-          RETURNING id
-        `);
-        
-        // Χρήση type assertion για να ορίσουμε τον τύπο του result
-        const typedResult = result as unknown as DbQueryResult[];
-        
-        if (typedResult && typedResult.length > 0 && typedResult[0].id) {
-          messageId = typedResult[0].id;
-          databaseSuccess = true;
-          console.log('Message saved to database with ID:', messageId);
-        }
-      } else {
-        console.warn('Database client not available, skipping database storage');
+      console.log('Saving contact message to database');
+      
+      // Λήψη του database client με τη νέα μέθοδο
+      const dbClient = await getDbClient();
+      const result = await dbClient.execute(sql`
+        INSERT INTO contact_messages (name, email, message, ip_address, status, created_at)
+        VALUES (${name}, ${email}, ${message}, ${ipAddress}, ${'new'}, NOW())
+        RETURNING id
+      `);
+      
+      // Χρήση type assertion για να ορίσουμε τον τύπο του result
+      const typedResult = result as unknown as DbQueryResult[];
+      
+      if (typedResult && typedResult.length > 0 && typedResult[0].id) {
+        messageId = typedResult[0].id;
+        databaseSuccess = true;
+        console.log('Message saved to database with ID:', messageId);
       }
     } catch (dbError) {
       // Ασφαλές logging του σφάλματος χωρίς να εμφανίζει ευαίσθητα δεδομένα

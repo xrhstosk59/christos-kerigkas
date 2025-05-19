@@ -1,6 +1,6 @@
 // src/app/api/certifications/route.ts
 import { NextResponse } from 'next/server';
-import { getDbClient } from '@/lib/db/server-db';
+import { getDbClient } from '@/lib/db/server-db-client'; // Ενημερωμένο import path
 
 export async function GET() {
   try {
