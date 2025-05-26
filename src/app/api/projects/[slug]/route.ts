@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { projectsService } from '@/lib/services/projects-service';
 import { apiResponse } from '@/lib/utils/api-response';
-import { checkAuth, getCurrentSession } from '@/lib/auth/server-auth';
+import { checkAuth, getCurrentSession } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
 import { Role } from '@/lib/auth/access-control';
 
@@ -50,7 +50,7 @@ export async function GET(
       200
     );
   } catch (error) {
-    logger.error(`Σφάλμα κατά την ανάκτηση project με slug ${context.params}:`, error, 'api-project-GET');
+    logger.error(`Σφάλμα κατά την ανάκτηση project με slug ${(await context.params).slug}:`, error, 'api-project-GET');
     return apiResponse.internalError('Παρουσιάστηκε σφάλμα κατά την ανάκτηση του project', error);
   }
 }
@@ -73,9 +73,9 @@ export async function PUT(
       return apiResponse.badRequest('Το slug είναι υποχρεωτικό');
     }
     
-    // Λήψη του τρέχοντος χρήστη
+    // Λήψη του τρέχοντος χρήστη με session
     const session = await getCurrentSession();
-    if (!session.user) {
+    if (!session.isAuthenticated || !session.user) {
       return apiResponse.unauthorized();
     }
     
@@ -109,7 +109,7 @@ export async function PUT(
       projectData,
       {
         id: session.user.id,
-        email: session.user.email,
+        email: session.user.email || '',
         role: userRole
       }
     );
@@ -166,9 +166,9 @@ export async function DELETE(
       return apiResponse.badRequest('Το slug είναι υποχρεωτικό');
     }
     
-    // Λήψη του τρέχοντος χρήστη
+    // Λήψη του τρέχοντος χρήστη με session
     const session = await getCurrentSession();
-    if (!session.user) {
+    if (!session.isAuthenticated || !session.user) {
       return apiResponse.unauthorized();
     }
     
@@ -192,7 +192,7 @@ export async function DELETE(
       slug,
       {
         id: session.user.id,
-        email: session.user.email,
+        email: session.user.email || '',
         role: userRole
       }
     );

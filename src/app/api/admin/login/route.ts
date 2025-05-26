@@ -1,9 +1,8 @@
 // src/app/api/admin/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { loginWithSupabase } from '@/lib/auth/server-auth';
+import { loginWithSupabase, createClient } from '@/lib/supabase/server';
 import { authRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
 
 // Σχήμα επικύρωσης για το login request
 const loginSchema = z.object({
@@ -98,30 +97,33 @@ export async function POST(req: NextRequest) {
 }
 
 // Για έλεγχο της κατάστασης σύνδεσης
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: false
-        },
-        global: {
-          headers: {
-            cookie: req.headers.get('cookie') || ''
-          }
-        }
-      }
-    );
+    // Ασφαλής έλεγχος environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
-    const { data, error } = await supabase.auth.getSession();
-    
-    if (error || !data.session) {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase environment variables');
       return NextResponse.json({ isAuthenticated: false }, { status: 200 });
     }
     
-    return NextResponse.json({ isAuthenticated: true }, { status: 200 });
+    // Χρήση του server createClient για consistency
+    const supabase = await createClient();
+    
+    const { data, error } = await supabase.auth.getUser();
+    
+    if (error || !data.user) {
+      return NextResponse.json({ isAuthenticated: false }, { status: 200 });
+    }
+    
+    return NextResponse.json({ 
+      isAuthenticated: true,
+      user: {
+        id: data.user.id,
+        email: data.user.email
+      }
+    }, { status: 200 });
   } catch (error) {
     console.error('Session check error:', error);
     return NextResponse.json({ isAuthenticated: false }, { status: 200 });

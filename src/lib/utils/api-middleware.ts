@@ -1,7 +1,7 @@
 // src/lib/utils/api-middleware.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { protectApiRoute } from '@/lib/auth/server-auth';
+import { protectApiRoute } from '@/lib/supabase/server';
 import { apiResponse } from '@/lib/utils/api-response';
 import { logger } from '@/lib/utils/logger';
 import { 

@@ -9,6 +9,7 @@ import {
 } from '@/lib/utils/errors/app-error';
 import { Role, Permission, checkPermission } from './access-control';
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/lib/db/database.types';
 
 // Τύπος για τα δεδομένα του χρήστη
 export interface UserData {
@@ -22,7 +23,7 @@ export interface UserData {
  * Μπορεί να χρησιμοποιηθεί σε RSC (React Server Components) και Server Actions.
  */
 export async function requireAuth(): Promise<UserData> {
-  const cookieStore = await cookies(); // Προσθήκη του await εδώ
+  const cookieStore = await cookies();
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -32,7 +33,7 @@ export async function requireAuth(): Promise<UserData> {
     redirect('/admin/login?error=config_error');
   }
   
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     supabaseUrl,
     supabaseKey,
     {
@@ -50,35 +51,36 @@ export async function requireAuth(): Promise<UserData> {
     }
   );
   
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-  if (sessionError) {
-    logger.error('Auth session error:', sessionError, 'auth');
-    redirect('/admin/login?error=session_error');
-  }
-  
-  if (!session) {
-    redirect('/admin/login?error=no_session');
-  }
-  
-  // Λήψη των στοιχείων του χρήστη (συμπεριλαμβανομένου του ρόλου)
-  const { data: userData, error: userError } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session.user.id)
-    .single();
+  // Χρήση getUser() αντί για getSession()
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
   
   if (userError) {
-    logger.error('User profile error:', userError, 'auth');
-    redirect('/admin/login?error=profile_error');
+    logger.error('Auth user error:', userError, 'auth');
+    redirect('/admin/login?error=auth_error');
+  }
+  
+  if (!user) {
+    redirect('/admin/login?error=no_user');
+  }
+  
+  // Λήψη των στοιχείων του χρήστη από το users table (όχι profiles)
+  const { data: userData, error: dbError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  
+  if (dbError || !userData) {
+    logger.error('User data error:', dbError, 'auth');
+    redirect('/admin/login?error=user_data_error');
   }
   
   // Ασφαλής έλεγχος για το εάν υπάρχει userData και ρόλος
-  const role = userData && userData.role ? userData.role as Role : Role.USER;
-  const email = session.user.email || '';
+  const role = userData.role as Role || Role.USER;
+  const email = user.email || '';
   
   return {
-    id: session.user.id,
+    id: user.id,
     email: email,
     role,
   };
@@ -103,7 +105,6 @@ export async function requirePermission(
     
     // Έλεγχος όλων των απαιτούμενων δικαιωμάτων
     const hasAllPermissions = permissions.every(permission => 
-      // Διόρθωση: Παρέχουμε πλήρες αντικείμενο με τα απαραίτητα πεδία
       checkPermission({ id: user.id, email: user.email, role: user.role }, permission)
     );
     
@@ -135,7 +136,6 @@ export function hasPermission(
     : [requiredPermissions];
   
   return permissions.every(permission => 
-    // Διόρθωση: Παρέχουμε πλήρες αντικείμενο με τα απαραίτητα πεδία
     checkPermission({ id: user.id, email: user.email, role: user.role }, permission)
   );
 }

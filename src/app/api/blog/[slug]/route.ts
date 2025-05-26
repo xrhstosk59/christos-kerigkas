@@ -1,7 +1,7 @@
 // src/app/api/blog/[slug]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { blogRepository } from '@/domains/blog/repositories/blog.repository' // Διορθωμένο import path
-import { checkAuth } from '@/lib/auth/server-auth'
+import { checkAuth } from '@/lib/supabase/server'
 import { z } from 'zod'
 
 // Post validation schema

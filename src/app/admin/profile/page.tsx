@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils/utils'
 import { Button } from '@/components/ui/button'
 
-// Τύπος για το supabaseAuthManager
+// Τύπος για το supabaseClient
 interface SupabaseAuthManager {
   isClientAvailable: () => boolean;
   getClient: () => {
@@ -35,19 +35,19 @@ export default function AdminProfile() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [supabaseAuthManager, setSupabaseAuthManager] = useState<SupabaseAuthManager | null>(null)
+  const [supabaseClient, setSupabaseAuthManager] = useState<SupabaseAuthManager | null>(null)
   
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: '',
   })
 
-  // Δυναμική εισαγωγή του supabaseAuthManager μόνο στο client
+  // Δυναμική εισαγωγή του supabaseClient μόνο στο client
   useEffect(() => {
     const importAuth = async () => {
       try {
-        const { supabaseAuthManager } = await import('@/lib/auth/supabase-auth-client')
-        setSupabaseAuthManager(supabaseAuthManager as SupabaseAuthManager)
+        const { supabaseClient } = await import('@/lib/auth/supabase-auth-client')
+        setSupabaseAuthManager(supabaseClient as SupabaseAuthManager)
       } catch (err) {
         console.error('Failed to load auth manager:', err)
       }
@@ -83,18 +83,18 @@ export default function AdminProfile() {
       setError(null)
       setSuccessMessage(null)
       
-      // Έλεγχος αν έχει φορτωθεί το supabaseAuthManager
-      if (!supabaseAuthManager) {
+      // Έλεγχος αν έχει φορτωθεί το supabaseClient
+      if (!supabaseClient) {
         throw new Error('Authentication service is not available yet')
       }
       
       // Έλεγχος αν το client είναι διαθέσιμο
-      if (!supabaseAuthManager.isClientAvailable()) {
+      if (!supabaseClient.isClientAvailable()) {
         throw new Error('Authentication service is not available')
       }
       
       // Χρήση του Supabase Auth API για την αλλαγή κωδικού
-      const client = supabaseAuthManager.getClient()
+      const client = supabaseClient.getClient()
       const { error } = await client.auth.updateUser({ 
         password: formData.password 
       })
@@ -315,7 +315,7 @@ export default function AdminProfile() {
             
             <Button
               type="submit"
-              disabled={isLoading || !supabaseAuthManager}
+              disabled={isLoading || !supabaseClient}
               className="gap-2"
             >
               {isLoading && (

@@ -36,6 +36,9 @@
 ./public/window.svg
 ./README.md
 ./scripts/apply-migrations.sh
+./scripts/check-auth-usage.ts
+./scripts/migrate-auth.ts
+./scripts/performance-check.ts
 ./scripts/seed-certifications.ts
 ./scripts/verify-schema.ts
 ./src/_actions/blog.ts
@@ -171,14 +174,8 @@
 ./src/lib/api/middleware/api-middleware.ts
 ./src/lib/auth/access-control.ts
 ./src/lib/auth/admin-actions.ts
-./src/lib/auth/auth.ts
 ./src/lib/auth/authorization.ts
-./src/lib/auth/client-auth.ts
-./src/lib/auth/common.ts
-./src/lib/auth/index.ts
-./src/lib/auth/server-auth.ts
 ./src/lib/auth/supabase-auth-client.ts
-./src/lib/auth/supabase.ts
 ./src/lib/cache/cache-service.ts
 ./src/lib/cache/index.ts
 ./src/lib/config/index.ts

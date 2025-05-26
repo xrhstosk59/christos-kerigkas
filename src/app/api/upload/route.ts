@@ -1,6 +1,6 @@
 // src/app/api/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { protectApiRoute } from '@/lib/auth/server-auth';
+import { protectApiRoute } from '@/lib/supabase/server';
 import { authRateLimit } from '@/lib/utils/rate-limit';
 import path from 'path';
 import { writeFile } from 'fs/promises';

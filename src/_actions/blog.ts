@@ -1,13 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-// Αφαίρεση του αχρησιμοποίητου import: import { redirect } from 'next/navigation'
 import { z } from 'zod'
-import { blogService } from '@/domains/blog/services' // Διορθωμένο import path
-import { NewBlogPost } from '@/domains/blog/models' // Εισαγωγή του μοντέλου BlogPost
+import { blogService } from '@/domains/blog/services'
+import { NewBlogPost } from '@/domains/blog/models'
 import { logger } from '@/lib/utils/logger'
 import { Role } from '@/lib/auth/access-control'
-import { getCurrentSession } from '@/lib/auth/server-auth'
+import { supabaseServer } from '@/lib/supabase/server'
 
 // Post validation schema για δημιουργία/ενημέρωση
 const postSchema = z.object({
@@ -37,9 +36,10 @@ type ActionResult<T = unknown> = {
  */
 export async function createBlogPost(formData: FormData): Promise<ActionResult> {
   try {
-    // Λήψη του τρέχοντος χρήστη
-    const session = await getCurrentSession()
-    if (!session.user) {
+    // Λήψη του τρέχοντος χρήστη με το νέο σύστημα
+    const { user, role } = await supabaseServer.auth.getUserWithRole()
+    
+    if (!user) {
       return { success: false, error: 'Δεν είστε συνδεδεμένοι' }
     }
     
@@ -71,7 +71,7 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
     // Μετατροπή του ρόλου του χρήστη στον τύπο Role του enum
     let userRole: Role
     
-    switch (session.user.role) {
+    switch (role) {
       case 'admin':
         userRole = Role.ADMIN
         break
@@ -96,17 +96,17 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
       published: true,
       featured: false,
       category: postData.categories[0],
-      excerpt: postData.description.slice(0, 160), // Δημιουργία excerpt από την περιγραφή
-      metaTitle: postData.title, // Χρήση του τίτλου ως meta title
-      metaDescription: postData.description.slice(0, 160), // Χρήση της περιγραφής ως meta description
+      excerpt: postData.description.slice(0, 160),
+      metaTitle: postData.title,
+      metaDescription: postData.description.slice(0, 160),
       createdAt: new Date(),
       updatedAt: new Date(),
-      status: 'published' // Προσθήκη του πεδίου status που έλειπε
+      status: 'published'
     };
     
     const newPost = await blogService.createPost(blogPostData, {
-      id: session.user.id,
-      email: session.user.email,
+      id: user.id,
+      email: user.email || '',
       role: userRole
     })
     
@@ -142,9 +142,10 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
  */
 export async function updateBlogPost(slug: string, formData: FormData): Promise<ActionResult> {
   try {
-    // Λήψη του τρέχοντος χρήστη
-    const session = await getCurrentSession()
-    if (!session.user) {
+    // Λήψη του τρέχοντος χρήστη με το νέο σύστημα
+    const { user, role } = await supabaseServer.auth.getUserWithRole()
+    
+    if (!user) {
       return { success: false, error: 'Δεν είστε συνδεδεμένοι' }
     }
     
@@ -176,7 +177,7 @@ export async function updateBlogPost(slug: string, formData: FormData): Promise<
     // Μετατροπή του ρόλου του χρήστη στον τύπο Role του enum
     let userRole: Role
     
-    switch (session.user.role) {
+    switch (role) {
       case 'admin':
         userRole = Role.ADMIN
         break
@@ -201,16 +202,16 @@ export async function updateBlogPost(slug: string, formData: FormData): Promise<
       published: true,
       featured: false,
       category: postData.categories[0],
-      excerpt: postData.description.slice(0, 160), // Ενημέρωση excerpt από την περιγραφή
-      metaTitle: postData.title, // Ενημέρωση meta title
-      metaDescription: postData.description.slice(0, 160), // Ενημέρωση meta description
+      excerpt: postData.description.slice(0, 160),
+      metaTitle: postData.title,
+      metaDescription: postData.description.slice(0, 160),
       updatedAt: new Date(),
-      status: 'published' // Προσθήκη του πεδίου status που έλειπε
+      status: 'published'
     };
     
     const updatedPost = await blogService.updatePost(slug, updateData, {
-      id: session.user.id,
-      email: session.user.email,
+      id: user.id,
+      email: user.email || '',
       role: userRole
     })
     
@@ -258,9 +259,10 @@ export async function updateBlogPost(slug: string, formData: FormData): Promise<
  */
 export async function deleteBlogPost(slug: string): Promise<ActionResult> {
   try {
-    // Λήψη του τρέχοντος χρήστη
-    const session = await getCurrentSession()
-    if (!session.user) {
+    // Λήψη του τρέχοντος χρήστη με το νέο σύστημα
+    const { user, role } = await supabaseServer.auth.getUserWithRole()
+    
+    if (!user) {
       return { success: false, error: 'Δεν είστε συνδεδεμένοι' }
     }
     
@@ -269,7 +271,7 @@ export async function deleteBlogPost(slug: string): Promise<ActionResult> {
     // Μετατροπή του ρόλου του χρήστη στον τύπο Role του enum
     let userRole: Role
     
-    switch (session.user.role) {
+    switch (role) {
       case 'admin':
         userRole = Role.ADMIN
         break
@@ -282,8 +284,8 @@ export async function deleteBlogPost(slug: string): Promise<ActionResult> {
     
     // Διαγραφή του post
     await blogService.deletePost(slug, {
-      id: session.user.id,
-      email: session.user.email,
+      id: user.id,
+      email: user.email || '',
       role: userRole
     })
     

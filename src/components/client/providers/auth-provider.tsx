@@ -1,9 +1,10 @@
+// src/components/client/providers/auth-provider.tsx
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, useTransition } from 'react'
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import * as clientAuth from '@/lib/auth/client-auth'
+import { supabaseClient } from '@/lib/supabase/client'
 
 // Τύπος για το AuthContext με βελτιωμένο type safety
 type AuthContextType = {
@@ -14,6 +15,16 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: Error }>
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
+}
+
+// Τύπος για partial session object
+interface PartialSession {
+  user: User;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  expires_at: number;
+  refresh_token: string;
 }
 
 // Default values για το context
@@ -47,71 +58,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(newSession?.user ?? null)
   }, [])
 
+  // Helper function για δημιουργία session object
+  const createSessionObject = useCallback((user: User): Session => {
+    const partialSession: PartialSession = {
+      user,
+      access_token: '',
+      token_type: 'bearer',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      refresh_token: ''
+    }
+    return partialSession as Session
+  }, [])
+
   // Ανανέωση της συνεδρίας
   const refreshSession = useCallback(async () => {
-    if (!clientAuth.isAuthClientValid()) {
-      return
-    }
-
     try {
       setIsLoading(true)
-      const { data } = await clientAuth.auth.getSession()
-      updateAuthState(data.session)
+      const { user } = await supabaseClient.auth.getCurrentUser()
+      
+      if (user) {
+        // Δημιουργία session object από το user
+        const sessionObject = createSessionObject(user)
+        updateAuthState(sessionObject)
+      } else {
+        updateAuthState(null)
+      }
     } catch (error) {
       console.error('Error refreshing session:', error)
+      updateAuthState(null)
     } finally {
       setIsLoading(false)
     }
-  }, [updateAuthState])
+  }, [updateAuthState, createSessionObject])
 
   // Αρχικοποίηση και event listeners
   useEffect(() => {
-    // Έλεγχος αν το Supabase client είναι διαθέσιμο
-    if (!clientAuth.isAuthClientValid()) {
-      console.warn('AuthProvider: Supabase Auth client is not initialized')
-      setIsLoading(false)
-      return
-    }
-
     // Αρχικοποίηση της κατάστασης από το τρέχον session
     const initializeAuth = async () => {
       try {
-        const { data } = await clientAuth.auth.getSession()
-        updateAuthState(data.session)
+        const { user } = await supabaseClient.auth.getCurrentUser()
+        
+        if (user) {
+          // Δημιουργία session object από το user
+          const sessionObject = createSessionObject(user)
+          updateAuthState(sessionObject)
+        } else {
+          updateAuthState(null)
+        }
       } catch (error) {
         console.error('Error getting session:', error)
+        updateAuthState(null)
       } finally {
         setIsLoading(false)
       }
     }
 
     // Ακρόαση για αλλαγές στην κατάσταση αυθεντικοποίησης
-    // Βελτιωμένο cleanup με unsubscribe type safety
-    let unsubscribe: () => void = () => {}
-    
-    try {
-      const client = clientAuth.supabaseAuthClient.getClient()
-      const { data } = client.auth.onAuthStateChange(
-        (event: AuthChangeEvent, session: Session | null) => {
-          updateAuthState(session)
-          
-          // Βελτιωμένος χειρισμός UI μεταβάσεων με React 19 transitions
-          startTransition(() => {
-            // Χρήση του router για ανανέωση μετά από αλλαγές στην κατάσταση σύνδεσης
-            if (event === 'SIGNED_IN') {
-              router.refresh()
-            } else if (event === 'SIGNED_OUT') {
-              router.refresh()
-            }
-          })
-        }
-      )
-      
-      unsubscribe = data.subscription.unsubscribe
-    } catch (error) {
-      console.error('Error setting up auth state change listener:', error)
-      setIsLoading(false)
-    }
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
+      (event: AuthChangeEvent, session: Session | null) => {
+        updateAuthState(session)
+        
+        // Βελτιωμένος χειρισμός UI μεταβάσεων με React 19 transitions
+        startTransition(() => {
+          // Χρήση του router για ανανέωση μετά από αλλαγές στην κατάσταση σύνδεσης
+          if (event === 'SIGNED_IN') {
+            router.refresh()
+          } else if (event === 'SIGNED_OUT') {
+            router.refresh()
+          }
+        })
+      }
+    )
 
     // Εκτέλεση της αρχικοποίησης
     initializeAuth()
@@ -128,30 +146,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Καθαρισμός των event listeners
     return () => {
-      unsubscribe()
+      subscription.unsubscribe()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [router, updateAuthState, refreshSession])
+  }, [router, updateAuthState, refreshSession, createSessionObject])
 
   // Βελτιωμένος χειρισμός σύνδεσης χρήστη με καλύτερο error handling
   const signIn = async (email: string, password: string) => {
-    if (!clientAuth.isAuthClientValid()) {
-      return { 
-        success: false, 
-        error: new Error('Authentication system is not available') 
-      }
-    }
-    
     try {
-      // Χρησιμοποιούμε το API του client auth
-      const result = await clientAuth.auth.signInWithPassword(email, password)
+      const result = await supabaseClient.auth.signIn(email, password)
 
-      if (result.error) {
+      if ('error' in result && result.error) {
         return { success: false, error: result.error }
       }
       
       // Ενημέρωση του auth state με τη νέα συνεδρία
-      updateAuthState(result.data?.session || null)
+      if ('data' in result && result.data) {
+        // Δημιουργία session object από το user
+        const user = result.data.user
+        if (user) {
+          const sessionObject = createSessionObject(user)
+          updateAuthState(sessionObject)
+        }
+      }
       
       return { success: true }
     } catch (error) {
@@ -165,12 +182,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Βελτιωμένος χειρισμός αποσύνδεσης
   const signOut = async () => {
-    if (!clientAuth.isAuthClientValid()) {
-      return
-    }
-    
     try {
-      await clientAuth.auth.signOut()
+      await supabaseClient.auth.signOut()
       // Καθαρισμός της τοπικής κατάστασης
       updateAuthState(null)
       

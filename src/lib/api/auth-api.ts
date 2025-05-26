@@ -103,8 +103,8 @@ export const authApi = {
     try {
       const supabase = await createClient();
       
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session?.user) {
+      const { data: sessionData } = await supabase.auth.getUser();
+      if (!userData?.user?.user) {
         return null;
       }
       

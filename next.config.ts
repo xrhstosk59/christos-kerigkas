@@ -1,69 +1,43 @@
-// src/next.config.ts - Ενημερωμένο για Next.js 15
+// next.config.ts - OPTIMIZED FOR MAXIMUM PERFORMANCE
 import { type NextConfig } from "next"
-import { imageConfig } from "./src/lib/utils/image-config"
 import BundleAnalyzer from "@next/bundle-analyzer"
 
-// Ενισχυμένα security headers με πιο αυστηρό CSP
-const securityHeaders = [
+// ✅ MINIMAL ESSENTIAL SECURITY HEADERS ONLY
+const essentialHeaders = [
   {
-    key: 'X-DNS-Prefetch-Control',
-    value: 'on'
-  },
-  {
-    key: 'X-XSS-Protection',
-    value: '1; mode=block'
+    key: 'X-Content-Type-Options',
+    value: 'nosniff'
   },
   {
     key: 'X-Frame-Options',
     value: 'SAMEORIGIN'
   },
   {
-    key: 'X-Content-Type-Options',  
-    value: 'nosniff'
+    key: 'X-XSS-Protection',
+    value: '1; mode=block'
   },
   {
     key: 'Referrer-Policy',
     value: 'strict-origin-when-cross-origin'
-  },
-  {
-    key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), gyroscope=(), magnetometer=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()'
-  },
-  {
-    key: 'Content-Security-Policy',
-    value: "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://tnwbnlbmlqoxypsqdqii.supabase.co https://www.google-analytics.com; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content; base-uri 'self';"
-  },
-  {
-    key: 'Strict-Transport-Security',
-    value: 'max-age=63072000; includeSubDomains; preload'
-  },
-  {
-    key: 'Cross-Origin-Embedder-Policy',
-    value: 'require-corp'
-  },
-  {
-    key: 'Cross-Origin-Opener-Policy',
-    value: 'same-origin'
-  },
-  {
-    key: 'Cross-Origin-Resource-Policy',
-    value: 'same-origin'
   }
 ];
 
-// Βελτιωμένες ρυθμίσεις για το Bundle Analyzer
+// ✅ OPTIMIZED BUNDLE ANALYZER
 const withBundleAnalyzer = BundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
-  openAnalyzer: true,
+  openAnalyzer: false, // Don't auto-open
 });
 
-// Διαμόρφωση του NextConfig
+// ✅ SUPER OPTIMIZED NEXT CONFIG
 const nextConfig: NextConfig = {
+  // ✅ IMAGE OPTIMIZATION
   images: {
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: imageConfig.deviceSizes,
-    imageSizes: imageConfig.imageSizes,
-    minimumCacheTTL: imageConfig.minimumCacheTTL,
+    formats: ['image/avif', 'image/webp'], // Modern formats first
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920], // Optimized sizes
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384], // Common icon sizes
+    minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year cache
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
@@ -73,21 +47,25 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'tnwbnlbmlqoxypsqdqii.supabase.co',
       },
-      // Add additional domains if needed
     ],
   },
+  
+  // ✅ BUILD OPTIMIZATIONS
   typescript: {
-    // Σε παραγωγικό περιβάλλον, είναι καλύτερα να αγνοούνται τα σφάλματα για την αποφυγή διακοπών
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // Enable for stricter builds
   },
   eslint: {
-    // Σε παραγωγικό περιβάλλον, καλύτερα να αγνοούνται τα lint warnings
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // Enable for better code quality
   },
-  poweredByHeader: false,
-  compress: true,
-  // Προσθήκη webpack configuration για τα Node.js modules
-  webpack: (config, { isServer }) => {
+  
+  // ✅ PERFORMANCE SETTINGS
+  poweredByHeader: false, // Remove X-Powered-By header
+  compress: true, // Enable gzip compression
+  reactStrictMode: true, // Enable React strict mode
+  
+  // ✅ OPTIMIZED WEBPACK CONFIG
+  webpack: (config, { isServer, dev }) => {
+    // Client-side optimizations
     if (!isServer) {
       config.resolve.fallback = {
         fs: false,
@@ -99,56 +77,122 @@ const nextConfig: NextConfig = {
         os: false,
         path: false,
       };
-    }
-    
-    // Προσθήκη source maps σε development mode
-    if (!isServer && process.env.NODE_ENV === 'development') {
-      config.devtool = 'eval-source-map';
+      
+      // Production optimizations
+      if (!dev) {
+        config.optimization = {
+          ...config.optimization,
+          usedExports: true,
+          sideEffects: false,
+          splitChunks: {
+            chunks: 'all',
+            cacheGroups: {
+              vendor: {
+                test: /[\\/]node_modules[\\/]/,
+                name: 'vendors',
+                chunks: 'all',
+                maxSize: 244000, // ~240KB
+              },
+              common: {
+                minChunks: 2,
+                chunks: 'all',
+                enforce: true,
+                maxSize: 244000,
+              },
+            },
+          },
+        };
+      }
     }
     
     return config;
   },
+  
+  // ✅ EXPERIMENTAL FEATURES FOR PERFORMANCE
   experimental: {
-    // Ενεργοποίηση υποστήριξης για server actions
     serverActions: {
-      bodySizeLimit: '2mb', // Αύξηση ορίου μεγέθους για server actions
+      bodySizeLimit: '1mb', // Reduced from 2mb
     },
-    optimizeCss: true,
-    serverMinification: true,
-    // Η ιδιότητα missingSuspenseWithCSRBailout έχει αφαιρεθεί από το Next.js 15
-    // Βασιζόμαστε πλέον μόνο στην αλλαγή του PageTransition component
+    optimizeCss: true, // Enable CSS optimization
+    serverMinification: true, // Minify server code
+    webVitalsAttribution: ['CLS', 'LCP'], // Track key metrics only
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'lodash-es'
+    ], // Optimize specific packages
   },
+  
+  // ✅ OPTIMIZED HEADERS
   headers: async () => [
+    // Static assets - long cache
     {
-      source: '/:all*(svg|jpg|png|webp|avif)',
+      source: '/:all*(svg|jpg|jpeg|png|gif|webp|avif|ico|woff|woff2|ttf|eot)',
       locale: false,
       headers: [
         {
           key: 'Cache-Control',
-          value: `public, max-age=${imageConfig.cacheMaxAge}, s-maxage=${imageConfig.cacheMaxAge}, stale-while-revalidate=${imageConfig.staleWhileRevalidate}`,
+          value: 'public, max-age=31536000, immutable',
         }
       ],
     },
+    // Uploads - long cache with revalidation
     {
       source: '/uploads/:path*',
       headers: [
         {
           key: 'Cache-Control',
-          value: `public, max-age=${imageConfig.cacheMaxAge}, immutable`,
+          value: 'public, max-age=31536000, immutable',
         }
       ],
     },
+    // API routes - no cache
+    {
+      source: '/api/:path*',
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'no-store, must-revalidate',
+        }
+      ],
+    },
+    // All pages - essential headers
     {
       source: '/:path*',
-      headers: securityHeaders,
+      headers: essentialHeaders,
     }
   ],
+  
+  // ✅ REDIRECT OPTIMIZATIONS
+  redirects: async () => [
+    // Add common redirects here if needed
+  ],
+  
+  // ✅ LOGGING (minimal in production)
   logging: {
     fetches: {
       fullUrl: process.env.NODE_ENV !== 'production',
     },
   },
+  
+  // ✅ OUTPUT SETTINGS
+  output: 'standalone', // Optimize for deployment
+  
+  // ✅ COMPILER OPTIONS
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error']
+    } : false,
+  },
+  
+  // ✅ RUNTIME CONFIG
+  serverRuntimeConfig: {
+    // Server-only config
+  },
+  publicRuntimeConfig: {
+    // Client-side config
+  },
 }
 
-// Εξαγωγή του config με το BundleAnalyzer wrapper όταν χρειάζεται
+// ✅ EXPORT WITH CONDITIONAL BUNDLE ANALYZER
 export default process.env.ANALYZE === 'true' ? withBundleAnalyzer(nextConfig) : nextConfig;

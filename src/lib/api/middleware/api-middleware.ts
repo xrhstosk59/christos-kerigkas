@@ -4,15 +4,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { ErrorHandler } from '@/lib/utils/errors/error-handler';
 import { ForbiddenError, UnauthorizedError, ValidationError } from '@/lib/utils/errors/app-error';
-import { getCurrentSession } from '@/lib/auth/server-auth';
+import { getCurrentSession } from '@/lib/supabase/server';
 import { checkPermission, Permission, UserWithRole } from '@/lib/auth/access-control';
 import { logger } from '@/lib/utils/logger';
 
-// Τύπος για τα context δεδομένα που περνάνε στον handler
+// Διορθωμένος τύπος για τα context δεδομένα που περνάνε στον handler
 export interface HandlerContext {
   user?: UserWithRole;
   session?: {
     isAuthenticated: boolean;
+    user?: UserWithRole;
   };
 }
 
@@ -65,9 +66,10 @@ export function createApiHandler<T extends z.ZodTypeAny>(
         
         context.user = userSession.user as UserWithRole;
         
-        // Διόρθωση για το πιθανό undefined session
+        // Ενημέρωση του session context
         if (context.session) {
           context.session.isAuthenticated = true;
+          context.session.user = userSession.user as UserWithRole;
         }
         
         // Έλεγχος δικαιωμάτων αν υπάρχουν

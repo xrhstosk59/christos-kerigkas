@@ -1,93 +1,145 @@
 // src/lib/auth/supabase-auth-client.ts
 'use client'
 
-import { createClient, SupabaseClient, Session, User } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client'
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 
-// Τύπος για τα αποτελέσματα των λειτουργιών αυθεντικοποίησης
-export interface AuthResult {
-  session: Session | null;
-  user: User | null;
-}
-
-// Κλάση για τη διαχείριση της αυθεντικοποίησης με Supabase (client-side)
-class SupabaseAuthManager {
-  private authClient: SupabaseClient | null = null;
-
-  constructor() {
-    this.initialize();
-  }
-
-  private initialize() {
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (supabaseUrl && supabaseAnonKey) {
-        this.authClient = createClient(supabaseUrl, supabaseAnonKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-          }
-        });
-      } else {
-        console.warn(
-          'Supabase Auth client initialization failed. ' +
-          'Missing environment variables.'
-        );
-      }
-    } catch (error) {
-      console.error('Error initializing Supabase Auth client:', error);
-      this.authClient = null;
-    }
-  }
-
-  // Έλεγχος αν το client είναι διαθέσιμο
+/**
+ * Client-side authentication manager για Supabase
+ * Χρησιμοποιείται μόνο σε browser environments
+ */
+export const supabaseClient = {
+  /**
+   * Έλεγχος αν το client είναι διαθέσιμο (browser environment)
+   */
   isClientAvailable(): boolean {
-    return !!this.authClient;
-  }
+    return typeof window !== 'undefined'
+  },
 
-  // Ασφαλής πρόσβαση στο client
-  getClient(): SupabaseClient {
-    if (!this.authClient) {
-      throw new Error('Supabase Auth client is not initialized');
+  /**
+   * Λήψη του Supabase client
+   */
+  getClient() {
+    if (!this.isClientAvailable()) {
+      throw new Error('Supabase client is only available in browser environment')
     }
-    
-    return this.authClient;
+    return createClient()
+  },
+
+  /**
+   * Authentication methods
+   */
+  auth: {
+    /**
+     * Sign in με email και password
+     */
+    async signIn(email: string, password: string) {
+      const client = createClient()
+      const { error } = await client.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        return { error }
+      }
+
+      // Επιβεβαίωση με getUser()
+      const { data: userData, error: userError } = await client.auth.getUser()
+      
+      if (userError || !userData.user) {
+        return { error: userError || new Error('Failed to verify user') }
+      }
+
+      return { data: userData, error: null }
+    },
+
+    /**
+     * Sign out
+     */
+    async signOut() {
+      const client = createClient()
+      const { error } = await client.auth.signOut()
+      
+      if (!error && typeof window !== 'undefined') {
+        // Καθαρισμός local state και redirect
+        window.location.href = '/admin/login'
+      }
+      
+      return { error }
+    },
+
+    /**
+     * Λήψη του current user
+     */
+    async getCurrentUser(): Promise<{ user: User | null; error: Error | null }> {
+      const client = createClient()
+      const { data, error } = await client.auth.getUser()
+      
+      return { user: data.user, error }
+    },
+
+    /**
+     * Έλεγχος authentication status
+     */
+    async isAuthenticated(): Promise<boolean> {
+      const { user } = await this.getCurrentUser()
+      return !!user
+    },
+
+    /**
+     * Update user password
+     */
+    async updateUser(options: { password: string }) {
+      const client = createClient()
+      const { error } = await client.auth.updateUser({
+        password: options.password
+      })
+
+      return { error }
+    },
+
+    /**
+     * Auth state change listener
+     */
+    onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
+      const client = createClient()
+      return client.auth.onAuthStateChange(callback)
+    },
+
+    /**
+     * Get current session
+     */
+    async getSession() {
+      const client = createClient()
+      const { data, error } = await client.auth.getSession()
+      return { session: data.session, error }
+    }
+  },
+
+  /**
+   * Database operations με client
+   */
+  db: {
+    /**
+     * Generic query function
+     */
+    async query<T>(
+      queryFn: (client: ReturnType<typeof createClient>) => Promise<{ data: T | null; error: Error | null }>
+    ): Promise<{ data: T | null; error: Error | null }> {
+      try {
+        const client = createClient()
+        return await queryFn(client)
+      } catch (error) {
+        console.error('Database query error:', error)
+        return { 
+          data: null, 
+          error: error instanceof Error ? error : new Error('Unknown database error')
+        }
+      }
+    }
   }
 }
 
-// Singleton instance
-export const supabaseAuthManager = new SupabaseAuthManager();
-
-/**
- * Έλεγχος αν το Supabase Auth client είναι διαθέσιμο
- */
-export function isAuthClientValid(): boolean {
-  return supabaseAuthManager.isClientAvailable();
-}
-
-/**
- * Απλοποιημένο API για συχνές λειτουργίες αυθεντικοποίησης
- */
-export const auth = {
-  async signInWithPassword(email: string, password: string) {
-    const client = supabaseAuthManager.getClient();
-    return await client.auth.signInWithPassword({ email, password });
-  },
-
-  async signOut() {
-    const client = supabaseAuthManager.getClient();
-    return await client.auth.signOut();
-  },
-
-  async getSession() {
-    const client = supabaseAuthManager.getClient();
-    return await client.auth.getSession();
-  },
-
-  async getUser() {
-    const client = supabaseAuthManager.getClient();
-    return await client.auth.getUser();
-  }
-};
+// Export για χρήση σε components
+export default supabaseClient

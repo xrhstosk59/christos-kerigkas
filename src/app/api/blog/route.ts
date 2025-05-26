@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { apiResponse } from '@/lib/utils/api-response';
-import { getCurrentSession } from '@/lib/auth/server-auth';
+import { supabaseServer } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
 import { Role } from '@/lib/auth/access-control';
 import { createApiHandler } from '@/lib/utils/api-middleware';
@@ -99,10 +99,16 @@ export const POST = createApiHandler(
   postSchema,
   async (req, validData, _context) => {
     try {
-      // Λήψη του τρέχοντος χρήστη
-      const session = await getCurrentSession();
-      if (!session.user) {
+      // Λήψη του τρέχοντος χρήστη με το νέο API
+      const { user, role } = await supabaseServer.auth.getUserWithRole();
+      
+      if (!user) {
         return apiResponse.unauthorized();
+      }
+      
+      // Έλεγχος αν ο χρήστης είναι admin ή editor
+      if (role !== 'admin' && role !== 'editor') {
+        return apiResponse.forbidden('Δεν έχετε τα απαραίτητα δικαιώματα για τη δημιουργία blog post');
       }
       
       logger.info(`Δημιουργία νέου blog post: ${validData.title}`, null, 'api-blog-POST');
@@ -111,7 +117,7 @@ export const POST = createApiHandler(
       // Ασφαλέστερη μετατροπή του ρόλου του χρήστη στον τύπο Role του enum
       let userRole: Role;
       
-      switch (session.user.role) {
+      switch (role) {
         case 'admin':
           userRole = Role.ADMIN;
           break;
@@ -144,8 +150,8 @@ export const POST = createApiHandler(
         metaDescription: validData.description.slice(0, 160), // Χρήση της περιγραφής ως meta description
         status: 'published' // Προσθήκη του πεδίου status που έλειπε
       }, {
-        id: session.user.id,
-        email: session.user.email,
+        id: user.id,
+        email: user.email || '',
         role: userRole
       });
       

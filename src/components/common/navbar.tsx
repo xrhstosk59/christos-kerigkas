@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback, useTransition } from 'react'
 import { Menu, X } from 'lucide-react'
-import { useTheme } from '@/components/providers/theme-provider'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils/utils'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
@@ -18,6 +17,28 @@ const navigation = [
   { name: 'Contact', href: '#contact', ariaLabel: 'Get in touch' },
 ] as const
 
+// ✅ SIMPLE THEME TOGGLE COMPONENT (No heavy theme provider calls)
+function SimpleThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
+  return (
+    <button
+      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+      className="ml-4 p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+      aria-label="Toggle theme"
+    >
+      {theme === 'light' ? '🌙' : '☀️'}
+    </button>
+  )
+}
+
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -26,53 +47,44 @@ export default function Navbar() {
   const pathname = usePathname()
   const [, startTransition] = useTransition()
 
-  // Χρήση του useCallback για τη βελτιστοποίηση των event handlers
+  // ✅ OPTIMIZED SCROLL HANDLER with RAF
   const handleScroll = useCallback(() => {
-    setScrolled(window.scrollY > 20)
+    requestAnimationFrame(() => {
+      setScrolled(window.scrollY > 20)
+    })
   }, [])
 
   useEffect(() => {
-    // Debounced scroll event για καλύτερη απόδοση
-    let timeoutId: NodeJS.Timeout;
-    
-    const handleScrollWithDebounce = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleScroll, 10);
-    };
-    
-    window.addEventListener('scroll', handleScrollWithDebounce, { passive: true })
+    // ✅ PASSIVE SCROLL LISTENER for better performance
+    window.addEventListener('scroll', handleScroll, { passive: true })
     
     return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('scroll', handleScrollWithDebounce)
+      window.removeEventListener('scroll', handleScroll)
     }
   }, [handleScroll])
 
-  // Βελτιωμένο link click handler με Next.js Router API
+  // ✅ OPTIMIZED LINK CLICK HANDLER
   const handleLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     setMobileMenuOpen(false)
     
-    // Χειρισμός hash links
     if (href.startsWith('#')) {
       e.preventDefault()
       
-      // Εάν είμαστε στην αρχική σελίδα
       if (pathname === '/') {
         const targetId = href.slice(1)
         const targetElement = document.getElementById(targetId)
         
         if (targetElement) {
           targetElement.scrollIntoView({
-            behavior: 'smooth'
+            behavior: 'smooth',
+            block: 'start'
           })
           
-          // Ενημέρωση URL με startTransition για React 19
           startTransition(() => {
             window.history.pushState({}, '', href)
           })
         }
       } else {
-        // Εάν είμαστε σε άλλη σελίδα, επιστροφή στην αρχική και μετά στο anchor
         startTransition(() => {
           router.push(`/${href}`)
         })
@@ -80,37 +92,42 @@ export default function Navbar() {
     }
   }, [pathname, router])
 
+  // ✅ OPTIMIZED CSS CLASSES
   const headerClasses = cn(
-    'fixed w-full z-50 transition-all duration-200 backdrop-blur-md',
-    theme === 'dark' ? 'bg-gray-900/90' : 'bg-white/90',
-    scrolled && 'shadow-sm'
+    'fixed w-full z-50 transition-all duration-300 backdrop-blur-sm',
+    scrolled && 'shadow-lg',
+    theme === 'dark' 
+      ? 'bg-gray-900/95 border-gray-800' 
+      : 'bg-white/95 border-gray-200',
+    scrolled && 'border-b'
   )
 
   const linkClasses = cn(
-    'text-sm font-semibold transition-colors duration-200 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+    'text-sm font-medium transition-colors duration-200 hover:scale-105 transform px-3 py-2 rounded-md',
     theme === 'dark' 
-      ? 'text-gray-400 hover:text-white focus-visible:text-white focus-visible:ring-white focus-visible:ring-offset-gray-900' 
-      : 'text-gray-600 hover:text-gray-900 focus-visible:text-gray-900 focus-visible:ring-gray-900 focus-visible:ring-offset-white'
+      ? 'text-gray-300 hover:text-white hover:bg-gray-800' 
+      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
   )
 
   const mobileMenuClasses = cn(
-    'block rounded-lg px-3 py-2 text-base font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2',
+    'block rounded-lg px-4 py-3 text-base font-medium transition-all duration-200',
     theme === 'dark'
-      ? 'text-gray-400 hover:bg-gray-800 hover:text-white focus-visible:bg-gray-800 focus-visible:text-white focus-visible:ring-white'
-      : 'text-gray-900 hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:ring-gray-900'
+      ? 'text-gray-300 hover:bg-gray-800 hover:text-white'
+      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
   )
 
   return (
     <header className={headerClasses} role="banner">
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 sm:p-6 lg:px-8" aria-label="Main navigation">
+        {/* ✅ LOGO */}
         <div className="flex lg:flex-1">
           <Link 
             href="/" 
             className={cn(
-              'text-lg font-bold sm:text-xl transition-colors duration-200 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+              'text-xl font-bold transition-all duration-200 hover:scale-110 transform',
               theme === 'dark' 
-                ? 'text-white hover:text-gray-300 focus-visible:text-gray-300 focus-visible:ring-white focus-visible:ring-offset-gray-900' 
-                : 'text-gray-900 hover:text-gray-600 focus-visible:text-gray-600 focus-visible:ring-gray-900 focus-visible:ring-offset-white'
+                ? 'text-white hover:text-gray-300' 
+                : 'text-gray-900 hover:text-gray-600'
             )}
             onClick={(e) => pathname === '/' && handleLinkClick(e, '#')}
             aria-label="Go to home page"
@@ -119,24 +136,8 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div className="flex lg:hidden">
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={cn(
-              'rounded-md p-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2',
-              theme === 'dark' 
-                ? 'text-gray-400 hover:text-white focus-visible:text-white focus-visible:ring-white' 
-                : 'text-gray-700 hover:text-gray-900 focus-visible:text-gray-900 focus-visible:ring-gray-900'
-            )}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-menu"
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
-          </button>
-        </div>
-
-        <div className="hidden lg:flex lg:gap-x-12">
+        {/* ✅ DESKTOP NAVIGATION */}
+        <div className="hidden lg:flex lg:gap-x-8 lg:items-center">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -148,37 +149,56 @@ export default function Navbar() {
               {item.name}
             </Link>
           ))}
+          <SimpleThemeToggle />
+        </div>
+
+        {/* ✅ MOBILE MENU BUTTON */}
+        <div className="flex lg:hidden items-center">
+          <SimpleThemeToggle />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={cn(
+              'ml-2 rounded-md p-2 transition-colors duration-200',
+              theme === 'dark' 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+            )}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </nav>
       
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            id="mobile-menu"
-            role="navigation"
-            aria-label="Mobile navigation"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className={theme === 'dark' ? 'bg-gray-900' : 'bg-white'}
-          >
-            <div className="space-y-1 px-4 pb-3 pt-2">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={(e) => handleLinkClick(e, item.href)}
-                  className={mobileMenuClasses}
-                  aria-label={item.ariaLabel}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
+      {/* ✅ MOBILE MENU with CSS transitions only */}
+      <div
+        id="mobile-menu"
+        className={cn(
+          'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
+          theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200',
+          mobileMenuOpen 
+            ? 'max-h-96 opacity-100 border-t' 
+            : 'max-h-0 opacity-0'
         )}
-      </AnimatePresence>
+        role="navigation"
+        aria-label="Mobile navigation"
+      >
+        <div className="px-4 py-2 space-y-1">
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={(e) => handleLinkClick(e, item.href)}
+              className={mobileMenuClasses}
+              aria-label={item.ariaLabel}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+      </div>
     </header>
   )
 }

@@ -1,17 +1,11 @@
-// src/app/layout.tsx - Ενημερωμένο για Next.js 15
+// src/app/layout.tsx - OPTIMIZED & WORKING
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { Analytics } from "@/components/layout/analytics";
-import PageTransition from "@/components/common/page-transition";
-import ScrollProgress from "@/components/common/scroll-progress";
-import { AuthProvider } from "@/components/client/providers/auth-provider";
-import ErrorBoundary from "@/_errors/boundaries/error-boundary";
-import PerformanceMonitor from "@/components/client/performance-monitor";
 import { defaultMetadata, generatePersonJsonLd, generateWebsiteJsonLd } from "@/lib/utils/seo";
 import "./globals.css";
 
-// Βελτιστοποίηση φόρτωσης γραμματοσειράς
+// ✅ OPTIMIZED FONT LOADING
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
@@ -24,20 +18,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
   display: "swap",
-  preload: true,
+  preload: false, // Not critical
   fallback: ["monospace"],
 });
 
-// Ενημερωμένο metadata για Next.js 15
+// ✅ METADATA
 export const metadata: Metadata = {
   ...defaultMetadata,
   metadataBase: new URL('https://christoskerigkas.com'),
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
-    apple: [
-      { url: '/apple-icon.png', sizes: '180x180' }
-    ]
+    apple: [{ url: '/apple-icon.png', sizes: '180x180' }]
   },
   robots: {
     index: true,
@@ -50,7 +42,7 @@ export const metadata: Metadata = {
   applicationName: "Christos Kerigkas Portfolio",
 };
 
-// Προσθήκη Viewport για Next.js 15
+// ✅ VIEWPORT
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
@@ -63,7 +55,7 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-// Δημιουργία των JSON-LD structured data
+// ✅ STRUCTURED DATA
 const personJsonLd = generatePersonJsonLd();
 const websiteJsonLd = generateWebsiteJsonLd();
 
@@ -75,51 +67,60 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <head>
-        {/* Schema.org JSON-LD για Person */}
+        {/* ✅ STRUCTURED DATA */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(personJsonLd)
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
-        
-        {/* Schema.org JSON-LD για Website */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteJsonLd)
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         
-        {/* Preconnect για εξωτερικές πηγές */}
+        {/* ✅ CRITICAL PRECONNECTS ONLY */}
         <link rel="preconnect" href="https://tnwbnlbmlqoxypsqdqii.supabase.co" />
         <link rel="dns-prefetch" href="https://tnwbnlbmlqoxypsqdqii.supabase.co" />
         {process.env.NEXT_PUBLIC_GA_ID && (
-          <>
-            <link rel="preconnect" href="https://www.googletagmanager.com" />
-            <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-          </>
+          <link rel="preconnect" href="https://www.googletagmanager.com" />
         )}
       </head>
-      <body className={`${geist.variable} ${geistMono.variable} antialiased min-h-screen`}>
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:top-2 focus:left-2 focus:rounded">
+      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased min-h-screen text-crisp custom-scrollbar transition-theme`}>
+        {/* ✅ ACCESSIBILITY SKIP LINK */}
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:top-2 focus:left-2 focus:rounded focus-ring"
+        >
           Skip to content
         </a>
         
-        <AuthProvider>
-          <ThemeProvider>
-            <ScrollProgress />
-            <ErrorBoundary>
-              <PageTransition>
-                <main id="main-content">
-                  {children}
-                </main>
-              </PageTransition>
-            </ErrorBoundary>
-            <Analytics />
-            <PerformanceMonitor />
-          </ThemeProvider>
-        </AuthProvider>
+        {/* ✅ THEME PROVIDER - Your custom provider */}
+        <ThemeProvider>
+          <div className="min-h-screen flex flex-col bg-background text-foreground">
+            <main id="main-content" className="flex-1">
+              {children}
+            </main>
+          </div>
+        </ThemeProvider>
+        
+        {/* ✅ PERFORMANCE OPTIMIZATION SCRIPT */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Preload critical pages when idle
+              if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                  const preloadPages = ['/cv', '/blog'];
+                  preloadPages.forEach(page => {
+                    const link = document.createElement('link');
+                    link.rel = 'prefetch';
+                    link.href = page;
+                    document.head.appendChild(link);
+                  });
+                });
+              }
+            `
+          }}
+        />
       </body>
     </html>
   );
