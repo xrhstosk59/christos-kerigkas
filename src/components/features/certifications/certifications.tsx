@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 
 // ✅ CERTIFICATION TYPE
 interface Certification {

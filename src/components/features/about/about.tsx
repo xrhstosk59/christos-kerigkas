@@ -1,6 +1,6 @@
 'use client'
 
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import { Code2, Dumbbell, GraduationCap, Home, Binary } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'

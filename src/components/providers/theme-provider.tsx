@@ -1,121 +1,66 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import type { ThemeProviderProps } from 'next-themes/dist/types';
 
-type Theme = 'dark' | 'light';
-
-interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
+// Separate context for profile image (not related to theme)
+interface ProfileContextType {
   profileImage: string;
   setProfileImage: (src: string) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
+// Profile Provider (separate from theme)
+export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profileImage, setProfileImage] = useState<string>('/uploads/profile.jpg');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Ενημέρωση του mounted state για να αποφύγουμε διαφορές
-    // μεταξύ server και client rendering
     setMounted(true);
-
-    // Φόρτωση του αποθηκευμένου θέματος από το localStorage
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Προτεραιότητα: savedTheme > prefersDark > default (light)
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (prefersDark) {
-      setTheme('dark');
-    }
-
-    // Φόρτωση του προφίλ image από το localStorage
+    // Load profile image from localStorage
     const savedProfileImage = localStorage.getItem('profileImage');
     if (savedProfileImage) {
       setProfileImage(savedProfileImage);
     }
   }, []);
 
-  // Παρακολούθηση αλλαγών στο θέμα και ενημέρωση του DOM και localStorage
-  useEffect(() => {
-    if (!mounted) return;
-    
-    // Ενημέρωση του classList του document
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    // Αποθήκευση στο localStorage
-    localStorage.setItem('theme', theme);
-  }, [theme, mounted]);
-
-  // Αποθήκευση του profileImage στο localStorage όταν αλλάζει
+  // Save profile image to localStorage when it changes
   useEffect(() => {
     if (!mounted) return;
     localStorage.setItem('profileImage', profileImage);
   }, [profileImage, mounted]);
 
-  // Συνάρτηση για εναλλαγή θέματος
-  const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
-
-  // Context value
-  const themeContextValue: ThemeContextType = {
-    theme,
-    setTheme,
-    toggleTheme,
-    profileImage,
-    setProfileImage,
-  };
-
   return (
-    <>
-      {/* Script για αποφυγή του flash of incorrect theme */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              try {
-                const savedTheme = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                
-                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (e) {
-                // Σε περίπτωση σφάλματος (π.χ. localStorage μη διαθέσιμο),
-                // απλά συνεχίζουμε χωρίς να αλλάξουμε τίποτα
-                console.error('Error accessing localStorage for theme:', e);
-              }
-            })();
-          `,
-        }}
-      />
-      <ThemeContext.Provider value={themeContextValue}>
-        {children}
-      </ThemeContext.Provider>
-    </>
+    <ProfileContext.Provider value={{ profileImage, setProfileImage }}>
+      {children}
+    </ProfileContext.Provider>
   );
 }
 
-// Custom hook για εύκολη πρόσβαση στο ThemeContext
-export function useTheme(): ThemeContextType {
-  const context = useContext(ThemeContext);
-  
+// Custom hook for profile
+export function useProfile(): ProfileContextType {
+  const context = useContext(ProfileContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error('useProfile must be used within a ProfileProvider');
   }
-  
   return context;
+}
+
+// Theme Provider using next-themes
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+      {...props}
+    >
+      <ProfileProvider>
+        {children}
+      </ProfileProvider>
+    </NextThemesProvider>
+  );
 }

@@ -1,7 +1,7 @@
 'use client'
 
 // src/components/features/projects/projects.tsx
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import { Suspense } from 'react'
 import { cn } from '@/lib/utils/utils'

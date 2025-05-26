@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { useAuth } from '@/components/client/providers/auth-provider'
 import Link from 'next/link'
 import { 

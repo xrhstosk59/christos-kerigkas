@@ -1,15 +1,16 @@
-// src/app/blog/[slug]/page.tsx
+// src/app/blog/[slug]/page.tsx - FIXED for Next.js 15
 import BlogPostView from '@/components/client/blog/blog-post-view'
 import type { BlogPost } from '@/types/blog'
 import { getBlogPostBySlug } from '@/lib/api/blog'
 
-// Διορθωμένη τυπολογία props χωρίς Promise
+// ✅ CORRECT: Props με Promise για Next.js 15
 interface PageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const { slug } = params;
+  // ✅ CRITICAL: Await τα params πριν τα χρησιμοποιήσεις
+  const { slug } = await params;
   
   try {
     // First try fetching from API
@@ -45,7 +46,6 @@ export default async function BlogPostPage({ params }: PageProps) {
       };
     }
     
-    // Χρησιμοποιούμε το νέο BlogPostView component με το prop 'post'
     return <BlogPostView post={postData} />;
   } catch (error) {
     console.error("Error loading blog post:", error);
@@ -65,7 +65,36 @@ export default async function BlogPostPage({ params }: PageProps) {
       content: "# Error Loading Post\n\nSorry, there was a problem loading this content."
     };
     
-    // Χρησιμοποιούμε το νέο BlogPostView component με το prop 'post'
     return <BlogPostView post={fallbackData} />;
   }
+}
+
+// ✅ Αν έχεις generateMetadata function, φτιάξ' το και αυτό:
+export async function generateMetadata({ params }: PageProps) {
+  const { slug } = await params;
+  
+  try {
+    // Try to get post data for metadata
+    const postData = await getBlogPostBySlug(slug);
+    
+    if (postData) {
+      return {
+        title: postData.title,
+        description: postData.description,
+        openGraph: {
+          title: postData.title,
+          description: postData.description,
+          images: postData.image ? [postData.image] : [],
+        },
+      };
+    }
+  } catch (error) {
+    console.error("Error generating metadata:", error);
+  }
+  
+  // Fallback metadata
+  return {
+    title: `Blog Post - ${slug}`,
+    description: "Read this blog post by Christos Kerigkas",
+  };
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Mail, Phone, Github, Linkedin, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 
 type StatusType = 'idle' | 'loading' | 'success' | 'error' | 'partialSuccess'

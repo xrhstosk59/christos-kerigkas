@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils/utils'
 import { Loader2, Save, X, Plus, ChevronLeft } from 'lucide-react'

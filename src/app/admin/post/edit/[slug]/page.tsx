@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import BlogPostForm from '@/components/features/admin/blog-post-form'
 import { Loader2 } from 'lucide-react'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils/utils'
 import type { BlogPost } from '@/types/blog'
 

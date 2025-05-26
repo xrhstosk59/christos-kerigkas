@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { Skill, SkillCategory } from '@/types/cv'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts'
 import { Button } from '@/components/ui/button'

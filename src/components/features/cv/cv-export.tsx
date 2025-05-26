@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { ExportOptions } from '@/types/cv'
 import { Download, FileText, Moon, Sun, Palette } from 'lucide-react'
 import { Button } from '@/components/ui/button'

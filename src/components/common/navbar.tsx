@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useTransition } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils/utils'
 import Link from 'next/link'
@@ -17,8 +17,8 @@ const navigation = [
   { name: 'Contact', href: '#contact', ariaLabel: 'Get in touch' },
 ] as const
 
-// ✅ SIMPLE THEME TOGGLE COMPONENT (No heavy theme provider calls)
-function SimpleThemeToggle() {
+// ✅ IMPROVED THEME TOGGLE with proper mounting
+function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -26,15 +26,30 @@ function SimpleThemeToggle() {
     setMounted(true)
   }, [])
 
-  if (!mounted) return null
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <button
+        className="ml-4 p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+        aria-label="Toggle theme"
+        disabled
+      >
+        <Sun className="h-5 w-5" />
+      </button>
+    )
+  }
 
   return (
     <button
       onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-      className="ml-4 p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-      aria-label="Toggle theme"
+      className="ml-4 p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
-      {theme === 'light' ? '🌙' : '☀️'}
+      {theme === 'light' ? (
+        <Moon className="h-5 w-5" />
+      ) : (
+        <Sun className="h-5 w-5" />
+      )}
     </button>
   )
 }
@@ -42,7 +57,6 @@ function SimpleThemeToggle() {
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { theme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
@@ -92,28 +106,22 @@ export default function Navbar() {
     }
   }, [pathname, router])
 
-  // ✅ OPTIMIZED CSS CLASSES
+  // ✅ SIMPLIFIED CSS CLASSES (removed theme references)
   const headerClasses = cn(
     'fixed w-full z-50 transition-all duration-300 backdrop-blur-sm',
-    scrolled && 'shadow-lg',
-    theme === 'dark' 
-      ? 'bg-gray-900/95 border-gray-800' 
-      : 'bg-white/95 border-gray-200',
-    scrolled && 'border-b'
+    scrolled && 'shadow-lg bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800'
   )
 
   const linkClasses = cn(
     'text-sm font-medium transition-colors duration-200 hover:scale-105 transform px-3 py-2 rounded-md',
-    theme === 'dark' 
-      ? 'text-gray-300 hover:text-white hover:bg-gray-800' 
-      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+    'text-gray-700 hover:text-gray-900 hover:bg-gray-100',
+    'dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
   )
 
   const mobileMenuClasses = cn(
     'block rounded-lg px-4 py-3 text-base font-medium transition-all duration-200',
-    theme === 'dark'
-      ? 'text-gray-300 hover:bg-gray-800 hover:text-white'
-      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+    'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+    'dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white'
   )
 
   return (
@@ -125,9 +133,8 @@ export default function Navbar() {
             href="/" 
             className={cn(
               'text-xl font-bold transition-all duration-200 hover:scale-110 transform',
-              theme === 'dark' 
-                ? 'text-white hover:text-gray-300' 
-                : 'text-gray-900 hover:text-gray-600'
+              'text-gray-900 hover:text-gray-600',
+              'dark:text-white dark:hover:text-gray-300'
             )}
             onClick={(e) => pathname === '/' && handleLinkClick(e, '#')}
             aria-label="Go to home page"
@@ -149,19 +156,18 @@ export default function Navbar() {
               {item.name}
             </Link>
           ))}
-          <SimpleThemeToggle />
+          <ThemeToggle />
         </div>
 
         {/* ✅ MOBILE MENU BUTTON */}
         <div className="flex lg:hidden items-center">
-          <SimpleThemeToggle />
+          <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className={cn(
               'ml-2 rounded-md p-2 transition-colors duration-200',
-              theme === 'dark' 
-                ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
-                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+              'text-gray-700 hover:text-gray-900 hover:bg-gray-100',
+              'dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800'
             )}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"
@@ -172,12 +178,12 @@ export default function Navbar() {
         </div>
       </nav>
       
-      {/* ✅ MOBILE MENU with CSS transitions only */}
+      {/* ✅ MOBILE MENU */}
       <div
         id="mobile-menu"
         className={cn(
           'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
-          theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200',
+          'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800',
           mobileMenuOpen 
             ? 'max-h-96 opacity-100 border-t' 
             : 'max-h-0 opacity-0'

@@ -1,7 +1,7 @@
 'use client'
 
 // src/components/features/experience/experience.tsx
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'

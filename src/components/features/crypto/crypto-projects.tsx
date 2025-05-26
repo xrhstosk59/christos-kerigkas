@@ -1,7 +1,7 @@
 // src/components/features/crypto/crypto-projects.tsx
 'use client'
 
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import { Cpu } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'

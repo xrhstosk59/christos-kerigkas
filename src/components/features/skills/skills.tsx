@@ -1,7 +1,7 @@
 'use client'
 
 // src/components/features/skills/skills.tsx
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 

@@ -1,8 +1,9 @@
-// src/components/layout/hero.tsx
+// src/components/layout/hero.tsx - FIXED for next-themes
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
+import { useProfile } from '@/components/providers/theme-provider'  // ✅ Added for profileImage
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
@@ -18,7 +19,10 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  const { theme, profileImage, setProfileImage } = useTheme()
+  // ✅ FIXED: Split the hooks
+  const { theme } = useTheme()  // Only theme from next-themes
+  const { profileImage, setProfileImage } = useProfile()  // profileImage from custom provider
+  
   const [isUploading, setIsUploading] = useState(false)
   const [imageError, setImageError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)

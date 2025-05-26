@@ -2,7 +2,7 @@
 "use client"
 
 import { motion, useScroll } from "framer-motion"
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 
 export default function ScrollProgress() {
   const { scrollYProgress } = useScroll()

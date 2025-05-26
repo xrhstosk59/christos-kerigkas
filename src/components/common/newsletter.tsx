@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils/utils'
 import { Loader2, Mail, CheckCircle, AlertCircle } from 'lucide-react'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { Github, Linkedin, Mail } from 'lucide-react'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 
 export function Footer() {
   const { theme } = useTheme()

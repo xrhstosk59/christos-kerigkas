@@ -1,4 +1,4 @@
-// src/lib/api/auth-api.ts
+// src/lib/api/auth-api.ts - FIXED
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -104,11 +104,12 @@ export const authApi = {
       const supabase = await createClient();
       
       const { data: sessionData } = await supabase.auth.getUser();
-      if (!userData?.user?.user) {
+      if (!sessionData?.user) {
         return null;
       }
       
-      const userId = sessionData.session.user.id;
+      // ✅ FIXED: Use sessionData.user directly (not sessionData.session.user)
+      const userId = sessionData.user.id;
       
       // Λήψη επιπλέον πληροφοριών προφίλ από τη βάση δεδομένων
       const { data: profileData } = await supabase
@@ -119,7 +120,7 @@ export const authApi = {
       
       return {
         id: userId,
-        email: sessionData.session.user.email || '',
+        email: sessionData.user.email || '', // ✅ FIXED: Use sessionData.user.email
         role: profileData?.role as 'admin' | 'user' || 'user',
         firstName: profileData?.first_name,
         lastName: profileData?.last_name,

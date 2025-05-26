@@ -3,7 +3,7 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useTheme } from '@/components/providers/theme-provider'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils/utils'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/components/client/providers/auth-provider'

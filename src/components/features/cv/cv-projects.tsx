@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from  '@/components/providers/theme-provider'
+import { useTheme } from "next-themes"
 import { Project, ProjectCategory } from '@/types/projects'
 import { ExternalLink, Github, ChevronLeft, ChevronRight } from 'lucide-react'
 // Διόρθωση του μονοπατιού εισαγωγής

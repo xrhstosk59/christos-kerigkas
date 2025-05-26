@@ -1,18 +1,18 @@
-// src/app/blog/page.tsx 
+// src/app/blog/page.tsx - FINAL FIXED for Next.js 15
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 
-// Τύπος για τα props της σελίδας - Διορθωμένο χωρίς Promise
+// ✅ CORRECT: Props με Promise για Next.js 15
 interface BlogPageProps {
-  searchParams?: {
+  searchParams: Promise<{
     category?: string;
     search?: string;
     page?: string;
-  };
+  }>;
 }
 
-// Τα props ακριβώς όπως ορίζονται στο blog.server.tsx
+// Τα props για το BlogComponent (resolved, όχι Promise)
 interface BlogProps {
   searchParams?: {
     category?: string;
@@ -31,7 +31,7 @@ const BlogComponent = dynamic<BlogProps>(() => import('@/components/features/blo
   )
 })
 
-// Metadata για τη σελίδα του blog
+// ✅ STATIC Metadata (κρατάμε μόνο αυτό, όχι generateMetadata)
 export const metadata: Metadata = {
   title: 'Blog | Christos Kerigkas',
   description: 'Latest articles, tutorials, and insights on web development, crypto, and technology.',
@@ -54,6 +54,9 @@ export const metadata: Metadata = {
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
+  // ✅ CRITICAL: Await τα searchParams πριν τα χρησιμοποιήσεις
+  const resolvedSearchParams = await searchParams;
+  
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-20">
       <Suspense fallback={
@@ -61,8 +64,8 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
       }>
-        {/* Αφαιρούμε το στατικό theme="light" ώστε να λειτουργεί το dark mode */}
-        <BlogComponent searchParams={searchParams} />
+        {/* Περνάμε τα resolved searchParams στο BlogComponent */}
+        <BlogComponent searchParams={resolvedSearchParams} />
       </Suspense>
     </main>
   )
