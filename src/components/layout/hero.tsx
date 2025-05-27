@@ -1,9 +1,9 @@
-// src/components/layout/hero.tsx - FIXED for next-themes
+// src/components/layout/hero.tsx - FIXED HYDRATION MISMATCH
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { useProfile } from '@/components/providers/theme-provider'  // ✅ Added for profileImage
+import { useProfile } from '@/components/providers/theme-provider'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
@@ -19,13 +19,19 @@ interface SocialLink {
 }
 
 export default function Hero() {
-  // ✅ FIXED: Split the hooks
-  const { theme } = useTheme()  // Only theme from next-themes
-  const { profileImage, setProfileImage } = useProfile()  // profileImage from custom provider
+  const { theme } = useTheme()
+  const { profileImage, setProfileImage } = useProfile()
   
+  // ✅ FIXED: Add mounted state to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [imageError, setImageError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // ✅ Set mounted to true after component mounts
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const socialLinks: SocialLink[] = [
     {
@@ -52,10 +58,8 @@ export default function Hero() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Reset input to ensure change event fires on selecting the same file
     e.target.value = ''
 
-    // Validate file type and size before sending
     const validTypes = ['image/jpeg', 'image/png', 'image/webp']
     if (!validTypes.includes(file.type)) {
       alert('Μη έγκυρος τύπος αρχείου. Παρακαλώ επιλέξτε εικόνα JPG, PNG ή WebP.')
@@ -85,7 +89,6 @@ export default function Hero() {
 
       const data = await response.json()
       if (data.success) {
-        // Delete old profile image if it's not the default
         if (profileImage !== '/profile.jpg' && isSupabaseUrl(profileImage)) {
           try {
             const deleteResponse = await fetch('/api/upload', {
@@ -102,7 +105,6 @@ export default function Hero() {
           }
         }
 
-        // Update profile image with the new one
         setProfileImage(data.filename)
       } else {
         throw new Error(data.error || 'Unknown error during upload')
@@ -145,32 +147,58 @@ export default function Hero() {
     }
   }
 
-  // ΔΙΟΡΘΩΣΗ: Ο imageLoader τώρα χρησιμοποιεί πραγματικά το width parameter
   const imageLoader = useCallback(({ src, width }: { src: string; width: number }) => {
-    // Αν είναι Supabase URL, επέστρεψέ το ως έχει
     if (isSupabaseUrl(src)) {
       return src
     }
-    // Αλλιώς, αν είναι σχετικό path, προσθέτουμε το width ως παράμετρο 
-    // για καλύτερη προσαρμογή (αν και δεν θα επηρεάσει την απόδοση στην τρέχουσα υλοποίηση)
     if (src.startsWith('/')) {
       return `${src}?w=${width}`
     }
-    // Αλλιώς επέστρεψε το κανονικό path
     return src
   }, [])
 
-  // Βελτιωμένος χειρισμός σφαλμάτων εικόνας
   const handleImageError = useCallback(() => {
     setImageError(true)
     console.warn('Profile image failed to load, falling back to default')
     
-    // Αλλάζουμε την εικόνα profile μόνο αν δεν είναι ήδη η default
     if (profileImage !== '/uploads/profile.jpg') {
       setProfileImage('/uploads/profile.jpg')
     }
   }, [profileImage, setProfileImage])
 
+  // ✅ FIXED: Use neutral classes until mounted
+  if (!mounted) {
+    return (
+      <section
+        className="relative isolate px-4 sm:px-6 pt-14 lg:px-8 min-h-[calc(100vh-64px)] flex items-center bg-white"
+        aria-label="Introduction"
+      >
+        <div className="mx-auto max-w-2xl py-12 sm:py-20 lg:py-32">
+          <div className="text-center">
+            <div className="relative group mb-8 mx-auto">
+              <div className="w-32 h-32 relative rounded-full overflow-hidden ring-2 ring-indigo-600 bg-gray-200">
+                {/* Placeholder while loading */}
+              </div>
+            </div>
+            <div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900">
+                Christos Kerigkas
+              </h1>
+              <p className="mt-4 text-lg lg:text-xl font-semibold text-gray-600">
+                Full Stack Developer
+              </p>
+              <p className="mt-6 text-base sm:text-lg max-w-2xl mx-auto text-gray-600">
+                Building modern web applications and crypto trading solutions.
+                Specialized in Next.js, React, and TypeScript development.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // ✅ FIXED: Now use theme-dependent classes only after mounted
   return (
     <section
       className={cn(
@@ -202,7 +230,6 @@ export default function Hero() {
                       Image failed to load
                     </div>
                   )}
-                  {/* ΔΙΟΡΘΩΣΗ: Χρησιμοποίησε unoptimized={true} για το Supabase URL και loader μόνο αν χρειάζεται */}
                   {isSupabaseUrl(profileImage) ? (
                     <Image
                       src={profileImage}

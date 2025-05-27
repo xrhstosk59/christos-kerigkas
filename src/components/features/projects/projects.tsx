@@ -1,6 +1,7 @@
 'use client'
 
 // src/components/features/projects/projects.tsx
+import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import { Suspense } from 'react'
@@ -19,6 +20,38 @@ const ProjectsComponent = dynamic(() => import('./index'), {
 export function Projects() {
   const { theme } = useTheme()
   
+  // ✅ FIXED: Add mounted state to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false)
+
+  // ✅ Set mounted to true after component mounts
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // ✅ FIXED: Use neutral classes until mounted
+  if (!mounted) {
+    return (
+      <section 
+        id="projects" 
+        className="py-24 bg-white"
+      >
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div>
+            <Suspense fallback={
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+              </div>
+            }>
+              {/* Pass light theme as default */}
+              <ProjectsComponent theme="light" />
+            </Suspense>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // ✅ FIXED: Now use theme-dependent classes only after mounted
   return (
     <motion.section 
       id="projects" 

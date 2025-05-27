@@ -54,6 +54,29 @@ const certifications: Certification[] = [
     skills: ['Cybersecurity'],
     filename: 'Introduction_to_Cybersecurity_Badge20241109-27-40xb2m.pdf'
   },
+  // ✅ NEW: Network Defense Certificate
+  {
+    id: 'network-defense',
+    title: 'Network Defense',
+    issuer: 'Cisco Networking Academy',
+    issueDate: '2025-05-09',
+    description: 'Student level credential for completing the Network Defense course. Covers cybersecurity concepts, network security measures, identity lifecycle management, firewall configuration, cloud security measures, and data protection mechanisms.',
+    skills: [
+      'Network Security',
+      'Cybersecurity', 
+      'Linux',
+      'Windows',
+      'Identity Management',
+      'Firewall Configuration',
+      'Cloud Security',
+      'Data Protection',
+      'PKI',
+      'Virtual Computing'
+    ],
+    type: 'course',
+    filename: 'NetworkDefenseUpdate20250509-28-afxm48.pdf', // ✅ Αλλάξε αν είναι διαφορετικό
+    featured: true
+  },
   {
     id: 'learning-online-completion',
     title: 'Learning to Learn Online - Certificate of Completion',
@@ -133,29 +156,33 @@ const certifications: Certification[] = [
 ];
 
 async function seedCertifications() {
-  console.log('Starting certification seeding...');
+  console.log('🌱 Starting certification seeding...');
   
   try {
     // Έλεγχος σύνδεσης με το Supabase
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Supabase credentials are missing in .env.local');
+      console.error('❌ Supabase credentials are missing in .env.local');
       process.exit(1);
     }
 
-    console.log(`Found ${certifications.length} certifications to import`);
+    console.log(`📋 Found ${certifications.length} certifications to import`);
     
-    // Πρώτα καθαρίζουμε τον πίνακα (προαιρετικό)
+    // ✅ IMPROVED: Προαιρετικό clearing - ρώτησε πρώτα
+    console.log('⚠️  This will replace ALL existing certifications. Continue? (Press Ctrl+C to cancel)');
+    await new Promise(resolve => setTimeout(resolve, 3000)); // 3s delay
+    
+    // Πρώτα καθαρίζουμε τον πίνακα
     const { error: deleteError } = await supabase
       .from('certifications')
       .delete()
       .not('id', 'is', null);
     
     if (deleteError) {
-      console.error('Error clearing certifications:', deleteError);
+      console.error('❌ Error clearing certifications:', deleteError);
       return;
     }
     
-    console.log('Existing certifications cleared');
+    console.log('🗑️  Existing certifications cleared');
     
     // Μετατροπή των πιστοποιητικών σε μορφή συμβατή με τη βάση
     const certificationsToInsert = certifications.map(cert => ({
@@ -174,7 +201,8 @@ async function seedCertifications() {
       updated_at: new Date()
     }));
     
-    console.log('Certifications prepared for insertion. First entry:', certificationsToInsert[0]);
+    console.log('📦 Certifications prepared for insertion');
+    console.log('🆕 NEW: Network Defense certificate included!');
     
     // Εισαγωγή πιστοποιητικών στη βάση
     const { error: insertError } = await supabase
@@ -182,13 +210,28 @@ async function seedCertifications() {
       .insert(certificationsToInsert);
     
     if (insertError) {
-      console.error('Error inserting certifications:', insertError);
+      console.error('❌ Error inserting certifications:', insertError);
       return;
     }
     
-    console.log(`Successfully inserted ${certificationsToInsert.length} certifications`);
+    console.log(`✅ Successfully inserted ${certificationsToInsert.length} certifications`);
+    console.log('🎉 Network Defense certificate added to database!');
+    
+    // Επικύρωση
+    const { data: networkDefense } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('id', 'network-defense')
+      .single();
+    
+    if (networkDefense) {
+      console.log('✅ Verification: Network Defense found in database');
+      console.log(`   📅 Issue Date: ${networkDefense.issue_date}`);
+      console.log(`   🏷️  Skills: ${networkDefense.skills?.join(', ')}`);
+    }
+    
   } catch (error) {
-    console.error('Error seeding certifications:', error);
+    console.error('❌ Error seeding certifications:', error);
   }
 }
 

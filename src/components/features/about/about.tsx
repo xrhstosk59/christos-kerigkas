@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import { Code2, Dumbbell, GraduationCap, Home, Binary } from 'lucide-react'
@@ -36,6 +37,61 @@ const details = [
 export function About() {
   const { theme } = useTheme()
   
+  // ✅ FIXED: Add mounted state to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false)
+
+  // ✅ Set mounted to true after component mounts
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // ✅ FIXED: Use neutral classes until mounted
+  if (!mounted) {
+    return (
+      <section 
+        id="about" 
+        className="py-24 bg-white"
+        aria-label="About Me Section"
+      >
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:max-w-4xl">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-center text-gray-900">
+              About Me
+            </h2>
+            
+            <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {details.map((detail) => (
+                <div
+                  key={detail.title}
+                  className="relative p-6 rounded-2xl transition-colors bg-gray-50 hover:bg-gray-100"
+                >
+                  <div className="rounded-lg p-2 w-10 h-10 mb-4 flex items-center justify-center bg-white">
+                    <detail.icon className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900">
+                    {detail.title}
+                  </h3>
+                  
+                  <p className="text-sm leading-relaxed text-gray-600">
+                    {detail.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-12 text-lg leading-8 text-center text-gray-600">
+              21 years old, passionate about technology and developing innovative solutions. 
+              Combining computer science studies with hands-on experience in modern web development 
+              and blockchain technologies.
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // ✅ FIXED: Now use theme-dependent classes only after mounted
   return (
     <section 
       id="about" 
