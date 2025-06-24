@@ -234,3 +234,8 @@ export function createRateLimitError(
   };
   return error;
 }
+
+/**
+ * Apply rate limiting to a request and return response if rate limit exceeded
+ */
+export const applyRateLimit = apiRateLimit;

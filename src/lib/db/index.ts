@@ -3,6 +3,9 @@ export * from './database';
 export * from './schema';
 export * from './utils/mappers';
 
+// Export the db instance for convenience
+export { getDb as db } from './database';
+
 // Εξαγωγή των τύπων για ευκολότερη πρόσβαση
 import type { 
   BlogPost,

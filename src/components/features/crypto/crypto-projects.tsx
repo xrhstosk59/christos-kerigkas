@@ -196,3 +196,5 @@ export function CryptoProjects() {
     </section>
   )
 }
+
+export default CryptoProjects

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Mail, Phone, Github, Linkedin, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
+import { useClientTheme } from '@/hooks/useClientTheme'
 
 type StatusType = 'idle' | 'loading' | 'success' | 'error' | 'partialSuccess'
 type ValidationError = {
@@ -13,7 +13,7 @@ type ValidationError = {
 type ErrorType = ValidationError | null
 
 export function Contact() {
-  const { theme } = useTheme()
+  const { mounted } = useClientTheme();
   
   // Αρχικοποίηση της φόρμας με κενό string για να αποφύγουμε το hydration mismatch
   // μεταξύ server και client rendering
@@ -31,13 +31,7 @@ export function Contact() {
     emailSent?: boolean;
   }>({})
 
-  // Χρησιμοποιούμε το mounted για να αποφύγουμε επιπλέον hydration issues
-  const [mounted, setMounted] = useState(false)
-  
-  useEffect(() => {
-    // Σημειώνουμε ότι το component έχει mounted στον client
-    setMounted(true)
-  }, [])
+  // Το mounted το παίρνουμε από το useClientTheme hook
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -146,10 +140,10 @@ export function Contact() {
   // του component για να αποφύγουμε hydration issues
   if (!mounted) {
     return (
-      <section id="contact" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
+      <section id="contact" className="py-24 bg-gray-50 dark:bg-gray-950">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:max-w-4xl">
-            <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-gray-900 dark:text-white">
               Contact
             </h2>
             <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -173,7 +167,7 @@ export function Contact() {
   }
 
   return (
-    <section id="contact" className={`py-24 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
+    <section id="contact" className="py-24 bg-gray-50 dark:bg-gray-950">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -181,8 +175,7 @@ export function Contact() {
           viewport={{ once: true }}
           className="mx-auto max-w-2xl lg:max-w-4xl"
         >
-          <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-gray-900 dark:text-white">
             Contact
           </h2>
 
@@ -202,10 +195,7 @@ export function Contact() {
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ x: 5 }}
-                    className={`flex items-center gap-2 ${theme === 'dark'
-                        ? 'text-gray-300 hover:text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                      } transition-colors duration-200`}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200"
                   >
                     <item.icon className="h-5 w-5" />
                     {item.text}
@@ -220,7 +210,7 @@ export function Contact() {
               {status !== 'idle' && status !== 'loading' && (
                 <div className={`p-3 rounded-md ${
                   status === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                  status === 'partialSuccess' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                  status === 'partialSuccess' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
                   'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                 } flex items-start gap-2`}>
                   {status === 'success' && <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />}
@@ -234,7 +224,7 @@ export function Contact() {
 
               {/* Name field */}
               <div>
-                <label htmlFor="name" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Name
                 </label>
                 <input
@@ -242,11 +232,8 @@ export function Contact() {
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                  className={`mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 ${
                     getFieldError('name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
-                  } ${theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-white focus:ring-indigo-500 focus:border-indigo-500'
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                   required
                   disabled={status === 'loading'}
@@ -258,7 +245,7 @@ export function Contact() {
               
               {/* Email field */}
               <div>
-                <label htmlFor="email" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Email
                 </label>
                 <input
@@ -266,11 +253,8 @@ export function Contact() {
                   id="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                  className={`mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 ${
                     getFieldError('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
-                  } ${theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-white focus:ring-indigo-500 focus:border-indigo-500'
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                   required
                   disabled={status === 'loading'}
@@ -282,7 +266,7 @@ export function Contact() {
 
               {/* Message field */}
               <div>
-                <label htmlFor="message" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Message
                 </label>
                 <textarea
@@ -290,11 +274,8 @@ export function Contact() {
                   rows={4}
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                  className={`mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 ${
                     getFieldError('message') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
-                  } ${theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-white focus:ring-indigo-500 focus:border-indigo-500'
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                   required
                   disabled={status === 'loading'}
@@ -331,3 +312,5 @@ export function Contact() {
     </section>
   )
 }
+
+export default Contact

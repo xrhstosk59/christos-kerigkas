@@ -7,6 +7,8 @@ export * from './blog';
 export * from './projects';
 export * from './certifications';
 export * from './contact';
+export * from './rate-limit';
+export * from './audit';
 export * from './common';
 
 // Εξαγωγή των relations

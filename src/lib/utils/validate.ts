@@ -162,6 +162,7 @@ export function isValidEmail(email: string): boolean {
 
 /**
  * Sanitize user input to prevent XSS
+ * @deprecated Χρησιμοποιήστε το sanitizeInput από το sanitize.ts για καλύτερη προστασία
  */
 export function sanitizeInput(input: string): string {
   return input

@@ -7,6 +7,7 @@ import {
     varchar,
     uuid,
     index,
+    boolean,
   } from 'drizzle-orm/pg-core';
   
   // Users table (για το Supabase Auth)
@@ -16,9 +17,14 @@ import {
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     role: text('role').notNull().default('user'),
+    // Two-Factor Authentication fields
+    twoFactorEnabled: boolean('two_factor_enabled').default(false),
+    twoFactorSecret: text('two_factor_secret'), // Base32 encoded secret
+    twoFactorBackupCodes: text('two_factor_backup_codes'), // JSON array of backup codes
   }, (table) => {
     return {
       emailIdx: index('email_idx').on(table.email),
+      twoFactorIdx: index('two_factor_idx').on(table.twoFactorEnabled),
     }
   });
   

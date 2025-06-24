@@ -1,184 +1,349 @@
 // src/lib/monitoring/performance.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '../utils/logger';
+import { reportMessage } from './sentry';
 
 /**
- * Interface για την αποθήκευση δεδομένων απόδοσης.
+ * Performance monitoring utilities
  */
-interface PerformanceMetrics {
-  url: string;
+
+export interface PerformanceMetrics {
+  loadTime: number;
+  domContentLoaded: number;
+  firstContentfulPaint?: number;
+  largestContentfulPaint?: number;
+  firstInputDelay?: number;
+  cumulativeLayoutShift?: number;
+}
+
+export interface APIPerformanceMetrics {
+  endpoint: string;
   method: string;
   duration: number;
-  timestamp: string;
-  statusCode?: number;
-  userAgent?: string;
-  referer?: string;
-  ipAddress?: string;
+  status: number;
+  size?: number;
 }
 
 /**
- * Συλλογή μετρικών απόδοσης για τα API requests.
+ * Measures and reports page performance metrics
  */
-export class PerformanceMonitor {
-  private static metrics: PerformanceMetrics[] = [];
-  private static maxStoredMetrics = 1000;
-  private static slowThresholdMs = 500; // Όριο για "αργά" αιτήματα (ms)
+export function measurePagePerformance(pageName: string): void {
+  if (typeof window === 'undefined') return;
 
-  /**
-   * Προσθήκη νέων μετρικών στη συλλογή.
-   */
-  static addMetrics(metrics: PerformanceMetrics): void {
-    this.metrics.push(metrics);
+  // Wait for the page to be fully loaded
+  window.addEventListener('load', () => {
+    // Basic timing metrics
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     
-    // Αν ξεπεράσουμε το όριο, αφαιρούμε τις παλαιότερες εγγραφές
-    if (this.metrics.length > this.maxStoredMetrics) {
-      this.metrics = this.metrics.slice(-this.maxStoredMetrics);
+    if (navigation) {
+      const metrics: PerformanceMetrics = {
+        loadTime: navigation.loadEventEnd - navigation.loadEventStart,
+        domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
+      };
+
+      // Web Vitals
+      try {
+        // LCP (Largest Contentful Paint)
+        if ('PerformanceObserver' in window) {
+          const lcpObserver = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            const lastEntry = entries[entries.length - 1] as any;
+            if (lastEntry) {
+              metrics.largestContentfulPaint = lastEntry.startTime;
+              
+              // Report if LCP is slow (> 2.5s)
+              if (lastEntry.startTime > 2500) {
+                reportMessage(
+                  `Slow LCP detected: ${pageName}`,
+                  {
+                    feature: 'performance',
+                    action: 'slow_lcp',
+                    metadata: { page: pageName, lcp: lastEntry.startTime },
+                  },
+                  'warning'
+                );
+              }
+            }
+          });
+          
+          lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+
+          // FID (First Input Delay)
+          const fidObserver = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            entries.forEach((entry: any) => {
+              metrics.firstInputDelay = entry.processingStart - entry.startTime;
+              
+              // Report if FID is slow (> 100ms)
+              if (entry.processingStart - entry.startTime > 100) {
+                reportMessage(
+                  `Slow FID detected: ${pageName}`,
+                  {
+                    feature: 'performance',
+                    action: 'slow_fid',
+                    metadata: { page: pageName, fid: entry.processingStart - entry.startTime },
+                  },
+                  'warning'
+                );
+              }
+            });
+          });
+          
+          fidObserver.observe({ entryTypes: ['first-input'] });
+
+          // CLS (Cumulative Layout Shift)
+          let clsValue = 0;
+          const clsObserver = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            entries.forEach((entry: any) => {
+              if (!entry.hadRecentInput) {
+                clsValue += entry.value;
+              }
+            });
+            
+            metrics.cumulativeLayoutShift = clsValue;
+            
+            // Report if CLS is poor (> 0.1)
+            if (clsValue > 0.1) {
+              reportMessage(
+                `Poor CLS detected: ${pageName}`,
+                {
+                  feature: 'performance',
+                  action: 'poor_cls',
+                  metadata: { page: pageName, cls: clsValue },
+                },
+                'warning'
+              );
+            }
+          });
+          
+          clsObserver.observe({ entryTypes: ['layout-shift'] });
+        }
+
+        // FCP (First Contentful Paint)
+        const paintEntries = performance.getEntriesByType('paint');
+        const fcpEntry = paintEntries.find(entry => entry.name === 'first-contentful-paint');
+        if (fcpEntry) {
+          metrics.firstContentfulPaint = fcpEntry.startTime;
+        }
+
+      } catch (error) {
+        console.warn('Failed to measure Web Vitals:', error);
+      }
+
+      // Report basic metrics
+      console.log(`[Performance] ${pageName}:`, metrics);
+      
+      // Report slow page loads (> 3s)
+      if (metrics.loadTime > 3000) {
+        reportMessage(
+          `Slow page load: ${pageName}`,
+          {
+            feature: 'performance',
+            action: 'slow_page_load',
+            metadata: { page: pageName, ...metrics },
+          },
+          'warning'
+        );
+      }
     }
-    
-    // Καταγραφή των αργών αιτημάτων
-    if (metrics.duration > this.slowThresholdMs) {
-      logger.warn(
-        `Αργό αίτημα: ${metrics.method} ${metrics.url} (${metrics.duration.toFixed(2)}ms)`,
-        { 
-          statusCode: metrics.statusCode,
-          userAgent: metrics.userAgent
-        },
-        'performance-monitor'
-      );
-    }
-  }
+  });
+}
 
-  /**
-   * Λήψη των συγκεντρωμένων μετρικών.
-   */
-  static getMetrics(): PerformanceMetrics[] {
-    return [...this.metrics];
-  }
+/**
+ * Measures API call performance
+ */
+export function measureAPIPerformance(
+  endpoint: string,
+  method: string,
+  startTime: number,
+  endTime: number,
+  status: number,
+  size?: number
+): void {
+  const duration = endTime - startTime;
+  
+  const metrics: APIPerformanceMetrics = {
+    endpoint,
+    method,
+    duration,
+    status,
+    size,
+  };
 
-  /**
-   * Λήψη των αργών αιτημάτων.
-   */
-  static getSlowRequests(thresholdMs = this.slowThresholdMs): PerformanceMetrics[] {
-    return this.metrics.filter(m => m.duration > thresholdMs);
+  console.log(`[API Performance] ${method} ${endpoint}: ${duration}ms`);
+  
+  // Report slow API calls (> 2s)
+  if (duration > 2000) {
+    reportMessage(
+      `Slow API call: ${method} ${endpoint}`,
+      {
+        feature: 'api_performance',
+        action: 'slow_api_call',
+        metadata: metrics,
+      },
+      'warning'
+    );
   }
-
-  /**
-   * Υπολογισμός μέσης διάρκειας αιτημάτων.
-   */
-  static getAverageRequestDuration(): number {
-    if (this.metrics.length === 0) return 0;
-    const sum = this.metrics.reduce((acc, m) => acc + m.duration, 0);
-    return sum / this.metrics.length;
-  }
-
-  /**
-   * Εκκαθάριση των μετρικών.
-   */
-  static clearMetrics(): void {
-    this.metrics = [];
+  
+  // Report failed API calls
+  if (status >= 400) {
+    reportMessage(
+      `API error: ${method} ${endpoint} - ${status}`,
+      {
+        feature: 'api_performance',
+        action: 'api_error',
+        metadata: metrics,
+      },
+      'error'
+    );
   }
 }
 
 /**
- * Middleware για τη μέτρηση της διάρκειας των αιτημάτων.
- * 
- * @returns Middleware function
+ * Performance timing decorator for functions
  */
-export function measureRequestDuration() {
-  return async function(req: NextRequest, next: () => Promise<NextResponse>) {
+export function withPerformanceTiming<T extends any[], R>(
+  name: string,
+  fn: (...args: T) => Promise<R>
+) {
+  return async (...args: T): Promise<R> => {
     const startTime = performance.now();
-    const url = req.nextUrl.pathname;
-    const method = req.method;
     
     try {
-      // Εκτέλεση του επόμενου middleware ή handler
-      const response = await next();
+      const result = await fn(...args);
+      const endTime = performance.now();
+      const duration = endTime - startTime;
       
-      // Υπολογισμός διάρκειας
-      const duration = performance.now() - startTime;
+      console.log(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
       
-      // Συλλογή μετρικών
-      const metrics: PerformanceMetrics = {
-        url,
-        method,
-        duration,
-        timestamp: new Date().toISOString(),
-        statusCode: response.status,
-        userAgent: req.headers.get('user-agent') || undefined,
-        referer: req.headers.get('referer') || undefined,
-        ipAddress: req.headers.get('x-forwarded-for') || 
-                   req.headers.get('x-real-ip') || undefined,
-      };
-      
-      // Προσθήκη στη συλλογή μετρικών
-      PerformanceMonitor.addMetrics(metrics);
-      
-      // Προσθήκη του χρόνου εκτέλεσης στα headers για λόγους debugging
-      if (process.env.NODE_ENV !== 'production') {
-        response.headers.set('X-Request-Duration', `${duration.toFixed(2)}ms`);
+      // Report slow operations (> 1s)
+      if (duration > 1000) {
+        reportMessage(
+          `Slow operation: ${name}`,
+          {
+            feature: 'performance',
+            action: 'slow_operation',
+            metadata: { operation: name, duration },
+          },
+          'warning'
+        );
       }
       
-      return response;
+      return result;
     } catch (error) {
-      // Ακόμα και αν συμβεί σφάλμα, καταγράφουμε τη διάρκεια
-      const duration = performance.now() - startTime;
+      const endTime = performance.now();
+      const duration = endTime - startTime;
       
-      PerformanceMonitor.addMetrics({
-        url,
-        method,
-        duration,
-        timestamp: new Date().toISOString(),
-        statusCode: 500, // Υποθέτουμε ότι είναι σφάλμα εσωτερικού διακομιστή
-      });
+      reportMessage(
+        `Failed operation: ${name}`,
+        {
+          feature: 'performance',
+          action: 'failed_operation',
+          metadata: { operation: name, duration, error: error instanceof Error ? error.message : 'Unknown error' },
+        },
+        'error'
+      );
       
-      // Επαναρίπτουμε το σφάλμα για να το χειριστεί το επόμενο middleware
       throw error;
     }
   };
 }
 
 /**
- * Δομή για την αποθήκευση μετρήσεων απόδοσης σε τμήματα κώδικα.
+ * Memory usage monitoring
  */
-class PerformanceTimer {
-  private startTime: number;
-  private name: string;
-  
-  /**
-   * Δημιουργία νέου timer.
-   * 
-   * @param name Όνομα του timer για αναγνώριση
-   */
-  constructor(name: string) {
-    this.name = name;
-    this.startTime = performance.now();
-  }
-  
-  /**
-   * Ολοκλήρωση του timer και καταγραφή του αποτελέσματος.
-   * 
-   * @param additionalInfo Επιπλέον πληροφορίες για καταγραφή
-   * @returns Η διάρκεια σε milliseconds
-   */
-  end(additionalInfo?: Record<string, unknown>): number {
-    const duration = performance.now() - this.startTime;
-    
-    logger.debug(
-      `Απόδοση [${this.name}]: ${duration.toFixed(2)}ms`,
-      additionalInfo,
-      'performance-timer'
+export function monitorMemoryUsage(): void {
+  if (typeof window === 'undefined' || !('memory' in performance)) return;
+
+  const memory = (performance as any).memory;
+  const memoryInfo = {
+    usedJSHeapSize: memory.usedJSHeapSize,
+    totalJSHeapSize: memory.totalJSHeapSize,
+    jsHeapSizeLimit: memory.jsHeapSizeLimit,
+    usagePercentage: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100,
+  };
+
+  console.log('[Memory Usage]:', memoryInfo);
+
+  // Report high memory usage (> 80%)
+  if (memoryInfo.usagePercentage > 80) {
+    reportMessage(
+      'High memory usage detected',
+      {
+        feature: 'performance',
+        action: 'high_memory_usage',
+        metadata: memoryInfo,
+      },
+      'warning'
     );
-    
-    return duration;
   }
 }
 
 /**
- * Δημιουργία νέου timer για μέτρηση απόδοσης σε τμήματα κώδικα.
- * 
- * @param name Όνομα του timer
- * @returns Αντικείμενο PerformanceTimer
+ * Resource loading monitoring
  */
-export function startTimer(name: string): PerformanceTimer {
-  return new PerformanceTimer(name);
+export function monitorResourceLoading(): void {
+  if (typeof window === 'undefined') return;
+
+  window.addEventListener('load', () => {
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    
+    // Find slow resources (> 1s)
+    const slowResources = resources.filter(resource => 
+      resource.duration > 1000
+    );
+
+    // Find large resources (> 1MB)
+    const largeResources = resources.filter(resource => 
+      resource.transferSize && resource.transferSize > 1024 * 1024
+    );
+
+    if (slowResources.length > 0) {
+      slowResources.forEach(resource => {
+        reportMessage(
+          `Slow resource loading: ${resource.name}`,
+          {
+            feature: 'performance',
+            action: 'slow_resource',
+            metadata: {
+              url: resource.name,
+              duration: resource.duration,
+              size: resource.transferSize,
+              type: resource.initiatorType,
+            },
+          },
+          'warning'
+        );
+      });
+    }
+
+    if (largeResources.length > 0) {
+      largeResources.forEach(resource => {
+        reportMessage(
+          `Large resource detected: ${resource.name}`,
+          {
+            feature: 'performance',
+            action: 'large_resource',
+            metadata: {
+              url: resource.name,
+              size: resource.transferSize,
+              duration: resource.duration,
+              type: resource.initiatorType,
+            },
+          },
+          'info'
+        );
+      });
+    }
+  });
+}
+
+/**
+ * Initialize all performance monitoring
+ */
+export function initializePerformanceMonitoring(pageName: string): void {
+  measurePagePerformance(pageName);
+  monitorResourceLoading();
+  
+  // Monitor memory usage every 30 seconds
+  setInterval(monitorMemoryUsage, 30000);
 }

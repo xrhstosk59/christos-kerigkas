@@ -1,323 +1,200 @@
-import { NextResponse } from 'next/server';
-import { AppError, isPostgresError, createErrorFromPostgresError } from './app-error';
-import { logger } from '../logger';
+// src/lib/utils/errors/error-handler.ts
+import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import crypto from 'crypto';
+import { reportError } from '@/lib/monitoring/sentry';
+
+export interface ApiError extends Error {
+  statusCode?: number;
+  code?: string;
+  details?: Record<string, unknown>;
+}
+
+export class ApiErrorClass extends Error implements ApiError {
+  public statusCode: number;
+  public code?: string;
+  public details?: Record<string, unknown>;
+
+  constructor(
+    message: string,
+    statusCode: number = 500,
+    code?: string,
+    details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+  }
+}
 
 /**
- * Κεντρικός χειριστής σφαλμάτων για την εφαρμογή.
- * Διαχειρίζεται τα σφάλματα με συνεπή τρόπο.
+ * Handle API errors and return appropriate responses
  */
-export class ErrorHandler {
-  /**
-   * Δημιουργία ενός μοναδικού ID για το error tracking
-   */
-  private static generateRequestId(): string {
-    return crypto.randomUUID();
+export function handleApiError(
+  error: unknown,
+  request?: NextRequest
+): NextResponse {
+  console.error('API Error:', error);
+
+  // Report error to Sentry
+  if (error instanceof Error) {
+    reportError(error, {
+      feature: 'api_error',
+      action: 'unhandled_error',
+      metadata: {
+        url: request?.url,
+        method: request?.method,
+      },
+    });
   }
 
-  /**
-   * Μετατροπή γενικών σφαλμάτων σε AppError
-   */
-  public static normalizeError(error: unknown, defaultMessage = 'Παρουσιάστηκε ένα σφάλμα'): AppError {
-    // Αν είναι ήδη AppError, το επιστρέφουμε ως έχει
-    if (error instanceof AppError) {
-      return error;
-    }
-    
-    // Αν είναι PostgreSQL error, το μετατρέπουμε στο κατάλληλο AppError
-    if (isPostgresError(error)) {
-      return createErrorFromPostgresError(error);
-    }
-    
-    // Αν είναι Zod Error, το μετατρέπουμε σε ValidationError
-    if (error instanceof ZodError) {
-      const formattedErrors: Record<string, string[]> = {};
-      
-      error.errors.forEach(err => {
-        const path = err.path.join('.');
-        if (!formattedErrors[path]) {
-          formattedErrors[path] = [];
-        }
-        formattedErrors[path].push(err.message);
-      });
-      
-      return new AppError(
-        'Τα δεδομένα δεν είναι έγκυρα',
-        400,
-        'VALIDATION_ERROR',
-        { errors: formattedErrors }
-      );
-    }
-    
-    // Για τα υπόλοιπα σφάλματα
-    if (error instanceof Error) {
-      return new AppError(
-        error.message || defaultMessage,
-        500,
-        'INTERNAL_ERROR',
-        { 
-          originalError: error.name,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        },
-        false
-      );
-    }
-    
-    // Για άγνωστα σφάλματα
-    return new AppError(
-      typeof error === 'string' ? error : defaultMessage,
-      500,
-      'INTERNAL_ERROR',
-      { unknownError: error },
-      false
-    );
-  }
-
-  /**
-   * Διαχείριση σφαλμάτων για API routes.
-   * 
-   * @param error Το σφάλμα που προέκυψε
-   * @param source Πηγή του σφάλματος (για το logging)
-   * @returns NextResponse με την κατάλληλη κατάσταση και μήνυμα
-   */
-  public static handleApiError(error: unknown, source = 'api'): NextResponse {
-    const requestId = this.generateRequestId();
-    const normalizedError = this.normalizeError(error);
-    
-    // Προσθήκη του requestId αν δεν υπάρχει ήδη
-    if (!normalizedError.requestId) {
-      Object.defineProperty(normalizedError, 'requestId', { value: requestId });
-    }
-
-    // Καταγραφή της κατάλληλης πληροφορίας ανάλογα με την κρισιμότητα
-    if (normalizedError.isOperational) {
-      // Τα λειτουργικά σφάλματα είναι αναμενόμενα (π.χ. validation errors, auth errors)
-      if (normalizedError.statusCode >= 500) {
-        logger.error(
-          `[${source}] ${normalizedError.code}: ${normalizedError.message}`, 
-          { 
-            ...normalizedError.context,
-            requestId: normalizedError.requestId || requestId,
-            statusCode: normalizedError.statusCode
-          },
-          source
-        );
-      } else {
-        logger.warn(
-          `[${source}] ${normalizedError.code}: ${normalizedError.message}`, 
-          { 
-            ...normalizedError.context,
-            requestId: normalizedError.requestId || requestId,
-            statusCode: normalizedError.statusCode
-          }, 
-          source
-        );
-      }
-    } else {
-      // Τα μη λειτουργικά σφάλματα είναι πιο σοβαρά (π.χ. database errors, unexpected errors)
-      logger.error(
-        `[${source}] ${normalizedError.code}: ${normalizedError.message}`, 
-        { 
-          ...normalizedError.context,
-          requestId: normalizedError.requestId || requestId,
-          statusCode: normalizedError.statusCode,
-          stack: normalizedError.stack
-        }, 
-        source
-      );
-    }
-    
-    // Επιστροφή του κατάλληλου response
-    // Σε production, κρύβουμε ευαίσθητες πληροφορίες
-    const isProd = process.env.NODE_ENV === 'production';
-    const details = isProd && !normalizedError.isOperational 
-      ? undefined 
-      : normalizedError.context;
-    
+  // Handle different types of errors
+  if (error instanceof ApiErrorClass) {
     return NextResponse.json(
       {
-        error: {
-          code: normalizedError.code,
-          message: normalizedError.message,
-          requestId: normalizedError.requestId || requestId,
-          ...(details && { details }),
-        },
+        error: error.message,
+        code: error.code,
+        details: error.details,
       },
-      { 
-        status: normalizedError.statusCode,
-        headers: {
-          'X-Request-ID': normalizedError.requestId || requestId
-        }
-      }
-    );
-  }
-  
-  /**
-   * Διαχείριση σφαλμάτων για Server Components και Server Actions.
-   * 
-   * @param error Το σφάλμα που προέκυψε
-   * @param source Πηγή του σφάλματος (για το logging)
-   * @returns Ένα τυποποιημένο αντικείμενο σφάλματος
-   */
-  public static handleServerError(error: unknown, source = 'server'): { 
-    success: false; 
-    error: { 
-      code: string; 
-      message: string; 
-      requestId: string;
-      details?: Record<string, unknown>; 
-    } 
-  } {
-    const requestId = this.generateRequestId();
-    const normalizedError = this.normalizeError(error);
-    
-    // Προσθήκη του requestId αν δεν υπάρχει ήδη
-    if (!normalizedError.requestId) {
-      Object.defineProperty(normalizedError, 'requestId', { value: requestId });
-    }
-    
-    // Καταγραφή με τον ίδιο τρόπο όπως το handleApiError
-    if (normalizedError.isOperational) {
-      if (normalizedError.statusCode >= 500) {
-        logger.error(
-          `[${source}] ${normalizedError.code}: ${normalizedError.message}`, 
-          { 
-            ...normalizedError.context,
-            requestId: normalizedError.requestId || requestId,
-            statusCode: normalizedError.statusCode
-          },
-          source
-        );
-      } else {
-        logger.warn(
-          `[${source}] ${normalizedError.code}: ${normalizedError.message}`, 
-          { 
-            ...normalizedError.context,
-            requestId: normalizedError.requestId || requestId,
-            statusCode: normalizedError.statusCode
-          }, 
-          source
-        );
-      }
-    } else {
-      logger.error(
-        `[${source}] ${normalizedError.code}: ${normalizedError.message}`, 
-        { 
-          ...normalizedError.context,
-          requestId: normalizedError.requestId || requestId,
-          statusCode: normalizedError.statusCode,
-          stack: normalizedError.stack
-        }, 
-        source
-      );
-    }
-    
-    // Επιστροφή του κατάλληλου αντικειμένου
-    // Σε production, κρύβουμε ευαίσθητες πληροφορίες
-    const isProd = process.env.NODE_ENV === 'production';
-    const details = isProd && !normalizedError.isOperational 
-      ? undefined 
-      : normalizedError.context;
-    
-    return {
-      success: false,
-      error: {
-        code: normalizedError.code,
-        message: normalizedError.message,
-        requestId: normalizedError.requestId || requestId,
-        ...(details && { details }),
-      },
-    };
-  }
-
-  /**
-   * Διαχείριση σφαλμάτων βάσης δεδομένων με ειδική λογική ανά τύπο
-   * 
-   * @param error Το σφάλμα που προέκυψε
-   * @param context Πληροφορίες για το context του σφάλματος
-   * @param source Πηγή του σφάλματος
-   */
-  public static handleDatabaseError(error: unknown, context: string, source = 'database'): AppError {
-    const requestId = this.generateRequestId();
-    
-    // Αν είναι PostgreSQL error, το μετατρέπουμε κατάλληλα
-    if (isPostgresError(error)) {
-      const appError = createErrorFromPostgresError(error);
-      
-      // Προσθήκη requestId και context
-      Object.defineProperty(appError, 'requestId', { value: requestId });
-      Object.defineProperty(appError, 'context', { 
-        value: { 
-          ...appError.context, 
-          databaseContext: context 
-        } 
-      });
-      
-      logger.error(
-        `Database error in ${context}: ${appError.message}`,
-        {
-          code: error.code,
-          detail: error.detail,
-          table: error.table,
-          constraint: error.constraint,
-          requestId
-        },
-        source
-      );
-      
-      return appError;
-    }
-    
-    // Για άλλους τύπους σφαλμάτων
-    logger.error(
-      `Database error in ${context}:`,
-      {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        requestId
-      },
-      source
-    );
-    
-    return new AppError(
-      `Database error in ${context}: ${error instanceof Error ? error.message : String(error)}`,
-      500,
-      'DATABASE_ERROR',
-      { originalError: error },
-      false,
-      requestId
+      { status: error.statusCode }
     );
   }
 
-  /**
-   * Διαχείριση σφαλμάτων από εξωτερικές υπηρεσίες
-   * 
-   * @param error Το σφάλμα που προέκυψε
-   * @param serviceName Όνομα της εξωτερικής υπηρεσίας
-   * @param source Πηγή του σφάλματος
-   */
-  public static handleExternalServiceError(error: unknown, serviceName: string, source = 'external'): AppError {
-    const requestId = this.generateRequestId();
-    
-    logger.error(
-      `Error from external service ${serviceName}:`,
+  // Handle Zod validation errors
+  if (error instanceof ZodError) {
+    return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        service: serviceName,
-        requestId
+        error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: error.errors,
       },
-      source
-    );
-    
-    return new AppError(
-      `Error communicating with ${serviceName}: ${error instanceof Error ? error.message : String(error)}`,
-      502,
-      'EXTERNAL_SERVICE_ERROR',
-      { service: serviceName, originalError: error },
-      false,
-      requestId
+      { status: 400 }
     );
   }
+
+  // Handle database connection errors
+  if (error instanceof Error && error.message.includes('connection')) {
+    return NextResponse.json(
+      {
+        error: 'Database connection failed',
+        code: 'DATABASE_ERROR',
+      },
+      { status: 503 }
+    );
+  }
+
+  // Handle authentication errors
+  if (error instanceof Error && error.message.includes('unauthorized')) {
+    return NextResponse.json(
+      {
+        error: 'Unauthorized',
+        code: 'UNAUTHORIZED',
+      },
+      { status: 401 }
+    );
+  }
+
+  // Handle permission errors
+  if (error instanceof Error && error.message.includes('forbidden')) {
+    return NextResponse.json(
+      {
+        error: 'Forbidden',
+        code: 'FORBIDDEN',
+      },
+      { status: 403 }
+    );
+  }
+
+  // Handle generic errors
+  return NextResponse.json(
+    {
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+    },
+    { status: 500 }
+  );
+}
+
+/**
+ * Create a custom API error
+ */
+export function createApiError(
+  message: string,
+  statusCode: number = 500,
+  code?: string,
+  details?: Record<string, unknown>
+): ApiErrorClass {
+  return new ApiErrorClass(message, statusCode, code, details);
+}
+
+/**
+ * Validation error creator
+ */
+export function createValidationError(
+  message: string = 'Validation failed',
+  details?: Record<string, unknown>
+): ApiErrorClass {
+  return new ApiErrorClass(message, 400, 'VALIDATION_ERROR', details);
+}
+
+/**
+ * Unauthorized error creator
+ */
+export function createUnauthorizedError(
+  message: string = 'Unauthorized'
+): ApiErrorClass {
+  return new ApiErrorClass(message, 401, 'UNAUTHORIZED');
+}
+
+/**
+ * Forbidden error creator
+ */
+export function createForbiddenError(
+  message: string = 'Forbidden'
+): ApiErrorClass {
+  return new ApiErrorClass(message, 403, 'FORBIDDEN');
+}
+
+/**
+ * Not found error creator
+ */
+export function createNotFoundError(
+  message: string = 'Not found'
+): ApiErrorClass {
+  return new ApiErrorClass(message, 404, 'NOT_FOUND');
+}
+
+/**
+ * Rate limit error creator
+ */
+export function createRateLimitError(
+  message: string = 'Too many requests'
+): ApiErrorClass {
+  return new ApiErrorClass(message, 429, 'RATE_LIMIT_EXCEEDED');
+}
+
+/**
+ * Server error creator
+ */
+export function createServerError(
+  message: string = 'Internal server error',
+  details?: Record<string, unknown>
+): ApiErrorClass {
+  return new ApiErrorClass(message, 500, 'INTERNAL_ERROR', details);
+}
+
+/**
+ * Async error wrapper for API routes
+ */
+export function withErrorHandler<T extends unknown[], R>(
+  handler: (...args: T) => Promise<R>
+) {
+  return async (...args: T): Promise<R | NextResponse> => {
+    try {
+      return await handler(...args);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  };
 }

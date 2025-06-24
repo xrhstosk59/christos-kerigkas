@@ -122,21 +122,21 @@ export async function checkUserRole(request: NextRequest, requiredRole: string) 
     return { hasRole: false, user: null }
   }
 
-  // Έλεγχος ρόλου από τη βάση
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
+  // Έλεγχος ρόλου από τη βάση (διόρθωση: χρήση users table)
+  const { data: userData, error: userError } = await supabase
+    .from('users')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (profileError || !profile) {
+  if (userError || !userData) {
     return { hasRole: false, user }
   }
 
   return {
-    hasRole: profile.role === requiredRole,
+    hasRole: userData.role === requiredRole,
     user,
-    role: profile.role,
+    role: userData.role,
   }
 }
 

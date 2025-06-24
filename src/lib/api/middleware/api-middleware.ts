@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { ErrorHandler } from '@/lib/utils/errors/error-handler';
+import { handleApiError } from '@/lib/utils/errors/error-handler';
 import { ForbiddenError, UnauthorizedError, ValidationError } from '@/lib/utils/errors/app-error';
 import { getCurrentSession } from '@/lib/supabase/server';
 import { checkPermission, Permission, UserWithRole } from '@/lib/auth/access-control';
@@ -126,7 +126,7 @@ export function createApiHandler<T extends z.ZodTypeAny>(
       // Εκτέλεση του handler
       return await handler(req, data, context);
     } catch (error) {
-      return ErrorHandler.handleApiError(error, options.name);
+      return handleApiError(error);
     }
   };
 }
