@@ -6,7 +6,9 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { OptimizedImage } from '@/components/common/optimized-image'
 import Image from 'next/image'
+import { Eye, Clock } from 'lucide-react'
 import { cn, formatDate } from '@/lib/utils/utils'
+import { formatViewCount, formatReadingTime } from '@/lib/utils/blog-utils'
 import type { Post } from '@/types/blog'
 
 interface BlogCardProps {
@@ -95,6 +97,22 @@ export const BlogCard = memo(function BlogCard({
               {post.description}
             </p>
             
+            {/* Stats Section */}
+            <div className="flex items-center gap-4 mb-3 text-xs text-gray-500 dark:text-gray-400">
+              {post.views !== undefined && (
+                <span className="flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  {formatViewCount(post.views)}
+                </span>
+              )}
+              {post.readingTime !== undefined && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {formatReadingTime(post.readingTime)}
+                </span>
+              )}
+            </div>
+
             <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="relative w-8 h-8 rounded-full overflow-hidden mr-2">
@@ -150,6 +168,25 @@ export const BlogCard = memo(function BlogCard({
               <time dateTime={typeof post.date === 'string' ? post.date : post.date?.toString()}>
                 {formatDate(new Date(post.date))}
               </time>
+              {(post.views !== undefined || post.readingTime !== undefined) && (
+                <>
+                  <span>•</span>
+                  <div className="flex items-center gap-3 text-xs">
+                    {post.views !== undefined && (
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {formatViewCount(post.views)}
+                      </span>
+                    )}
+                    {post.readingTime !== undefined && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatReadingTime(post.readingTime)}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
             
             <Link href={`/blog/${post.slug}`}>

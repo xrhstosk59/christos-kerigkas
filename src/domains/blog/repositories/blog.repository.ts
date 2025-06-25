@@ -286,5 +286,77 @@ export const blogRepository = {
       .limit(limit);
     
     return transformPosts(relatedPosts as RawBlogPost[]);
+  },
+
+  /**
+   * Αύξηση του view count για ένα blog post.
+   * 
+   * @param slug Το slug του blog post
+   * @returns Promise με το ενημερωμένο blog post
+   */
+  async incrementViews(slug: string): Promise<BlogPost | undefined> {
+    const database = await ensureDatabaseConnection();
+    const [result] = await database.update(blogPosts)
+      .set({
+        views: sql`${blogPosts.views} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(blogPosts.slug, slug))
+      .returning();
+    
+    return result ? ensureCategories(result as RawBlogPost) : undefined;
+  },
+
+  /**
+   * Ανάκτηση των πιο δημοφιλών blog posts με βάση τα views.
+   * 
+   * @param limit Μέγιστος αριθμός αποτελεσμάτων
+   * @returns Promise με τα δημοφιλή blog posts
+   */
+  async findMostPopular(limit: number = 5): Promise<BlogPost[]> {
+    const database = await ensureDatabaseConnection();
+    const rawPosts = await database.select()
+      .from(blogPosts)
+      .where(eq(blogPosts.published, true))
+      .orderBy(desc(blogPosts.views), desc(blogPosts.date))
+      .limit(limit);
+    
+    return transformPosts(rawPosts as RawBlogPost[]);
+  },
+
+  /**
+   * Ανάκτηση στατιστικών για τα blog posts.
+   * 
+   * @returns Promise με στατιστικά δεδομένα
+   */
+  async getStatistics(): Promise<{
+    totalPosts: number;
+    publishedPosts: number;
+    draftPosts: number;
+    totalViews: number;
+    avgViews: number;
+    avgReadingTime: number;
+  }> {
+    const database = await ensureDatabaseConnection();
+    
+    const [stats] = await database
+      .select({
+        totalPosts: count(),
+        publishedPosts: sql<number>`count(*) filter (where ${blogPosts.published} = true)`,
+        draftPosts: sql<number>`count(*) filter (where ${blogPosts.published} = false)`,
+        totalViews: sql<number>`coalesce(sum(${blogPosts.views}), 0)`,
+        avgViews: sql<number>`coalesce(round(avg(${blogPosts.views})), 0)`,
+        avgReadingTime: sql<number>`coalesce(round(avg(${blogPosts.readingTime})), 0)`,
+      })
+      .from(blogPosts);
+
+    return {
+      totalPosts: Number(stats.totalPosts),
+      publishedPosts: Number(stats.publishedPosts),
+      draftPosts: Number(stats.draftPosts),
+      totalViews: Number(stats.totalViews),
+      avgViews: Number(stats.avgViews),
+      avgReadingTime: Number(stats.avgReadingTime),
+    };
   }
 }

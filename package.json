@@ -66,6 +66,7 @@
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
     "cva": "^0.0.0",
+    "date-fns": "^4.1.0",
     "dompurify": "^3.2.6",
     "drizzle-orm": "^0.43.1",
     "drizzle-zod": "^0.8.2",

@@ -14,7 +14,13 @@ import {
   User,
   Users,
   FileText,
-  Home
+  Home,
+  MessageSquare,
+  Shield,
+  Lock,
+  Mail,
+  Activity,
+  Database
 } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 
@@ -35,7 +41,14 @@ export default function AdminNavbar() {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
+    { name: 'Health Monitor', href: '/admin/health', icon: Activity },
+    { name: 'Performance', href: '/admin/performance', icon: Activity },
+    { name: 'Migrations', href: '/admin/migrations', icon: Database },
     { name: 'Posts', href: '/admin', icon: FileText },
+    { name: 'Contact Messages', href: '/admin/contact-messages', icon: MessageSquare },
+    { name: 'Newsletter', href: '/admin/newsletter', icon: Mail },
+    { name: 'Audit Logs', href: '/admin/audit-logs', icon: Shield },
+    { name: 'Account Lockouts', href: '/admin/lockouts', icon: Lock },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Profile', href: '/admin/profile', icon: User },
   ]

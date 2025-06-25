@@ -261,7 +261,8 @@ export async function checkLoginAttemptAllowed(
  */
 export async function emergencyUnlockAccount(
   identifier: string,
-  adminId: string
+  adminId: string,
+  _reason?: string
 ): Promise<boolean> {
   try {
     console.warn(`Emergency account unlock requested by admin ${adminId} for ${identifier}`);

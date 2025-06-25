@@ -68,6 +68,12 @@ export const blogPosts = pgTable('blog_posts', {
   published: pgBoolean('published').default(true),
   featured: pgBoolean('featured').default(false),
   
+  // View count για tracking δημοτικότητας
+  views: serial('views').default(0),
+  
+  // Reading time σε λεπτά (υπολογίζεται αυτόματα)
+  readingTime: serial('reading_time').default(1),
+  
   // Κατηγορία ως string για συμβατότητα με υπάρχοντα κώδικα - θα καταργηθεί
   category: varchar('category', { length: 100 }).default('general'),
 }, (table) => {
@@ -181,6 +187,8 @@ export const blogPostSchema = z.object({
   metaDescription: z.string().optional().nullable(),
   published: z.boolean().default(true),
   featured: z.boolean().default(false),
+  views: z.number().default(0),
+  readingTime: z.number().default(1),
   category: z.string().default('general'),
 });
 
