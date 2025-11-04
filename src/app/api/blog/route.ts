@@ -128,6 +128,10 @@ export const POST = createApiHandler(
           userRole = Role.USER;
       }
       
+      // Calculate reading time (average reading speed: 200 words per minute)
+      const wordCount = validData.content.split(/\s+/).length;
+      const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
       // Προσθήκη των απαραίτητων πεδίων για συμβατότητα με το NewBlogPost
       const newPost = await blogService.createPost({
         slug: validData.slug,
@@ -142,6 +146,8 @@ export const POST = createApiHandler(
         createdAt: new Date(),
         updatedAt: new Date(),
         // Προσθήκη των πεδίων που έλειπαν και προκαλούσαν το TypeScript σφάλμα
+        views: 0,
+        readingTime,
         category: validData.categories[0] || 'general', // Χρήση της πρώτης κατηγορίας ως default
         published: true, // Default τιμή για published
         featured: false, // Default τιμή για featured

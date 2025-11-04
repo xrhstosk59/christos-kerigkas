@@ -4,7 +4,7 @@ import { checkAdminAuth } from '@/lib/auth/admin-auth';
 import { handleApiError } from '@/lib/utils/errors/error-handler';
 import { getDbClient } from '@/lib/db/server-db-client';
 import { auditLogs } from '@/lib/db/schema/audit';
-import { sql, desc, gte, and, eq } from 'drizzle-orm';
+import { desc, gte, and, eq } from 'drizzle-orm';
 
 /**
  * Get performance metrics and analytics
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         timestamp: auditLogs.timestamp,
         action: auditLogs.action,
         severity: auditLogs.severity,
-        metadata: auditLogs.metadata,
+        details: auditLogs.details,
         source: auditLogs.source,
       })
       .from(auditLogs)

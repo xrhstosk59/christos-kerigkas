@@ -12,7 +12,7 @@
 
 import { db } from '../src/lib/db';
 import { users } from '../src/lib/db/schema';
-import { isNotNull } from 'drizzle-orm';
+import { isNotNull, eq } from 'drizzle-orm';
 import { encrypt, encryptBackupCodes, validateEncryptionSetup } from '../src/lib/utils/encryption';
 
 interface User2FA {
@@ -117,7 +117,7 @@ async function migrate2FAData() {
             twoFactorBackupCodes: encryptedBackupCodes,
             updatedAt: new Date(),
           })
-          .where(users.id === user.id);
+          .where(eq(users.id, user.id));
 
         console.log('  ✅ Database updated');
         successCount++;

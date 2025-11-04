@@ -82,6 +82,10 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
         userRole = Role.USER
     }
     
+    // Calculate reading time (average reading speed: 200 words per minute)
+    const wordCount = postData.content.split(/\s+/).length;
+    const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
     // Δημιουργία του post
     const blogPostData: NewBlogPost = {
       slug: postData.slug,
@@ -95,6 +99,8 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
       content: postData.content,
       published: true,
       featured: false,
+      views: 0,
+      readingTime,
       category: postData.categories[0],
       excerpt: postData.description.slice(0, 160),
       metaTitle: postData.title,

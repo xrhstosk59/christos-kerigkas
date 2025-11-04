@@ -26,6 +26,8 @@ export function mapDbPostToBlogPost(dbPost: SelectBlogPost, categories: string[]
     metaDescription: dbPost.metaDescription || null,
     published: dbPost.published ?? true,
     featured: dbPost.featured ?? false,
+    views: Number(dbPost.views) || 0,
+    readingTime: dbPost.readingTime || 1,
     category: dbPost.category || 'general',
   };
 }

@@ -56,6 +56,8 @@ const envSchema = z.object({
   
   // Redis (Optional)
   REDIS_URL: z.string().optional(),
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   
   // Feature Flags
   ENABLE_2FA: z.string().transform(val => val === 'true').default('true'),

@@ -87,6 +87,8 @@ export const AuditAction = {
   ADMIN_ACCESS: 'ADMIN_ACCESS',
   ADMIN_SETTINGS_CHANGE: 'ADMIN_SETTINGS_CHANGE',
   ADMIN_USER_IMPERSONATE: 'ADMIN_USER_IMPERSONATE',
+  ADMIN_ACTION: 'ADMIN_ACTION',
+  EMERGENCY_2FA_DISABLE: 'EMERGENCY_2FA_DISABLE',
   
   // Security events
   SUSPICIOUS_ACTIVITY: 'SUSPICIOUS_ACTIVITY',
@@ -145,6 +147,7 @@ export const Source = {
   API: 'API',
   SYSTEM: 'SYSTEM',
   CLI: 'CLI',
+  ADMIN: 'ADMIN',
 } as const;
 
 export type SourceType = typeof Source[keyof typeof Source];
