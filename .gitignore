@@ -56,6 +56,10 @@ next-env.d.ts
 .branches
 .temp
 
+# Database backups
+/backups/*.sql
+!backups/.gitkeep
+
 # Editors
 .idea/
 .vscode/*

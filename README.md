@@ -12,12 +12,14 @@
 - **Διαδραστικό CV**: Με δυνατότητα εξαγωγής σε PDF
 - **Blog Platform**: Ολοκληρωμένη λειτουργικότητα blog με αναζήτηση και κατηγορίες
 - **Admin Panel**: Ασφαλές διαχειριστικό για ενημέρωση περιεχομένου
+- **2FA Authentication**: Two-factor authentication με encrypted storage
 - **Animated UI**: Εντυπωσιακά animations με Framer Motion
 - **SEO Optimized**: Βελτιστοποιημένο για μηχανές αναζήτησης
 - **Fast Performance**: Server-side rendering και βελτιστοποιημένα assets
 - **Contact Form**: Με rate limiting και αποθήκευση στη βάση δεδομένων
 - **Newsletter**: Δυνατότητα εγγραφής σε newsletter
 - **Analytics**: Ενσωματωμένη υποστήριξη για Google Analytics
+- **Security Features**: Encrypted 2FA, rate limiting, audit logging, hardened CSP
 
 ## 📋 Προαπαιτούμενα
 
@@ -45,7 +47,11 @@ yarn install
 
 3. **Ρύθμιση μεταβλητών περιβάλλοντος**
 
-Δημιουργήστε ένα αρχείο `.env.local` στον ριζικό κατάλογο και προσθέστε τις απαραίτητες μεταβλητές περιβάλλοντος:
+Δημιουργήστε ένα αρχείο `.env.local` στον ριζικό κατάλογο και προσθέστε τις απαραίτητες μεταβλητές περιβάλλοντος.
+
+> 📖 **Για πλήρεις οδηγίες setup δες το [SETUP.md](./SETUP.md)**
+
+Ελάχιστες απαιτούμενες μεταβλητές:
 
 ```env
 # Database
