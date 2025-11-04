@@ -1,6 +1,6 @@
 // src/lib/db/schema/blog.ts
 
-import { pgTable, serial, varchar, text, timestamp, jsonb, boolean as pgBoolean, index, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, timestamp, jsonb, boolean as pgBoolean, bigint, index, primaryKey } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -68,9 +68,9 @@ export const blogPosts = pgTable('blog_posts', {
   published: pgBoolean('published').default(true),
   featured: pgBoolean('featured').default(false),
   
-  // View count για tracking δημοτικότητας
-  views: serial('views').default(0),
-  
+  // View count για tracking δημοτικότητας (bigint for high traffic posts)
+  views: bigint('views', { mode: 'number' }).default(0).notNull(),
+
   // Reading time σε λεπτά (υπολογίζεται αυτόματα)
   readingTime: serial('reading_time').default(1),
   

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { rateLimitAttempts } from '@/lib/db/schema';
 import { eq, and, gte, desc } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { createAuditLog } from '@/lib/utils/audit-logger';
 
 /**
  * Account lockout and failed login attempt tracking
@@ -271,14 +272,21 @@ export async function emergencyUnlockAccount(
     await db().delete(rateLimitAttempts)
       .where(eq(rateLimitAttempts.identifier, `login_failed:${identifier}`));
 
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: adminId,
-    //   action: 'EMERGENCY_ACCOUNT_UNLOCK',
-    //   resourceId: identifier,
-    //   metadata: { targetIdentifier: identifier }
-    // });
-    
+    // Add audit log entry for security tracking
+    await createAuditLog({
+      userId: adminId,
+      action: 'ADMIN_ACTION',
+      resourceType: 'USER',
+      resourceId: identifier,
+      details: {
+        action: 'EMERGENCY_ACCOUNT_UNLOCK',
+        targetIdentifier: identifier,
+        reason: _reason || 'Emergency unlock by admin'
+      },
+      severity: 'CRITICAL',
+      source: 'ADMIN',
+    });
+
     return true;
   } catch (error) {
     console.error('Failed to emergency unlock account:', error);

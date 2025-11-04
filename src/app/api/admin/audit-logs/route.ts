@@ -5,8 +5,22 @@ import { auditLogs } from '@/lib/db/schema/audit';
 import { users } from '@/lib/db/schema/auth';
 import { desc, eq, count, like, and, gte, lte } from 'drizzle-orm';
 import { checkAdminAuth } from '@/lib/auth/admin-auth';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+// Validation schema for query parameters
+const queryParamsSchema = z.object({
+  page: z.coerce.number().int().positive().max(10000).default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  action: z.string().optional(),
+  severity: z.string().optional(),
+  source: z.string().optional(),
+  resourceType: z.string().optional(),
+  search: z.string().max(100).optional(),
+  fromDate: z.string().datetime().optional(),
+  toDate: z.string().datetime().optional(),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,18 +34,31 @@ export async function GET(request: NextRequest) {
     }
 
     const db = await getDbClient();
-    
-    // Get URL parameters for pagination and filtering
+
+    // Get and validate URL parameters
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const action = searchParams.get('action');
-    const severity = searchParams.get('severity');
-    const source = searchParams.get('source');
-    const resourceType = searchParams.get('resourceType');
-    const search = searchParams.get('search'); // Search in action, resourceType, details
-    const fromDate = searchParams.get('fromDate');
-    const toDate = searchParams.get('toDate');
+    const rawParams = {
+      page: searchParams.get('page') || '1',
+      limit: searchParams.get('limit') || '20',
+      action: searchParams.get('action') || undefined,
+      severity: searchParams.get('severity') || undefined,
+      source: searchParams.get('source') || undefined,
+      resourceType: searchParams.get('resourceType') || undefined,
+      search: searchParams.get('search') || undefined,
+      fromDate: searchParams.get('fromDate') || undefined,
+      toDate: searchParams.get('toDate') || undefined,
+    };
+
+    // Validate parameters
+    const validationResult = queryParamsSchema.safeParse(rawParams);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters', details: validationResult.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { page, limit, action, severity, source, resourceType, search, fromDate, toDate } = validationResult.data;
     const offset = (page - 1) * limit;
 
     // Build where conditions
@@ -54,8 +81,10 @@ export async function GET(request: NextRequest) {
     }
     
     if (search) {
+      // Sanitize search input to prevent LIKE injection
+      const sanitizedSearch = search.replace(/[%_\\]/g, '\\$&');
       whereConditions.push(
-        like(auditLogs.action, `%${search}%`)
+        like(auditLogs.action, `%${sanitizedSearch}%`)
       );
     }
     

@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import { encrypt, decrypt, encryptBackupCodes, decryptBackupCodes } from '@/lib/utils/encryption';
+import { createAuditLog } from '@/lib/utils/audit-logger';
 
 /**
  * Two-Factor Authentication utilities
@@ -50,10 +52,11 @@ export async function generate2FASecret(
   );
 
   // Store the secret temporarily (not activated until verification)
+  // Encrypt sensitive data before storing
   await db().update(users)
-    .set({ 
-      twoFactorSecret: secret.base32,
-      twoFactorBackupCodes: JSON.stringify(backupCodes),
+    .set({
+      twoFactorSecret: encrypt(secret.base32),
+      twoFactorBackupCodes: encryptBackupCodes(backupCodes),
       twoFactorEnabled: false // Not enabled until verified
     })
     .where(eq(users.id, userId));
@@ -81,8 +84,9 @@ export async function verify2FASetup(
     return false;
   }
 
-  // Create TOTP instance with stored secret
-  const secret = Secret.fromBase32(user.twoFactorSecret);
+  // Decrypt and create TOTP instance with stored secret
+  const decryptedSecret = decrypt(user.twoFactorSecret);
+  const secret = Secret.fromBase32(decryptedSecret);
   const totp = new TOTP({
     issuer: process.env.NEXT_PUBLIC_APP_NAME || 'Christos Kerigkas Portfolio',
     label: user.email,
@@ -127,7 +131,8 @@ export async function verify2FAToken(
   }
 
   // First, try TOTP verification
-  const secret = Secret.fromBase32(user.twoFactorSecret);
+  const decryptedSecret = decrypt(user.twoFactorSecret);
+  const secret = Secret.fromBase32(decryptedSecret);
   const totp = new TOTP({
     issuer: process.env.NEXT_PUBLIC_APP_NAME || 'Christos Kerigkas Portfolio',
     label: user.email,
@@ -145,16 +150,16 @@ export async function verify2FAToken(
 
   // If TOTP fails, check backup codes
   if (user.twoFactorBackupCodes) {
-    const backupCodes: string[] = JSON.parse(user.twoFactorBackupCodes);
+    const backupCodes: string[] = decryptBackupCodes(user.twoFactorBackupCodes);
     const normalizedToken = token.toUpperCase().replace(/\s/g, '');
-    
+
     if (backupCodes.includes(normalizedToken)) {
       // Remove used backup code
       const updatedCodes = backupCodes.filter(code => code !== normalizedToken);
-      
+
       await db().update(users)
-        .set({ 
-          twoFactorBackupCodes: JSON.stringify(updatedCodes),
+        .set({
+          twoFactorBackupCodes: encryptBackupCodes(updatedCodes),
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
@@ -191,13 +196,13 @@ export async function disable2FA(userId: string): Promise<boolean> {
  * Regenerates backup codes for a user
  */
 export async function regenerateBackupCodes(userId: string): Promise<string[]> {
-  const backupCodes = Array.from({ length: 8 }, () => 
+  const backupCodes = Array.from({ length: 8 }, () =>
     crypto.randomBytes(4).toString('hex').toUpperCase()
   );
 
   await db().update(users)
-    .set({ 
-      twoFactorBackupCodes: JSON.stringify(backupCodes),
+    .set({
+      twoFactorBackupCodes: encryptBackupCodes(backupCodes),
       updatedAt: new Date()
     })
     .where(eq(users.id, userId));
@@ -240,7 +245,7 @@ export async function get2FAStatus(userId: string): Promise<{
   let backupCodesCount = 0;
   if (user.twoFactorBackupCodes) {
     try {
-      const codes: string[] = JSON.parse(user.twoFactorBackupCodes);
+      const codes: string[] = decryptBackupCodes(user.twoFactorBackupCodes);
       backupCodesCount = codes.length;
     } catch {
       backupCodesCount = 0;
@@ -266,22 +271,29 @@ export async function emergencyDisable2FA(
     console.warn(`Emergency 2FA disable requested by admin ${adminId} for user ${userId}`);
     
     await db().update(users)
-      .set({ 
+      .set({
         twoFactorEnabled: false,
         twoFactorSecret: null,
         twoFactorBackupCodes: null,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
-    
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: adminId,
-    //   action: 'EMERGENCY_2FA_DISABLE',
-    //   resourceId: userId,
-    //   metadata: { targetUserId: userId }
-    // });
-    
+
+    // Add audit log entry for security tracking
+    await createAuditLog({
+      userId: adminId,
+      action: 'ADMIN_ACTION',
+      resourceType: 'USER',
+      resourceId: userId,
+      details: {
+        action: 'EMERGENCY_2FA_DISABLE',
+        targetUserId: userId,
+        reason: 'Emergency disable by admin'
+      },
+      severity: 'CRITICAL',
+      source: 'ADMIN',
+    });
+
     return true;
   } catch (error) {
     console.error('Failed to emergency disable 2FA:', error);
