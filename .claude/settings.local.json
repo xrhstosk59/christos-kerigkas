@@ -9,7 +9,8 @@
       "Bash(npm run type-check:*)",
       "Bash(npx depcheck:*)",
       "Bash(npm uninstall:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
