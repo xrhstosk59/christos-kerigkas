@@ -1,8 +1,14 @@
 # Christos Kerigkas - Personal Portfolio
 
-Ένα σύγχρονο, διαδραστικό portfolio κατασκευασμένο με Next.js 15, React 19, TypeScript και Tailwind CSS.
+[![CI](https://github.com/xrhstosk59/christos-kerigkas/actions/workflows/ci.yml/badge.svg)](https://github.com/xrhstosk59/christos-kerigkas/actions/workflows/ci.yml)
+[![Deploy](https://github.com/xrhstosk59/christos-kerigkas/actions/workflows/deploy.yml/badge.svg)](https://github.com/xrhstosk59/christos-kerigkas/actions/workflows/deploy.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.x-black.svg)](https://nextjs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-![Christos Kerigkas Portfolio](https://example.com/portfolio-preview.png)
+Ένα σύγχρονο, επαγγελματικό portfolio με enterprise-grade αρχιτεκτονική, κατασκευασμένο με Next.js 15, React 19, TypeScript και Tailwind CSS.
+
+> **Tech Highlights**: Domain-driven architecture • Strict TypeScript • Comprehensive security headers • 2FA authentication • Audit logging • Real-time monitoring • CI/CD pipelines
 
 ## 🚀 Χαρακτηριστικά
 
@@ -86,6 +92,46 @@ npm run dev
 yarn dev
 ```
 
+## 🔒 Security Features
+
+Το project ακολουθεί best practices για security:
+
+- **Authentication**: Supabase Auth με 2FA support
+- **Rate Limiting**: Upstash Redis για API protection
+- **Security Headers**: CSP, HSTS, X-Frame-Options, και άλλα
+- **Audit Logging**: Comprehensive logging για admin actions
+- **Input Validation**: Zod schemas για validation
+- **Error Boundaries**: Graceful error handling με reporting
+- **SQL Injection Protection**: Parameterized queries με Drizzle ORM
+
+## 🔄 CI/CD
+
+Το project χρησιμοποιεί GitHub Actions για automated workflows:
+
+### CI Pipeline
+- **Code Quality**: Linting και type checking
+- **Build Verification**: Build check για κάθε PR
+- **Bundle Size**: Automatic bundle size monitoring
+- **Dependency Check**: Automated unused dependency detection
+
+### Deployment Pipeline
+- **Automatic Deploy**: Auto-deploy στο Vercel για main branch
+- **Preview Deployments**: Automatic preview για κάθε PR
+- **Environment Management**: Secure secrets management
+
+### Dependabot
+- **Automated Updates**: Weekly dependency updates
+- **Security Patches**: Automatic security vulnerability fixes
+- **Version Grouping**: Smart grouping για patch updates
+
+Για να ενεργοποιήσετε τα workflows, προσθέστε τα παρακάτω secrets στο GitHub:
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `DATABASE_URL`
+
 ## 🏗️ Δομή Project
 
 ```
@@ -143,14 +189,31 @@ npm run start
 
 ## 📝 Scripts
 
-- `npm run dev` - Εκτέλεση σε development mode
+### Development
+- `npm run dev` - Εκτέλεση σε development mode με Turbopack
 - `npm run build` - Δημιουργία production build
 - `npm run start` - Εκτέλεση του production build
 - `npm run lint` - Έλεγχος linting
+- `npm run type-check` - TypeScript type checking
+
+### Database
 - `npm run db:generate` - Δημιουργία Drizzle migrations
 - `npm run db:migrate` - Εκτέλεση database migrations
+- `npm run db:push` - Push schema changes στη βάση
 - `npm run db:studio` - Εκκίνηση του Drizzle Studio
-- `npm run db:seed` - Εισαγωγή αρχικών δεδομένων στη βάση
+- `npm run db:seed` - Εισαγωγή αρχικών δεδομένων
+- `npm run db:health` - Database health check
+- `npm run db:verify` - Verify database schema
+
+### Performance & Analysis
+- `npm run analyze` - Bundle analysis
+- `npm run bundle-size` - Check bundle size limits
+- `npm run performance` - Run performance checks
+- `npm run deps:check` - Check for unused dependencies
+
+### Maintenance
+- `npm run clean` - Καθαρισμός build artifacts
+- `npm run clean:install` - Καθαρισμός και reinstall dependencies
 
 ## 🧰 Τεχνολογίες
 
@@ -172,10 +235,46 @@ npm run start
 Το admin panel είναι προσβάσιμο στη διαδρομή `/admin`.
 
 ### Features:
-- Διαχείριση blog posts
-- Προβολή μηνυμάτων επικοινωνίας
-- Διαχείριση newsletter εγγραφών
-- Επεξεργασία προφίλ
+- **Content Management**: Διαχείριση blog posts και projects
+- **Communications**: Προβολή μηνυμάτων επικοινωνίας
+- **Newsletter**: Διαχείριση newsletter εγγραφών
+- **User Management**: Διαχείριση χρηστών και permissions
+- **Audit Logs**: Comprehensive audit trail για όλες τις actions
+- **Performance Monitor**: Real-time performance metrics
+- **Database Health**: Database health monitoring
+- **Security**: Account lockouts και rate limiting status
+- **2FA Setup**: Two-factor authentication configuration
+
+## ⚡ Performance
+
+Το project βελτιστοποιημένο για performance:
+
+- **Bundle Size**: JavaScript bundles < 250KB (gzipped)
+- **CSS**: Optimized CSS < 30KB (gzipped)
+- **Image Optimization**: Automatic WebP/AVIF conversion
+- **Code Splitting**: Automatic route-based code splitting
+- **Server Components**: Extensive use για μειωμένο client JS
+- **Middleware**: Optimized για minimal overhead
+- **Caching**: Redis caching για API responses
+
+## 🤝 Contributing
+
+Contributions are welcome! Αν θέλετε να συνεισφέρετε:
+
+1. Fork το repository
+2. Δημιουργήστε ένα feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit τις αλλαγές σας (`git commit -m 'Add some AmazingFeature'`)
+4. Push στο branch (`git push origin feature/AmazingFeature`)
+5. Ανοίξτε ένα Pull Request
+
+### Development Guidelines
+
+- Τηρήστε τα TypeScript types (strict mode enabled)
+- Ακολουθήστε το existing code style
+- Προσθέστε comments όπου χρειάζεται
+- Βεβαιωθείτε ότι το build περνάει (`npm run build`)
+- Τρέξτε type check (`npm run type-check`)
+- Ελέγξτε για unused dependencies (`npm run deps:check`)
 
 ## 📄 Άδεια Χρήσης
 
