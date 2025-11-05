@@ -1,60 +1,81 @@
 // src/domains/blog/repositories/blog.repository.ts
-import { blogPosts } from '@/lib/db/schema/blog';
 import { ensureDatabaseConnection } from '@/lib/db/helpers';
-import { desc, eq, like, or, and, not, count, sql } from 'drizzle-orm';
+import type { Database } from '@/lib/db/database.types';
 import type { BlogPost, NewBlogPost, PaginatedResult } from '../models/blog-post.model';
 
-// Τύπος που αντιπροσωπεύει το blog post όπως επιστρέφεται από τη βάση πριν τη μετατροπή
-type RawBlogPost = Omit<BlogPost, 'categories' | 'category'> & {
-  categories: string[] | null;
-  category: string | null;
-};
+// Type for blog post from database
+type DBBlogPost = Database['public']['Tables']['blog_posts']['Row'];
 
-// Βοηθητική συνάρτηση για τη μετατροπή του null σε άδειο array για το πεδίο categories
-function ensureCategories(post: RawBlogPost): BlogPost {
+// Helper function to ensure categories
+function ensureCategories(post: DBBlogPost): BlogPost {
   return {
     ...post,
     categories: post.categories ?? ['general'],
-    category: post.category ?? 'general'
-  };
+    category: post.categories?.[0] ?? 'general',
+    authorName: post.author_name,
+    authorImage: post.author_image,
+    author_name: post.author_name,
+    author_image: post.author_image,
+    createdAt: post.created_at,
+    updatedAt: post.updated_at,
+    created_at: post.created_at,
+    updated_at: post.updated_at,
+    readingTime: post.reading_time || 5,
+    reading_time: post.reading_time || 5,
+    views: post.views || 0,
+    published: true, // Default value
+  } as BlogPost;
 }
 
-// Βοηθητική συνάρτηση για τη μετατροπή μιας λίστας posts
-function transformPosts(posts: RawBlogPost[]): BlogPost[] {
+// Helper function to transform a list of posts
+function transformPosts(posts: DBBlogPost[]): BlogPost[] {
   return posts.map(post => ensureCategories(post));
 }
 
 /**
- * Repository για την πρόσβαση στα δεδομένα των blog posts.
- * Περιέχει όλες τις λειτουργίες CRUD και αναζήτησης.
+ * Repository for accessing blog posts data.
+ * Contains all CRUD and search operations.
  */
 export const blogRepository = {
   /**
-   * Ανάκτηση όλων των blog posts με pagination.
-   * 
-   * @param page Αριθμός σελίδας (ξεκινάει από 1)
-   * @param limit Αριθμός αποτελεσμάτων ανά σελίδα
-   * @returns Promise με τα αποτελέσματα
+   * Retrieve all blog posts with pagination.
    */
   async findAll(page: number = 1, limit: number = 10): Promise<PaginatedResult<BlogPost>> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
+    const supabase = await ensureDatabaseConnection();
     const offset = (page - 1) * limit;
-    
-    const rawPosts = await database.select()
-      .from(blogPosts)
-      .orderBy(desc(blogPosts.date))
-      .limit(limit)
-      .offset(offset);
-    
-    // Μετατροπή των δεδομένων από τη βάση στον αναμενόμενο τύπο BlogPost
-    const posts = transformPosts(rawPosts as RawBlogPost[]);
-    
-    const [result] = await database
-      .select({ total: count() })
-      .from(blogPosts);
-    
-    const total = Number(result.total);
-    
+
+    // Get paginated posts
+    const { data: rawPosts, error: postsError } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .order('date', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (postsError) {
+      console.error('Error fetching blog posts:', postsError);
+      return {
+        posts: [],
+        total: 0,
+        totalPages: 0,
+        currentPage: page,
+        hasNextPage: false,
+        hasPrevPage: false,
+      };
+    }
+
+    const posts = transformPosts(rawPosts || []);
+
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      console.error('Error counting blog posts:', countError);
+    }
+
+    const total = count || 0;
+
     return {
       posts,
       total,
@@ -64,56 +85,68 @@ export const blogRepository = {
       hasPrevPage: page > 1,
     };
   },
-  
+
   /**
-   * Ανάκτηση ενός blog post με βάση το slug.
-   * 
-   * @param slug Το slug του blog post
-   * @returns Promise με το blog post ή undefined αν δεν βρεθεί
+   * Retrieve a blog post by slug.
    */
   async findBySlug(slug: string): Promise<BlogPost | undefined> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    const [post] = await database.select()
-      .from(blogPosts)
-      .where(eq(blogPosts.slug, slug))
-      .limit(1);
-    
-    return post ? ensureCategories(post as RawBlogPost) : undefined;
+    const supabase = await ensureDatabaseConnection();
+
+    const { data: post, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error('Error fetching blog post by slug:', error);
+      return undefined;
+    }
+
+    return post ? ensureCategories(post) : undefined;
   },
-  
+
   /**
-   * Ανάκτηση blog posts με βάση την κατηγορία.
-   * 
-   * @param category Η κατηγορία των blog posts
-   * @param page Αριθμός σελίδας
-   * @param limit Αριθμός αποτελεσμάτων ανά σελίδα
-   * @returns Promise με τα αποτελέσματα
+   * Retrieve blog posts by category.
    */
   async findByCategory(category: string, page: number = 1, limit: number = 10): Promise<PaginatedResult<BlogPost>> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
+    const supabase = await ensureDatabaseConnection();
     const offset = (page - 1) * limit;
-    
-    // Χρήση του sql template ασφαλέστερα
-    const rawPosts = await database.select()
-      .from(blogPosts)
-      .where(
-        sql`${category} = ANY(${blogPosts.categories})`
-      )
-      .orderBy(desc(blogPosts.date))
-      .limit(limit)
-      .offset(offset);
-    
-    const posts = transformPosts(rawPosts as RawBlogPost[]);
-    
-    const [result] = await database
-      .select({ total: count() })
-      .from(blogPosts)
-      .where(
-        sql`${category} = ANY(${blogPosts.categories})`
-      );
-    
-    const total = Number(result.total);
-    
+
+    // Get paginated posts with category filter
+    const { data: rawPosts, error: postsError } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .contains('categories', [category])
+      .order('date', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (postsError) {
+      console.error('Error fetching blog posts by category:', postsError);
+      return {
+        posts: [],
+        total: 0,
+        totalPages: 0,
+        currentPage: page,
+        hasNextPage: false,
+        hasPrevPage: false,
+      };
+    }
+
+    const posts = transformPosts(rawPosts || []);
+
+    // Get total count with category filter
+    const { count, error: countError } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true })
+      .contains('categories', [category]);
+
+    if (countError) {
+      console.error('Error counting blog posts by category:', countError);
+    }
+
+    const total = count || 0;
+
     return {
       posts,
       total,
@@ -123,72 +156,74 @@ export const blogRepository = {
       hasPrevPage: page > 1,
     };
   },
-  
+
   /**
-   * Αναζήτηση blog posts με βάση ένα query.
-   * 
-   * @param query Το query αναζήτησης
-   * @param limit Μέγιστος αριθμός αποτελεσμάτων
-   * @returns Promise με τα αποτελέσματα
+   * Search blog posts by query.
    */
   async search(query: string, limit: number = 10): Promise<BlogPost[]> {
     if (!query || query.trim() === '') {
       return [];
     }
-    
-    // Καθαρισμός του query για να αποφευχθεί SQL injection
-    const sanitizedQuery = query.trim().replace(/[%_]/g, '\\$&');
-    const searchPattern = `%${sanitizedQuery}%`;
-    
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    const posts = await database.select()
-      .from(blogPosts)
-      .where(
-        or(
-          like(blogPosts.title, searchPattern),
-          like(blogPosts.description, searchPattern),
-          like(blogPosts.content, searchPattern)
-        )
-      )
-      .orderBy(desc(blogPosts.date))
+
+    const supabase = await ensureDatabaseConnection();
+    const searchTerm = `%${query}%`;
+
+    const { data: posts, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},content.ilike.${searchTerm}`)
+      .order('date', { ascending: false })
       .limit(limit);
-    
-    return transformPosts(posts as RawBlogPost[]);
+
+    if (error) {
+      console.error('Error searching blog posts:', error);
+      return [];
+    }
+
+    return transformPosts(posts || []);
   },
-  
+
   /**
-   * Ανάκτηση blog posts με βάση τα tags.
-   * 
-   * @param tags Λίστα με tags
-   * @param page Αριθμός σελίδας
-   * @param limit Αριθμός αποτελεσμάτων ανά σελίδα
-   * @returns Promise με τα αποτελέσματα
+   * Retrieve blog posts by tags.
    */
   async findByTags(tags: string[], page: number = 1, limit: number = 10): Promise<PaginatedResult<BlogPost>> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
+    const supabase = await ensureDatabaseConnection();
     const offset = (page - 1) * limit;
-    
-    // Δημιουργία συνθηκών αναζήτησης για κάθε tag
-    const whereConditions = tags.map(tag => 
-      sql`${tag} = ANY(${blogPosts.categories})`
-    );
-    
-    const rawPosts = await database.select()
-      .from(blogPosts)
-      .where(or(...whereConditions))
-      .orderBy(desc(blogPosts.date))
-      .limit(limit)
-      .offset(offset);
-    
-    const posts = transformPosts(rawPosts as RawBlogPost[]);
-    
-    const [result] = await database
-      .select({ total: count() })
-      .from(blogPosts)
-      .where(or(...whereConditions));
-    
-    const total = Number(result.total);
-    
+
+    // For Supabase, we'll use overlaps for array matching
+    const { data: rawPosts, error: postsError } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .overlaps('categories', tags)
+      .order('date', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (postsError) {
+      console.error('Error fetching blog posts by tags:', postsError);
+      return {
+        posts: [],
+        total: 0,
+        totalPages: 0,
+        currentPage: page,
+        hasNextPage: false,
+        hasPrevPage: false,
+      };
+    }
+
+    const posts = transformPosts(rawPosts || []);
+
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true })
+      .overlaps('categories', tags);
+
+    if (countError) {
+      console.error('Error counting blog posts by tags:', countError);
+    }
+
+    const total = count || 0;
+
     return {
       posts,
       total,
@@ -198,136 +233,184 @@ export const blogRepository = {
       hasPrevPage: page > 1,
     };
   },
-  
+
   /**
-   * Δημιουργία νέου blog post.
-   * 
-   * @param post Τα δεδομένα του νέου post
-   * @returns Promise με το νέο blog post
+   * Create new blog post.
    */
-  async create(post: NewBlogPost): Promise<BlogPost> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    const [result] = await database.insert(blogPosts)
-      .values(post)
-      .returning();
-    
-    return ensureCategories(result as RawBlogPost);
+  async create(post: NewBlogPost): Promise<BlogPost | undefined> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .insert({
+        slug: post.slug,
+        title: post.title,
+        description: post.description,
+        content: post.content,
+        date: post.date,
+        image: post.image,
+        author_name: post.author_name,
+        author_image: post.author_image,
+        categories: post.categories,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating blog post:', error);
+      return undefined;
+    }
+
+    return data ? ensureCategories(data) : undefined;
   },
-  
+
   /**
-   * Ενημέρωση ενός υπάρχοντος blog post.
-   * 
-   * @param slug Το slug του blog post
-   * @param post Τα νέα δεδομένα του post
-   * @returns Promise με το ενημερωμένο blog post
+   * Update an existing blog post.
    */
   async update(slug: string, post: Partial<Omit<NewBlogPost, 'createdAt'>>): Promise<BlogPost | undefined> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    const [result] = await database.update(blogPosts)
-      .set({
-        ...post,
-        updatedAt: new Date()
-      })
-      .where(eq(blogPosts.slug, slug))
-      .returning();
-    
-    return result ? ensureCategories(result as RawBlogPost) : undefined;
+    const supabase = await ensureDatabaseConnection();
+
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (post.title) updateData.title = post.title;
+    if (post.description) updateData.description = post.description;
+    if (post.content) updateData.content = post.content;
+    if (post.date) updateData.date = post.date;
+    if (post.image) updateData.image = post.image;
+    if (post.author_name) updateData.author_name = post.author_name;
+    if (post.author_image) updateData.author_image = post.author_image;
+    if (post.categories) updateData.categories = post.categories;
+
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .update(updateData)
+      .eq('slug', slug)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating blog post:', error);
+      return undefined;
+    }
+
+    return data ? ensureCategories(data) : undefined;
   },
-  
+
   /**
-   * Διαγραφή ενός blog post.
-   * 
-   * @param slug Το slug του blog post
-   * @returns Promise που ολοκληρώνεται μετά τη διαγραφή
+   * Delete a blog post.
    */
   async delete(slug: string): Promise<void> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    await database.delete(blogPosts)
-      .where(eq(blogPosts.slug, slug));
+    const supabase = await ensureDatabaseConnection();
+
+    const { error } = await supabase
+      .from('blog_posts')
+      .delete()
+      .eq('slug', slug);
+
+    if (error) {
+      console.error('Error deleting blog post:', error);
+    }
   },
-  
+
   /**
-   * Εύρεση σχετικών blog posts.
-   * 
-   * @param postSlug Το slug του blog post
-   * @param limit Μέγιστος αριθμός αποτελεσμάτων
-   * @returns Promise με τα σχετικά blog posts
+   * Find related blog posts.
    */
   async findRelated(postSlug: string, limit: number = 3): Promise<BlogPost[]> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    
-    // Πρώτα βρίσκουμε το post και τις κατηγορίες του
-    const [currentPost] = await database.select()
-      .from(blogPosts)
-      .where(eq(blogPosts.slug, postSlug))
-      .limit(1);
-    
-    if (!currentPost) {
+    const supabase = await ensureDatabaseConnection();
+
+    // First find the current post and its categories
+    const { data: currentPost, error: currentError } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('slug', postSlug)
+      .single();
+
+    if (currentError || !currentPost) {
       return [];
     }
-    
-    // Βεβαιωνόμαστε ότι έχουμε έγκυρες κατηγορίες
-    const safeCurrentPost = ensureCategories(currentPost as RawBlogPost);
-    
-    // Βρίσκουμε posts με παρόμοιες κατηγορίες, εξαιρώντας το τρέχον post
-    const relatedConditions = safeCurrentPost.categories.map((category: string) => 
-      sql`${category} = ANY(${blogPosts.categories})`
-    );
-    
-    const relatedPosts = await database.select()
-      .from(blogPosts)
-      .where(
-        and(
-          or(...relatedConditions),
-          not(eq(blogPosts.slug, postSlug))
-        )
-      )
-      .orderBy(desc(blogPosts.date))
+
+    const safeCurrentPost = ensureCategories(currentPost);
+
+    // Find posts with similar categories, excluding the current post
+    const { data: relatedPosts, error: relatedError } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .overlaps('categories', safeCurrentPost.categories)
+      .neq('slug', postSlug)
+      .order('date', { ascending: false })
       .limit(limit);
-    
-    return transformPosts(relatedPosts as RawBlogPost[]);
+
+    if (relatedError) {
+      console.error('Error fetching related blog posts:', relatedError);
+      return [];
+    }
+
+    return transformPosts(relatedPosts || []);
   },
 
   /**
-   * Αύξηση του view count για ένα blog post.
-   * 
-   * @param slug Το slug του blog post
-   * @returns Promise με το ενημερωμένο blog post
+   * Increment view count for a blog post.
    */
   async incrementViews(slug: string): Promise<BlogPost | undefined> {
-    const database = await ensureDatabaseConnection();
-    const [result] = await database.update(blogPosts)
-      .set({
-        views: sql`${blogPosts.views} + 1`,
-        updatedAt: new Date()
+    const supabase = await ensureDatabaseConnection();
+
+    // First get the current post
+    const { data: currentPost } = await supabase
+      .from('blog_posts')
+      .select('views')
+      .eq('slug', slug)
+      .single();
+
+    if (!currentPost) {
+      return undefined;
+    }
+
+    const newViews = (currentPost.views || 0) + 1;
+
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .update({
+        views: newViews,
+        updated_at: new Date().toISOString()
       })
-      .where(eq(blogPosts.slug, slug))
-      .returning();
-    
-    return result ? ensureCategories(result as RawBlogPost) : undefined;
+      .eq('slug', slug)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error incrementing blog post views:', error);
+      return undefined;
+    }
+
+    return data ? ensureCategories(data) : undefined;
   },
 
   /**
-   * Ανάκτηση των πιο δημοφιλών blog posts με βάση τα views.
-   * 
-   * @param limit Μέγιστος αριθμός αποτελεσμάτων
-   * @returns Promise με τα δημοφιλή blog posts
+   * Retrieve most popular blog posts by views.
    */
   async findMostPopular(limit: number = 5): Promise<BlogPost[]> {
-    const database = await ensureDatabaseConnection();
-    const rawPosts = await database.select()
-      .from(blogPosts)
-      .where(eq(blogPosts.published, true))
-      .orderBy(desc(blogPosts.views), desc(blogPosts.date))
+    const supabase = await ensureDatabaseConnection();
+
+    const { data: rawPosts, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('published', true)
+      .order('views', { ascending: false })
+      .order('date', { ascending: false })
       .limit(limit);
-    
-    return transformPosts(rawPosts as RawBlogPost[]);
+
+    if (error) {
+      console.error('Error fetching most popular blog posts:', error);
+      return [];
+    }
+
+    return transformPosts(rawPosts || []);
   },
 
   /**
-   * Ανάκτηση στατιστικών για τα blog posts.
-   * 
-   * @returns Promise με στατιστικά δεδομένα
+   * Get statistics for blog posts.
    */
   async getStatistics(): Promise<{
     totalPosts: number;
@@ -337,26 +420,43 @@ export const blogRepository = {
     avgViews: number;
     avgReadingTime: number;
   }> {
-    const database = await ensureDatabaseConnection();
-    
-    const [stats] = await database
-      .select({
-        totalPosts: count(),
-        publishedPosts: sql<number>`count(*) filter (where ${blogPosts.published} = true)`,
-        draftPosts: sql<number>`count(*) filter (where ${blogPosts.published} = false)`,
-        totalViews: sql<number>`coalesce(sum(${blogPosts.views}), 0)`,
-        avgViews: sql<number>`coalesce(round(avg(${blogPosts.views})), 0)`,
-        avgReadingTime: sql<number>`coalesce(round(avg(${blogPosts.readingTime})), 0)`,
-      })
-      .from(blogPosts);
+    const supabase = await ensureDatabaseConnection();
+
+    // Get total posts
+    const { count: totalCount } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true });
+
+    // Get published posts
+    const { count: publishedCount } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('published', true);
+
+    // Get draft posts
+    const { count: draftCount } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('published', false);
+
+    // Get all posts to calculate averages
+    const { data: allPosts } = await supabase
+      .from('blog_posts')
+      .select('views, reading_time');
+
+    const totalViews = allPosts?.reduce((sum, post) => sum + (post.views || 0), 0) || 0;
+    const avgViews = allPosts && allPosts.length > 0 ? Math.round(totalViews / allPosts.length) : 0;
+    const avgReadingTime = allPosts && allPosts.length > 0
+      ? Math.round(allPosts.reduce((sum, post) => sum + (post.reading_time || 0), 0) / allPosts.length)
+      : 0;
 
     return {
-      totalPosts: Number(stats.totalPosts),
-      publishedPosts: Number(stats.publishedPosts),
-      draftPosts: Number(stats.draftPosts),
-      totalViews: Number(stats.totalViews),
-      avgViews: Number(stats.avgViews),
-      avgReadingTime: Number(stats.avgReadingTime),
+      totalPosts: totalCount || 0,
+      publishedPosts: publishedCount || 0,
+      draftPosts: draftCount || 0,
+      totalViews,
+      avgViews,
+      avgReadingTime,
     };
   }
-}
+};

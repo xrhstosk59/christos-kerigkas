@@ -91,23 +91,17 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
       slug: postData.slug,
       title: postData.title,
       description: postData.description,
-      date: new Date(postData.date),
+      date: postData.date,
       image: postData.image,
-      authorName: postData.author.name,
-      authorImage: postData.author.image,
+      author_name: postData.author.name,
+      author_image: postData.author.image,
       categories: postData.categories,
       content: postData.content,
-      published: true,
       featured: false,
       views: 0,
-      readingTime,
-      category: postData.categories[0],
-      excerpt: postData.description.slice(0, 160),
-      metaTitle: postData.title,
-      metaDescription: postData.description.slice(0, 160),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'published'
+      reading_time: readingTime,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     const newPost = await blogService.createPost(blogPostData, {
@@ -123,9 +117,9 @@ export async function createBlogPost(formData: FormData): Promise<ActionResult> 
       success: true,
       data: {
         ...newPost,
-        date: newPost.date.toISOString(),
-        createdAt: newPost.createdAt ? newPost.createdAt.toISOString() : new Date().toISOString(),
-        updatedAt: newPost.updatedAt ? newPost.updatedAt.toISOString() : new Date().toISOString(),
+        date: newPost.date,
+        created_at: newPost.created_at || new Date().toISOString(),
+        updated_at: newPost.updated_at || new Date().toISOString(),
       }
     }
   } catch (error) {
@@ -199,20 +193,14 @@ export async function updateBlogPost(slug: string, formData: FormData): Promise<
       slug: postData.slug,
       title: postData.title,
       description: postData.description,
-      date: new Date(postData.date),
+      date: postData.date,
       image: postData.image,
-      authorName: postData.author.name,
-      authorImage: postData.author.image,
+      author_name: postData.author.name,
+      author_image: postData.author.image,
       categories: postData.categories,
       content: postData.content,
-      published: true,
       featured: false,
-      category: postData.categories[0],
-      excerpt: postData.description.slice(0, 160),
-      metaTitle: postData.title,
-      metaDescription: postData.description.slice(0, 160),
-      updatedAt: new Date(),
-      status: 'published'
+      updated_at: new Date().toISOString()
     };
     
     const updatedPost = await blogService.updatePost(slug, updateData, {
@@ -238,9 +226,9 @@ export async function updateBlogPost(slug: string, formData: FormData): Promise<
       success: true,
       data: {
         ...updatedPost,
-        date: updatedPost.date.toISOString(),
-        createdAt: updatedPost.createdAt ? updatedPost.createdAt.toISOString() : new Date().toISOString(),
-        updatedAt: updatedPost.updatedAt ? updatedPost.updatedAt.toISOString() : new Date().toISOString(),
+        date: updatedPost.date,
+        created_at: updatedPost.created_at || new Date().toISOString(),
+        updated_at: updatedPost.updated_at || new Date().toISOString(),
       }
     }
   } catch (error) {

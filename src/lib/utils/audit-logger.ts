@@ -1,8 +1,17 @@
 // src/lib/utils/audit-logger.ts
-import { db } from '@/lib/db';
-import { auditLogs, type NewAuditLog, type AuditActionType, type ResourceTypeType, type SeverityType, type SourceType } from '@/lib/db/schema/audit';
+import { createClient } from '@/lib/supabase/server';
+import type { Database } from '@/lib/db/database.types';
 import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
+
+type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
+type NewAuditLog = Database['public']['Tables']['audit_logs']['Insert'];
+
+// Type aliases for backward compatibility
+type AuditActionType = string;
+type ResourceTypeType = string | null;
+type SeverityType = string;
+type SourceType = string;
 
 /**
  * Comprehensive audit logging system
@@ -80,21 +89,28 @@ export async function extractAuditContext(request?: NextRequest): Promise<AuditC
  */
 export async function createAuditLog(data: AuditLogData): Promise<boolean> {
   try {
+    const supabase = await createClient();
+
     const auditEntry: NewAuditLog = {
-      userId: data.userId,
+      user_id: data.userId || null,
       action: data.action,
-      resourceType: data.resourceType,
-      resourceId: data.resourceId,
-      details: data.details,
-      ipAddress: data.ipAddress,
-      userAgent: data.userAgent ? data.userAgent.substring(0, 1000) : undefined, // Limit length
-      sessionId: data.sessionId,
+      resource_type: data.resourceType || null,
+      resource_id: data.resourceId || null,
+      details: data.details || null,
+      ip_address: data.ipAddress || null,
+      user_agent: data.userAgent ? data.userAgent.substring(0, 1000) : null, // Limit length
       severity: data.severity || 'INFO',
       source: data.source || 'WEB',
-      timestamp: new Date(),
+      status: 'SUCCESS', // Default status
     };
 
-    await db().insert(auditLogs).values(auditEntry);
+    const { error } = await supabase
+      .from('audit_logs')
+      .insert(auditEntry);
+
+    if (error) {
+      throw error;
+    }
 
     // Log to console in development for debugging
     if (process.env.NODE_ENV === 'development') {
@@ -110,7 +126,7 @@ export async function createAuditLog(data: AuditLogData): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('Failed to create audit log:', error);
-    
+
     // Critical: audit logging failure should be reported
     if (data.severity === 'CRITICAL') {
       console.error('[CRITICAL] Failed to log critical audit event:', {

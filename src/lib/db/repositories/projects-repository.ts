@@ -1,171 +1,267 @@
 // src/lib/db/repositories/projects-repository.ts
-import { projects, cryptoProjects, type NewProject, type NewCryptoProject, type Project, type CryptoProject } from '@/lib/db/schema/projects';
 import { ensureDatabaseConnection } from '@/lib/db/helpers';
-import { eq, sql } from 'drizzle-orm';
-import { mapDbProjectToProject } from '@/lib/db/utils/mappers';
+import type { Database } from '@/lib/db/database.types';
+
+// Types for projects based on Supabase schema
+type Project = Database['public']['Tables']['projects']['Row'];
+type NewProject = Database['public']['Tables']['projects']['Insert'];
+type CryptoProject = Database['public']['Tables']['crypto_projects']['Row'];
+type NewCryptoProject = Database['public']['Tables']['crypto_projects']['Insert'];
 
 /**
- * Repository για τα projects
+ * Repository for projects
  */
 export const projectsRepository = {
   /**
-   * Εύρεση όλων των projects
+   * Find all projects
    */
   async findAll(limitCount?: number): Promise<Project[]> {
-    const database = await ensureDatabaseConnection(); 
-    const query = database.select()
-      .from(projects)
-      .orderBy(projects.order);
-    
+    const supabase = await ensureDatabaseConnection();
+
+    let query = supabase
+      .from('projects')
+      .select('*')
+      .order('order', { ascending: true });
+
     if (limitCount) {
-      const results = await query.limit(limitCount);
-      return results.map(project => mapDbProjectToProject(project));
+      query = query.limit(limitCount);
     }
-    
-    const results = await query;
-    return results.map(project => mapDbProjectToProject(project));
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching projects:', error);
+      return [];
+    }
+
+    return data || [];
   },
-  
+
   /**
-   * Εύρεση προτεινόμενων (featured) projects
+   * Find featured projects
    */
   async findFeatured(): Promise<Project[]> {
-    const database = await ensureDatabaseConnection();
-    const results = await database.select()
-      .from(projects)
-      .where(eq(projects.featured, true))
-      .orderBy(projects.order);
-    
-    return results.map(project => mapDbProjectToProject(project));
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('featured', true)
+      .order('order', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching featured projects:', error);
+      return [];
+    }
+
+    return data || [];
   },
-  
+
   /**
-   * Εύρεση project με βάση το slug
+   * Find project by slug
    */
   async findBySlug(slug: string): Promise<Project | undefined> {
-    const database = await ensureDatabaseConnection();
-    const [project] = await database.select()
-      .from(projects)
-      .where(eq(projects.slug, slug))
-      .limit(1);
-    
-    return project ? mapDbProjectToProject(project) : undefined;
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error('Error fetching project by slug:', error);
+      return undefined;
+    }
+
+    return data || undefined;
   },
-  
+
   /**
-   * Εύρεση projects με βάση την κατηγορία
+   * Find projects by category
    */
   async findByCategory(category: string): Promise<Project[]> {
-    const database = await ensureDatabaseConnection();
-    const results = await database.select()
-      .from(projects)
-      .where(sql`${category} = ANY(${projects.categories})`)
-      .orderBy(projects.order);
-    
-    return results.map(project => mapDbProjectToProject(project));
+    const supabase = await ensureDatabaseConnection();
+
+    // Using PostgreSQL array contains operator
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .contains('categories', [category])
+      .order('order', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching projects by category:', error);
+      return [];
+    }
+
+    return data || [];
   },
-  
+
   /**
-   * Δημιουργία νέου project
+   * Create new project
    */
-  async create(project: NewProject): Promise<Project> {
-    const database = await ensureDatabaseConnection();
-    const [result] = await database.insert(projects)
-      .values(project)
-      .returning();
-    
-    return mapDbProjectToProject(result);
+  async create(project: NewProject): Promise<Project | undefined> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert(project)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating project:', error);
+      return undefined;
+    }
+
+    return data || undefined;
   },
-  
+
   /**
-   * Ενημέρωση υπάρχοντος project
+   * Update existing project
    */
-  async update(slug: string, project: Partial<Omit<NewProject, 'createdAt'>>): Promise<Project | undefined> {
-    const database = await ensureDatabaseConnection();
-    const [result] = await database.update(projects)
-      .set({
+  async update(slug: string, project: Partial<Omit<NewProject, 'created_at'>>): Promise<Project | undefined> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update({
         ...project,
-        updatedAt: new Date()
+        updated_at: new Date().toISOString()
       })
-      .where(eq(projects.slug, slug))
-      .returning();
-    
-    return result ? mapDbProjectToProject(result) : undefined;
+      .eq('slug', slug)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating project:', error);
+      return undefined;
+    }
+
+    return data || undefined;
   },
-  
+
   /**
-   * Διαγραφή project
+   * Delete project
    */
   async delete(slug: string): Promise<void> {
-    const database = await ensureDatabaseConnection();
-    await database.delete(projects)
-      .where(eq(projects.slug, slug));
+    const supabase = await ensureDatabaseConnection();
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('slug', slug);
+
+    if (error) {
+      console.error('Error deleting project:', error);
+    }
   }
 };
 
 /**
- * Repository για τα crypto projects
+ * Repository for crypto projects
  */
 export const cryptoProjectsRepository = {
   /**
-   * Εύρεση όλων των crypto projects
+   * Find all crypto projects
    */
   async findAll(): Promise<CryptoProject[]> {
-    const database = await ensureDatabaseConnection();
-    const results = await database.select()
-      .from(cryptoProjects)
-      .orderBy(cryptoProjects.id);
-    
-    return results;
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('crypto_projects')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching crypto projects:', error);
+      return [];
+    }
+
+    return data || [];
   },
-  
+
   /**
-   * Εύρεση crypto project με βάση το slug
+   * Find crypto project by slug
    */
   async findBySlug(slug: string): Promise<CryptoProject | undefined> {
-    const database = await ensureDatabaseConnection();
-    const [project] = await database.select()
-      .from(cryptoProjects)
-      .where(eq(cryptoProjects.slug, slug))
-      .limit(1);
-    
-    return project;
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('crypto_projects')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error('Error fetching crypto project by slug:', error);
+      return undefined;
+    }
+
+    return data || undefined;
   },
-  
+
   /**
-   * Δημιουργία νέου crypto project
+   * Create new crypto project
    */
-  async create(project: NewCryptoProject): Promise<CryptoProject> {
-    const database = await ensureDatabaseConnection();
-    const [result] = await database.insert(cryptoProjects)
-      .values(project)
-      .returning();
-    
-    return result;
+  async create(project: NewCryptoProject): Promise<CryptoProject | undefined> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('crypto_projects')
+      .insert(project)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating crypto project:', error);
+      return undefined;
+    }
+
+    return data || undefined;
   },
-  
+
   /**
-   * Ενημέρωση υπάρχοντος crypto project
+   * Update existing crypto project
    */
-  async update(slug: string, project: Partial<Omit<NewCryptoProject, 'createdAt'>>): Promise<CryptoProject | undefined> {
-    const database = await ensureDatabaseConnection();
-    const [result] = await database.update(cryptoProjects)
-      .set({
+  async update(slug: string, project: Partial<Omit<NewCryptoProject, 'created_at'>>): Promise<CryptoProject | undefined> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('crypto_projects')
+      .update({
         ...project,
-        updatedAt: new Date()
+        updated_at: new Date().toISOString()
       })
-      .where(eq(cryptoProjects.slug, slug))
-      .returning();
-    
-    return result;
+      .eq('slug', slug)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating crypto project:', error);
+      return undefined;
+    }
+
+    return data || undefined;
   },
-  
+
   /**
-   * Διαγραφή crypto project
+   * Delete crypto project
    */
   async delete(slug: string): Promise<void> {
-    const database = await ensureDatabaseConnection();
-    await database.delete(cryptoProjects)
-      .where(eq(cryptoProjects.slug, slug));
+    const supabase = await ensureDatabaseConnection();
+
+    const { error } = await supabase
+      .from('crypto_projects')
+      .delete()
+      .eq('slug', slug);
+
+    if (error) {
+      console.error('Error deleting crypto project:', error);
+    }
   }
-}
+};
+
+// Export types for convenience
+export type { Project, NewProject, CryptoProject, NewCryptoProject };

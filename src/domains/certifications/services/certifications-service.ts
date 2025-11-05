@@ -16,13 +16,33 @@ const CACHE_KEYS = {
 } as const;
 
 /**
+ * Helper function to map database certification to app certification type
+ */
+function mapCertification(cert: any): Certification {
+  return {
+    id: cert.id.toString(),
+    title: cert.title || cert.name,
+    issuer: cert.issuer,
+    issueDate: cert.issue_date,
+    expirationDate: cert.expiry_date || undefined,
+    credentialId: cert.credential_id || undefined,
+    credentialUrl: cert.credential_url || undefined,
+    description: cert.description || undefined,
+    skills: cert.skills || [],
+    type: cert.type as CertificationType,
+    filename: cert.filename,
+    featured: cert.featured || false
+  };
+}
+
+/**
  * Service για τη διαχείριση των certifications.
  * Περιέχει την επιχειρησιακή λογική και χρησιμοποιεί το repository για πρόσβαση στα δεδομένα.
  */
 export const certificationsService = {
   /**
    * Ανάκτηση όλων των certifications.
-   * 
+   *
    * @returns Promise με όλα τα certifications
    */
   async getAllCertifications(): Promise<Certification[]> {
@@ -31,26 +51,7 @@ export const certificationsService = {
         CACHE_KEYS.all,
         async () => {
           const dbCertifications = await certificationsRepository.findAll();
-          return dbCertifications.map(cert => ({
-            id: cert.id,
-            title: cert.title,
-            issuer: cert.issuer,
-            issueDate: typeof cert.issueDate === 'string' 
-              ? cert.issueDate 
-              : cert.issueDate.toISOString(),
-            expirationDate: cert.expirationDate 
-              ? (typeof cert.expirationDate === 'string' 
-                  ? cert.expirationDate 
-                  : cert.expirationDate.toISOString()) 
-              : undefined,
-            credentialId: cert.credentialId || undefined,
-            credentialUrl: cert.credentialUrl || undefined,
-            description: cert.description || undefined,
-            skills: cert.skills || [],
-            type: cert.type as CertificationType,
-            filename: cert.filename,
-            featured: cert.featured || false
-          }));
+          return dbCertifications.map(cert => mapCertification(cert));
         },
         { expireInSeconds: 60 * 30 } // 30 λεπτά
       );
@@ -62,7 +63,7 @@ export const certificationsService = {
 
   /**
    * Ανάκτηση certification με βάση το ID.
-   * 
+   *
    * @param id Το ID του certification
    * @returns Promise με το certification ή null αν δεν βρεθεί
    */
@@ -74,26 +75,7 @@ export const certificationsService = {
           const dbCertification = await certificationsRepository.findById(id);
           if (!dbCertification) return null;
 
-          return {
-            id: dbCertification.id,
-            title: dbCertification.title,
-            issuer: dbCertification.issuer,
-            issueDate: typeof dbCertification.issueDate === 'string' 
-              ? dbCertification.issueDate 
-              : dbCertification.issueDate.toISOString(),
-            expirationDate: dbCertification.expirationDate 
-              ? (typeof dbCertification.expirationDate === 'string' 
-                  ? dbCertification.expirationDate 
-                  : dbCertification.expirationDate.toISOString()) 
-              : undefined,
-            credentialId: dbCertification.credentialId || undefined,
-            credentialUrl: dbCertification.credentialUrl || undefined,
-            description: dbCertification.description || undefined,
-            skills: dbCertification.skills || [],
-            type: dbCertification.type as CertificationType,
-            filename: dbCertification.filename,
-            featured: dbCertification.featured || false
-          };
+          return mapCertification(dbCertification);
         },
         { expireInSeconds: 60 * 60 } // 1 ώρα
       );
@@ -105,7 +87,7 @@ export const certificationsService = {
 
   /**
    * Ανάκτηση των featured certifications.
-   * 
+   *
    * @returns Promise με τα featured certifications
    */
   async getFeaturedCertifications(): Promise<Certification[]> {
@@ -114,26 +96,7 @@ export const certificationsService = {
         CACHE_KEYS.featured,
         async () => {
           const dbCertifications = await certificationsRepository.findFeatured();
-          return dbCertifications.map(cert => ({
-            id: cert.id,
-            title: cert.title,
-            issuer: cert.issuer,
-            issueDate: typeof cert.issueDate === 'string' 
-              ? cert.issueDate 
-              : cert.issueDate.toISOString(),
-            expirationDate: cert.expirationDate 
-              ? (typeof cert.expirationDate === 'string' 
-                  ? cert.expirationDate 
-                  : cert.expirationDate.toISOString()) 
-              : undefined,
-            credentialId: cert.credentialId || undefined,
-            credentialUrl: cert.credentialUrl || undefined,
-            description: cert.description || undefined,
-            skills: cert.skills || [],
-            type: cert.type as CertificationType,
-            filename: cert.filename,
-            featured: cert.featured || false
-          }));
+          return dbCertifications.map(cert => mapCertification(cert));
         },
         { expireInSeconds: 60 * 30 } // 30 λεπτά
       );
@@ -145,7 +108,7 @@ export const certificationsService = {
 
   /**
    * Ανάκτηση certifications με βάση skill.
-   * 
+   *
    * @param skill Το skill για αναζήτηση
    * @returns Promise με τα certifications που περιέχουν το skill
    */
@@ -155,26 +118,7 @@ export const certificationsService = {
         CACHE_KEYS.bySkill(skill),
         async () => {
           const dbCertifications = await certificationsRepository.findBySkill(skill);
-          return dbCertifications.map(cert => ({
-            id: cert.id,
-            title: cert.title,
-            issuer: cert.issuer,
-            issueDate: typeof cert.issueDate === 'string' 
-              ? cert.issueDate 
-              : cert.issueDate.toISOString(),
-            expirationDate: cert.expirationDate 
-              ? (typeof cert.expirationDate === 'string' 
-                  ? cert.expirationDate 
-                  : cert.expirationDate.toISOString()) 
-              : undefined,
-            credentialId: cert.credentialId || undefined,
-            credentialUrl: cert.credentialUrl || undefined,
-            description: cert.description || undefined,
-            skills: cert.skills || [],
-            type: cert.type as CertificationType,
-            filename: cert.filename,
-            featured: cert.featured || false
-          }));
+          return dbCertifications.map(cert => mapCertification(cert));
         },
         { expireInSeconds: 60 * 30 } // 30 λεπτά
       );
@@ -198,7 +142,7 @@ export const certificationsService = {
 
   /**
    * Ανάκτηση στατιστικών για τα certifications.
-   * 
+   *
    * @returns Promise με στατιστικά
    */
   async getCertificationsStats(): Promise<{
@@ -208,7 +152,7 @@ export const certificationsService = {
   }> {
     try {
       const allCertifications = await this.getAllCertifications();
-      
+
       const stats = {
         total: allCertifications.length,
         featured: allCertifications.filter(cert => cert.featured).length,

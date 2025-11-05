@@ -1,11 +1,15 @@
 // src/lib/db/utils/mappers.ts
+// DEPRECATED: These mappers are no longer used after migration to Supabase.
+// Database types are now handled directly via @/lib/db/database.types
+// This file is kept for reference but should not be imported.
+
+/*
+// Commented out to avoid build errors - these types no longer exist
+
 import { SelectBlogPost, BlogPost } from '../schema/blog';
 import { SelectCertification, Certification } from '../schema/certifications';
 import { SelectProject, Project } from '../schema/projects';
 
-/**
- * Μετατρέπει ένα DB blog post σε τύπο BlogPost για το frontend
- */
 export function mapDbPostToBlogPost(dbPost: SelectBlogPost, categories: string[] = []): BlogPost {
   return {
     id: dbPost.id,
@@ -32,11 +36,8 @@ export function mapDbPostToBlogPost(dbPost: SelectBlogPost, categories: string[]
   };
 }
 
-/**
- * Μετατρέπει ένα DB certification σε τύπο Certification για το frontend
- */
 export function mapDbCertificationToCertification(
-  dbCert: SelectCertification, 
+  dbCert: SelectCertification,
   skills: string[] = []
 ): Certification {
   return {
@@ -51,17 +52,14 @@ export function mapDbCertificationToCertification(
     skills: skills.length > 0 ? skills : (dbCert.skills || []),
     type: dbCert.type,
     filename: dbCert.filename,
-    featured: dbCert.featured ?? false, // Χρήση ?? για να αποφύγουμε το null
+    featured: dbCert.featured ?? false,
     createdAt: dbCert.createdAt,
     updatedAt: dbCert.updatedAt
   };
 }
 
-/**
- * Μετατρέπει ένα DB project σε τύπο Project για το frontend
- */
 export function mapDbProjectToProject(
-  dbProject: SelectProject, 
+  dbProject: SelectProject,
   categories: string[] = [],
   tech: string[] = []
 ): Project {
@@ -76,11 +74,15 @@ export function mapDbProjectToProject(
     github: dbProject.github,
     demo: dbProject.demo || null,
     image: dbProject.image,
-    images: Array.isArray(dbProject.images) ? dbProject.images : null, // Διασφάλιση ότι είναι array ή null
+    images: Array.isArray(dbProject.images) ? dbProject.images : null,
     status: dbProject.status,
-    featured: dbProject.featured ?? false, // Χρήση ?? για να αποφύγουμε το null
+    featured: dbProject.featured ?? false,
     order: dbProject.order,
     createdAt: dbProject.createdAt,
     updatedAt: dbProject.updatedAt
   };
 }
+*/
+
+// Placeholder export to avoid "empty file" errors
+export {};

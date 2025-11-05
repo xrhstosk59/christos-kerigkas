@@ -121,8 +121,8 @@ export async function PUT(
     // Μετατροπή των ημερομηνιών σε string μόνο αν υπάρχουν
     const formattedProject = {
       ...updatedProject,
-      createdAt: updatedProject.createdAt ? updatedProject.createdAt.toISOString() : undefined,
-      updatedAt: updatedProject.updatedAt ? updatedProject.updatedAt.toISOString() : undefined,
+      created_at: updatedProject.created_at || undefined,
+      updated_at: updatedProject.updated_at || undefined,
     };
     
     return apiResponse.success(

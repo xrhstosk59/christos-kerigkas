@@ -56,11 +56,11 @@ export const GET = createApiHandler(
             slug: post.slug,
             title: post.title,
             description: post.description,
-            date: post.date.toISOString(),
+            date: post.date,
             image: post.image,
             author: {
-              name: post.authorName,
-              image: post.authorImage
+              name: post.author_name,
+              image: post.author_image
             },
             categories: post.categories,
             content: post.content,
@@ -137,42 +137,36 @@ export const POST = createApiHandler(
         slug: validData.slug,
         title: validData.title,
         description: validData.description,
-        date: new Date(validData.date),
+        date: validData.date,
         image: validData.image,
-        authorName: validData.author.name,
-        authorImage: validData.author.image,
+        author_name: validData.author.name,
+        author_image: validData.author.image,
         categories: validData.categories,
         content: validData.content,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         // Προσθήκη των πεδίων που έλειπαν και προκαλούσαν το TypeScript σφάλμα
         views: 0,
-        readingTime,
-        category: validData.categories[0] || 'general', // Χρήση της πρώτης κατηγορίας ως default
-        published: true, // Default τιμή για published
-        featured: false, // Default τιμή για featured
-        excerpt: validData.description.slice(0, 160), // Δημιουργία excerpt από την περιγραφή
-        metaTitle: validData.title, // Χρήση του τίτλου ως meta title
-        metaDescription: validData.description.slice(0, 160), // Χρήση της περιγραφής ως meta description
-        status: 'published' // Προσθήκη του πεδίου status που έλειπε
+        reading_time: readingTime,
+        featured: false
       }, {
         id: user.id,
         email: user.email || '',
         role: userRole
       });
-      
-      // Έλεγχος ότι τα createdAt και updatedAt δεν είναι undefined
-      const createdAt = newPost.createdAt ? newPost.createdAt.toISOString() : new Date().toISOString();
-      const updatedAt = newPost.updatedAt ? newPost.updatedAt.toISOString() : new Date().toISOString();
-      
+
+      // Έλεγχος ότι τα created_at και updated_at δεν είναι undefined
+      const created_at = newPost.created_at || new Date().toISOString();
+      const updated_at = newPost.updated_at || new Date().toISOString();
+
       return apiResponse.success(
-        { 
-          message: 'Το blog post δημιουργήθηκε επιτυχώς', 
+        {
+          message: 'Το blog post δημιουργήθηκε επιτυχώς',
           post: {
             ...newPost,
-            date: newPost.date.toISOString(),
-            createdAt: createdAt,
-            updatedAt: updatedAt,
+            date: newPost.date,
+            created_at,
+            updated_at,
           }
         },
         undefined,

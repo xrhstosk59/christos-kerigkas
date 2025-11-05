@@ -1,55 +1,76 @@
 // src/lib/db/repositories/contact-repository.ts
-import { ensureDatabaseConnection } from '@/lib/db/helpers'
-import { contactMessages, type NewContactMessage } from '@/lib/db/schema'
-import { desc, eq, count } from 'drizzle-orm'
+import { ensureDatabaseConnection } from '@/lib/db/helpers';
+import type { Database } from '@/lib/db/database.types';
+
+// Types based on Supabase schema
+type ContactMessage = Database['public']['Tables']['contact_messages']['Row'];
+type NewContactMessage = Database['public']['Tables']['contact_messages']['Insert'];
 
 export const contactRepository = {
   async create(message: NewContactMessage) {
     try {
       console.log('Repository: Creating contact message', message.name);
-      
-      // Χρησιμοποιούμε την ensureDatabaseConnection αντί για απευθείας εισαγωγή του db
-      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-      
-      // Βεβαιωνόμαστε ότι το ipAddress έχει τιμή, ακόμα και αν είναι προαιρετικό στο schema
+
+      const supabase = await ensureDatabaseConnection();
+
+      // Ensure ipAddress has a value
       const messageToSave = {
         ...message,
-        ipAddress: message.ipAddress || 'unknown',
-        status: 'new' // Θέτουμε το status σε 'new' εφόσον είναι νέο μήνυμα
+        ip_address: message.ip_address || 'unknown',
+        status: 'new' // Set status to 'new' for new messages
       };
-      
-      const [result] = await database.insert(contactMessages)
-        .values(messageToSave)
-        .returning();
-      
-      console.log('Repository: Message created successfully with ID:', result?.id);
-      return result;
+
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .insert(messageToSave)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Repository: Error creating contact message:', error);
+        throw error;
+      }
+
+      console.log('Repository: Message created successfully with ID:', data?.id);
+      return data;
     } catch (error) {
       console.error('Repository: Error creating contact message:', error);
       throw error;
     }
   },
-  
+
   async findAll(page: number = 1, limit: number = 10) {
     try {
-      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-      
+      const supabase = await ensureDatabaseConnection();
+
       const offset = (page - 1) * limit;
-      
-      const messages = await database.select()
-        .from(contactMessages)
-        .orderBy(desc(contactMessages.createdAt))
-        .limit(limit)
-        .offset(offset);
-      
-      const [result] = await database
-        .select({ total: count() })
-        .from(contactMessages);
-      
-      const total = Number(result.total);
-      
+
+      // Get paginated messages
+      const { data: messages, error: messagesError } = await supabase
+        .from('contact_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (messagesError) {
+        console.error('Repository: Error finding contact messages:', messagesError);
+        throw messagesError;
+      }
+
+      // Get total count
+      const { count, error: countError } = await supabase
+        .from('contact_messages')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Repository: Error counting contact messages:', countError);
+        throw countError;
+      }
+
+      const total = count || 0;
+
       return {
-        messages,
+        messages: messages || [],
         total,
         totalPages: Math.ceil(total / limit),
         currentPage: page,
@@ -59,16 +80,28 @@ export const contactRepository = {
       throw error;
     }
   },
-  
+
   async delete(id: number) {
     try {
-      const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-      
-      return database.delete(contactMessages)
-        .where(eq(contactMessages.id, id));
+      const supabase = await ensureDatabaseConnection();
+
+      const { error } = await supabase
+        .from('contact_messages')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Repository: Error deleting contact message:', error);
+        throw error;
+      }
+
+      return { success: true };
     } catch (error) {
       console.error('Repository: Error deleting contact message:', error);
       throw error;
     }
   }
-}
+};
+
+// Export types for convenience
+export type { ContactMessage, NewContactMessage };

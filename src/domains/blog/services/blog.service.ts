@@ -146,20 +146,24 @@ export const blogService = {
     try {
       // Δημιουργία του post
       const newPost = await blogRepository.create(post);
-      
+
+      if (!newPost) {
+        throw new Error('Αποτυχία δημιουργίας blog post');
+      }
+
       // Στοχευμένη εκκαθάριση του cache για τις λίστες posts
       // Αντί να διαγράφουμε όλα τα κλειδιά, διαγράφουμε μόνο αυτά που επηρεάζονται
-      
+
       // 1. Διαγραφή της πρώτης σελίδας της λίστας όλων των posts, η οποία επηρεάζεται πάντα
       await cache.delete(blogCacheKeys.posts.all(1, 10)); // Συνηθισμένο μέγεθος σελίδας
-      
+
       // 2. Διαγραφή των caches για τις κατηγορίες που περιέχονται στο νέο post
       for (const category of post.categories) {
         await cache.delete(blogCacheKeys.posts.byCategory(category, 1, 10));
       }
-      
+
       logger.info(`Δημιουργία νέου blog post με slug: ${newPost.slug}`, null, 'blog-service');
-      
+
       return newPost;
     } catch (error) {
       logger.error('Σφάλμα κατά τη δημιουργία blog post:', error, 'blog-service');
@@ -192,7 +196,7 @@ export const blogService = {
       // Ενημέρωση του post
       const updatedPost = await blogRepository.update(slug, {
         ...postData,
-        updatedAt: new Date()
+        updated_at: new Date().toISOString()
       });
       
       if (!updatedPost) {

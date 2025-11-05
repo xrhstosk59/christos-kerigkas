@@ -1,16 +1,11 @@
 // src/lib/db/helpers.ts
-
-import { getDb } from './database';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from './schema';
+import { createClient } from '@/lib/supabase/server';
+import type { SupabaseServerClient } from './database';
 
 /**
- * Συνάρτηση που διασφαλίζει τη σύνδεση με τη βάση δεδομένων.
- * Χρησιμοποιείται από τα repositories.
+ * Ensures database connection by returning a Supabase client.
+ * This replaces the old Drizzle connection helper.
  */
-export async function ensureDatabaseConnection(): Promise<PostgresJsDatabase<typeof schema>> {
-  return getDb();
+export async function ensureDatabaseConnection(): Promise<SupabaseServerClient> {
+  return await createClient();
 }
-
-// Εξαγωγή του sql tag για διευκόλυνση
-export { sql } from 'drizzle-orm';

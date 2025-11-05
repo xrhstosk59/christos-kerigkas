@@ -1,11 +1,12 @@
 // src/app/api/admin/newsletter/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbClient } from '@/lib/db/server-db-client';
-import { newsletterSubscribers } from '@/lib/db/schema/contact';
-import { desc, eq, count, like, and, sql } from 'drizzle-orm';
+import { getDbClient } from '@/lib/db/server-db';
 import { checkAdminAuth } from '@/lib/auth/admin-auth';
+import type { Database } from '@/lib/db/database.types';
 
 export const dynamic = 'force-dynamic';
+
+type NewsletterSubscriber = Database['public']['Tables']['newsletter_subscribers']['Row'];
 
 // Get newsletter subscribers
 export async function GET(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     const db = await getDbClient();
-    
+
     // Get URL parameters for pagination and filtering
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -29,56 +30,61 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search'); // Search in email
     const offset = (page - 1) * limit;
 
-    // Build where conditions
-    const whereConditions = [];
-    
+    // Build base query
+    let query = db.from('newsletter_subscribers').select('*', { count: 'exact' });
+
+    // Apply filters
     if (status === 'active') {
-      whereConditions.push(eq(newsletterSubscribers.isActive, true));
+      query = query.eq('is_active', true);
     } else if (status === 'unsubscribed') {
-      whereConditions.push(eq(newsletterSubscribers.isActive, false));
-    }
-    
-    if (search) {
-      whereConditions.push(like(newsletterSubscribers.email, `%${search}%`));
+      query = query.eq('is_active', false);
     }
 
-    const whereCondition = whereConditions.length > 0 ? and(...whereConditions) : undefined;
-    
-    // Get total count for pagination
-    const totalCountQuery = whereCondition 
-      ? db.select({ count: count() }).from(newsletterSubscribers).where(whereCondition)
-      : db.select({ count: count() }).from(newsletterSubscribers);
-    const totalCount = await totalCountQuery;
-    
-    // Get paginated results
-    const baseQuery = db.select().from(newsletterSubscribers);
-    const subscribersQuery = whereCondition 
-      ? baseQuery.where(whereCondition)
-      : baseQuery;
-    
-    const subscribers = await subscribersQuery
-      .orderBy(desc(newsletterSubscribers.subscribedAt))
-      .limit(limit)
-      .offset(offset);
+    if (search) {
+      query = query.ilike('email', `%${search}%`);
+    }
+
+    // Get subscribers with pagination
+    const { data: subscribers, error, count: totalCount } = await query
+      .order('subscribed_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Error fetching newsletter subscribers:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch subscribers' },
+        { status: 500 }
+      );
+    }
 
     // Get statistics
-    const stats = await db
-      .select({
-        totalSubscribers: sql<number>`count(*)`,
-        activeSubscribers: sql<number>`count(*) filter (where ${newsletterSubscribers.isActive} = true)`,
-        unsubscribedCount: sql<number>`count(*) filter (where ${newsletterSubscribers.isActive} = false)`,
-        recentSubscriptions: sql<number>`count(*) filter (where ${newsletterSubscribers.subscribedAt} > current_date - interval '7 days')`,
-      })
-      .from(newsletterSubscribers);
+    const { data: allSubscribers, error: statsError } = await db
+      .from('newsletter_subscribers')
+      .select('*');
+
+    if (statsError) {
+      console.error('Error fetching statistics:', statsError);
+    }
+
+    const stats = {
+      totalSubscribers: allSubscribers?.length || 0,
+      activeSubscribers: allSubscribers?.filter(s => s.is_active).length || 0,
+      unsubscribedCount: allSubscribers?.filter(s => !s.is_active).length || 0,
+      recentSubscriptions: allSubscribers?.filter(s => {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return new Date(s.subscribed_at) > sevenDaysAgo;
+      }).length || 0,
+    };
 
     return NextResponse.json({
       subscribers,
-      statistics: stats[0],
+      statistics: stats,
       pagination: {
         page,
         limit,
-        total: totalCount[0]?.count || 0,
-        totalPages: Math.ceil((totalCount[0]?.count || 0) / limit)
+        total: totalCount || 0,
+        totalPages: Math.ceil((totalCount || 0) / limit)
       }
     });
 
@@ -114,46 +120,65 @@ export async function PATCH(request: NextRequest) {
     }
 
     const db = await getDbClient();
-    
+
     if (action === 'delete') {
       // Delete subscriber completely
-      const deletedSubscriber = await db
-        .delete(newsletterSubscribers)
-        .where(eq(newsletterSubscribers.id, id))
-        .returning();
+      const { data: deletedSubscriber, error } = await db
+        .from('newsletter_subscribers')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
 
-      if (deletedSubscriber.length === 0) {
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: 'Subscriber not found' },
+            { status: 404 }
+          );
+        }
+        console.error('Error deleting subscriber:', error);
         return NextResponse.json(
-          { error: 'Subscriber not found' },
-          { status: 404 }
+          { error: 'Failed to delete subscriber' },
+          { status: 500 }
         );
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: 'Subscriber deleted successfully',
         success: true
       });
     } else {
       // Update subscriber status
       const isActive = action === 'activate';
-      const updatedSubscriber = await db
-        .update(newsletterSubscribers)
-        .set({ 
-          isActive,
-          unsubscribedAt: isActive ? null : new Date()
-        })
-        .where(eq(newsletterSubscribers.id, id))
-        .returning();
+      const updateData: Partial<NewsletterSubscriber> = {
+        is_active: isActive,
+        unsubscribed_at: isActive ? null : new Date().toISOString()
+      };
 
-      if (updatedSubscriber.length === 0) {
+      const { data: updatedSubscriber, error } = await db
+        .from('newsletter_subscribers')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: 'Subscriber not found' },
+            { status: 404 }
+          );
+        }
+        console.error('Error updating subscriber:', error);
         return NextResponse.json(
-          { error: 'Subscriber not found' },
-          { status: 404 }
+          { error: 'Failed to update subscriber' },
+          { status: 500 }
         );
       }
 
-      return NextResponse.json({ 
-        subscriber: updatedSubscriber[0],
+      return NextResponse.json({
+        subscriber: updatedSubscriber,
         message: `Subscriber ${action}d successfully`,
         success: true
       });
@@ -200,15 +225,15 @@ export async function POST(request: NextRequest) {
     }
 
     const db = await getDbClient();
-    
-    // Check if subscriber already exists
-    const existingSubscriber = await db
-      .select()
-      .from(newsletterSubscribers)
-      .where(eq(newsletterSubscribers.email, email))
-      .limit(1);
 
-    if (existingSubscriber.length > 0) {
+    // Check if subscriber already exists
+    const { data: existingSubscriber, error: checkError } = await db
+      .from('newsletter_subscribers')
+      .select()
+      .eq('email', email)
+      .single();
+
+    if (existingSubscriber) {
       return NextResponse.json(
         { error: 'Email already subscribed' },
         { status: 409 }
@@ -216,17 +241,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Add new subscriber
-    const newSubscriber = await db
-      .insert(newsletterSubscribers)
-      .values({
+    const { data: newSubscriber, error } = await db
+      .from('newsletter_subscribers')
+      .insert({
         email,
-        isActive: true,
-        ipAddress: 'admin-added'
+        is_active: true,
+        ip_address: 'admin-added'
       })
-      .returning();
+      .select()
+      .single();
 
-    return NextResponse.json({ 
-      subscriber: newSubscriber[0],
+    if (error) {
+      console.error('Error adding subscriber:', error);
+      return NextResponse.json(
+        { error: 'Failed to add subscriber' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      subscriber: newSubscriber,
       message: 'Subscriber added successfully',
       success: true
     });

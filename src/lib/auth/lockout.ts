@@ -1,7 +1,5 @@
 // src/lib/auth/lockout.ts
-import { db } from '@/lib/db';
-import { rateLimitAttempts } from '@/lib/db/schema';
-import { eq, and, gte, desc } from 'drizzle-orm';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest } from 'next/server';
 import { createAuditLog } from '@/lib/utils/audit-logger';
 
@@ -38,11 +36,11 @@ const LOCKOUT_CONFIG = {
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
   const realIp = request.headers.get('x-real-ip');
-  
+
   if (forwarded) {
     return forwarded.split(',')[0].trim();
   }
-  
+
   return realIp || 'unknown';
 }
 
@@ -55,25 +53,88 @@ export async function recordFailedLoginAttempt(
   metadata?: Record<string, any>
 ): Promise<void> {
   const clientIP = request ? getClientIP(request) : 'unknown';
-  const resetTime = new Date(Date.now() + LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000);
+  const supabase = await createClient();
 
-  await db().insert(rateLimitAttempts).values({
-    identifier: `login_failed:${identifier}`,
-    endpoint: 'auth_login',
-    attempts: 1,
-    resetTime,
-    createdAt: new Date(),
-  });
+  // Check if a record exists for this identifier
+  const { data: existing } = await supabase
+    .from('rate_limits')
+    .select('*')
+    .eq('identifier', `login_failed:${identifier}`)
+    .eq('action_type', 'auth_login')
+    .single();
+
+  const now = new Date().toISOString();
+
+  if (existing) {
+    // Update existing record
+    const newAttemptCount = existing.attempt_count + 1;
+    const isLocked = newAttemptCount >= LOCKOUT_CONFIG.MAX_FAILED_ATTEMPTS;
+    const lockoutMinutes = isLocked ? calculateLockoutDuration(newAttemptCount) : 0;
+    const lockedUntil = isLocked ? new Date(Date.now() + lockoutMinutes * 60 * 1000).toISOString() : null;
+
+    await supabase
+      .from('rate_limits')
+      .update({
+        attempt_count: newAttemptCount,
+        last_attempt_at: now,
+        is_locked: isLocked,
+        locked_until: lockedUntil,
+        updated_at: now,
+      })
+      .eq('id', existing.id);
+  } else {
+    // Create new record
+    await supabase
+      .from('rate_limits')
+      .insert({
+        identifier: `login_failed:${identifier}`,
+        action_type: 'auth_login',
+        attempt_count: 1,
+        first_attempt_at: now,
+        last_attempt_at: now,
+        is_locked: false,
+        locked_until: null,
+      });
+  }
 
   // Also record by IP to prevent IP-based attacks
   if (clientIP !== 'unknown') {
-    await db().insert(rateLimitAttempts).values({
-      identifier: `login_failed_ip:${clientIP}`,
-      endpoint: 'auth_login',
-      attempts: 1,
-      resetTime,
-      createdAt: new Date(),
-    });
+    const { data: existingIP } = await supabase
+      .from('rate_limits')
+      .select('*')
+      .eq('identifier', `login_failed_ip:${clientIP}`)
+      .eq('action_type', 'auth_login')
+      .single();
+
+    if (existingIP) {
+      const newAttemptCount = existingIP.attempt_count + 1;
+      const isLocked = newAttemptCount >= LOCKOUT_CONFIG.MAX_FAILED_ATTEMPTS;
+      const lockoutMinutes = isLocked ? calculateLockoutDuration(newAttemptCount) : 0;
+      const lockedUntil = isLocked ? new Date(Date.now() + lockoutMinutes * 60 * 1000).toISOString() : null;
+
+      await supabase
+        .from('rate_limits')
+        .update({
+          attempt_count: newAttemptCount,
+          last_attempt_at: now,
+          is_locked: isLocked,
+          locked_until: lockedUntil,
+          updated_at: now,
+        })
+        .eq('id', existingIP.id);
+    } else {
+      await supabase
+        .from('rate_limits')
+        .insert({
+          identifier: `login_failed_ip:${clientIP}`,
+          action_type: 'auth_login',
+          attempt_count: 1,
+          first_attempt_at: now,
+          last_attempt_at: now,
+          is_locked: false,
+          locked_until: null,
+        });
+    }
   }
 
   console.log(`Failed login attempt recorded for ${identifier} from IP ${clientIP}`, {
@@ -91,15 +152,22 @@ export async function recordSuccessfulLogin(
   request?: NextRequest
 ): Promise<void> {
   const clientIP = request ? getClientIP(request) : 'unknown';
+  const supabase = await createClient();
 
   // Clear failed attempts for this identifier
-  await db().delete(rateLimitAttempts)
-    .where(eq(rateLimitAttempts.identifier, `login_failed:${identifier}`));
+  await supabase
+    .from('rate_limits')
+    .delete()
+    .eq('identifier', `login_failed:${identifier}`)
+    .eq('action_type', 'auth_login');
 
   // Clear failed attempts for this IP
   if (clientIP !== 'unknown') {
-    await db().delete(rateLimitAttempts)
-      .where(eq(rateLimitAttempts.identifier, `login_failed_ip:${clientIP}`));
+    await supabase
+      .from('rate_limits')
+      .delete()
+      .eq('identifier', `login_failed_ip:${clientIP}`)
+      .eq('action_type', 'auth_login');
   }
 
   console.log(`Successful login recorded for ${identifier} from IP ${clientIP}`);
@@ -109,38 +177,36 @@ export async function recordSuccessfulLogin(
  * Gets failed login attempts for an identifier
  */
 async function getFailedAttempts(identifier: string): Promise<number> {
-  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000);
-  
-  const attempts = await db().select()
-    .from(rateLimitAttempts)
-    .where(
-      and(
-        eq(rateLimitAttempts.identifier, `login_failed:${identifier}`),
-        gte(rateLimitAttempts.createdAt, cutoffTime)
-      )
-    )
-    .orderBy(desc(rateLimitAttempts.createdAt));
+  const supabase = await createClient();
+  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000).toISOString();
 
-  return attempts.length;
+  const { data } = await supabase
+    .from('rate_limits')
+    .select('attempt_count')
+    .eq('identifier', `login_failed:${identifier}`)
+    .eq('action_type', 'auth_login')
+    .gte('first_attempt_at', cutoffTime)
+    .single();
+
+  return data?.attempt_count || 0;
 }
 
 /**
  * Gets failed login attempts by IP
  */
 async function getFailedAttemptsByIP(ip: string): Promise<number> {
-  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000);
-  
-  const attempts = await db().select()
-    .from(rateLimitAttempts)
-    .where(
-      and(
-        eq(rateLimitAttempts.identifier, `login_failed_ip:${ip}`),
-        gte(rateLimitAttempts.createdAt, cutoffTime)
-      )
-    )
-    .orderBy(desc(rateLimitAttempts.createdAt));
+  const supabase = await createClient();
+  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000).toISOString();
 
-  return attempts.length;
+  const { data } = await supabase
+    .from('rate_limits')
+    .select('attempt_count')
+    .eq('identifier', `login_failed_ip:${ip}`)
+    .eq('action_type', 'auth_login')
+    .gte('first_attempt_at', cutoffTime)
+    .single();
+
+  return data?.attempt_count || 0;
 }
 
 /**
@@ -152,7 +218,7 @@ function calculateLockoutDuration(attemptCount: number): number {
   }
 
   const excessAttempts = attemptCount - LOCKOUT_CONFIG.MAX_FAILED_ATTEMPTS;
-  const lockoutMinutes = LOCKOUT_CONFIG.INITIAL_LOCKOUT_MINUTES * 
+  const lockoutMinutes = LOCKOUT_CONFIG.INITIAL_LOCKOUT_MINUTES *
     Math.pow(LOCKOUT_CONFIG.PROGRESSIVE_MULTIPLIER, excessAttempts);
 
   return Math.min(lockoutMinutes, LOCKOUT_CONFIG.MAX_LOCKOUT_MINUTES);
@@ -166,16 +232,16 @@ export async function checkAccountLockout(
   request?: NextRequest
 ): Promise<AccountLockoutStatus> {
   const clientIP = request ? getClientIP(request) : 'unknown';
-  
+
   // Check attempts by identifier (email)
   const identifierAttempts = await getFailedAttempts(identifier);
-  
+
   // Check attempts by IP
   const ipAttempts = clientIP !== 'unknown' ? await getFailedAttemptsByIP(clientIP) : 0;
-  
+
   // Use the higher of the two counts
   const maxAttempts = Math.max(identifierAttempts, ipAttempts);
-  
+
   if (maxAttempts < LOCKOUT_CONFIG.MAX_FAILED_ATTEMPTS) {
     return {
       isLocked: false,
@@ -183,33 +249,23 @@ export async function checkAccountLockout(
     };
   }
 
-  // Account is locked - calculate when it will be unlocked
-  const lockoutMinutes = calculateLockoutDuration(maxAttempts);
-  
-  // Get the timestamp of the most recent failed attempt
-  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000);
-  
-  const recentAttempts = await db().select()
-    .from(rateLimitAttempts)
-    .where(
-      and(
-        eq(rateLimitAttempts.identifier, `login_failed:${identifier}`),
-        gte(rateLimitAttempts.createdAt, cutoffTime)
-      )
-    )
-    .orderBy(desc(rateLimitAttempts.createdAt))
-    .limit(1);
+  // Account is locked - get lockout info
+  const supabase = await createClient();
+  const { data: rateLimit } = await supabase
+    .from('rate_limits')
+    .select('*')
+    .eq('identifier', `login_failed:${identifier}`)
+    .eq('action_type', 'auth_login')
+    .single();
 
-  if (recentAttempts.length === 0) {
-    // No recent attempts found, not locked
+  if (!rateLimit || !rateLimit.is_locked || !rateLimit.locked_until) {
     return {
       isLocked: false,
       remainingAttempts: LOCKOUT_CONFIG.MAX_FAILED_ATTEMPTS,
     };
   }
 
-  const lastAttemptTime = recentAttempts[0].createdAt;
-  const lockoutExpiresAt = new Date(lastAttemptTime!.getTime() + lockoutMinutes * 60 * 1000);
+  const lockoutExpiresAt = new Date(rateLimit.locked_until);
   const now = new Date();
 
   if (now < lockoutExpiresAt) {
@@ -267,10 +323,15 @@ export async function emergencyUnlockAccount(
 ): Promise<boolean> {
   try {
     console.warn(`Emergency account unlock requested by admin ${adminId} for ${identifier}`);
-    
+
+    const supabase = await createClient();
+
     // Clear all failed attempts for this identifier
-    await db().delete(rateLimitAttempts)
-      .where(eq(rateLimitAttempts.identifier, `login_failed:${identifier}`));
+    await supabase
+      .from('rate_limits')
+      .delete()
+      .eq('identifier', `login_failed:${identifier}`)
+      .eq('action_type', 'auth_login');
 
     // Add audit log entry for security tracking
     await createAuditLog({
@@ -302,16 +363,23 @@ export async function getLockoutStatistics(): Promise<{
   recentFailedAttempts: number;
   topFailedIPs: Array<{ ip: string; attempts: number }>;
 }> {
-  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000);
-  
+  const supabase = await createClient();
+  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000).toISOString();
+
   // Get all recent failed attempts
-  const allAttempts = await db().select()
-    .from(rateLimitAttempts)
-    .where(
-      and(
-        gte(rateLimitAttempts.createdAt, cutoffTime)
-      )
-    );
+  const { data: allAttempts } = await supabase
+    .from('rate_limits')
+    .select('*')
+    .eq('action_type', 'auth_login')
+    .gte('first_attempt_at', cutoffTime);
+
+  if (!allAttempts) {
+    return {
+      totalLockedAccounts: 0,
+      recentFailedAttempts: 0,
+      topFailedIPs: [],
+    };
+  }
 
   // Count locked accounts (those with >= MAX_FAILED_ATTEMPTS)
   const accountAttempts = new Map<string, number>();
@@ -320,10 +388,10 @@ export async function getLockoutStatistics(): Promise<{
   for (const attempt of allAttempts) {
     if (attempt.identifier.startsWith('login_failed:')) {
       const account = attempt.identifier.replace('login_failed:', '');
-      accountAttempts.set(account, (accountAttempts.get(account) || 0) + 1);
+      accountAttempts.set(account, attempt.attempt_count);
     } else if (attempt.identifier.startsWith('login_failed_ip:')) {
       const ip = attempt.identifier.replace('login_failed_ip:', '');
-      ipAttempts.set(ip, (ipAttempts.get(ip) || 0) + 1);
+      ipAttempts.set(ip, attempt.attempt_count);
     }
   }
 
@@ -331,7 +399,7 @@ export async function getLockoutStatistics(): Promise<{
     .filter(count => count >= LOCKOUT_CONFIG.MAX_FAILED_ATTEMPTS).length;
 
   const topFailedIPs = Array.from(ipAttempts.entries())
-    .sort(([,a], [,b]) => b - a)
+    .sort(([, a], [, b]) => b - a)
     .slice(0, 10)
     .map(([ip, attempts]) => ({ ip, attempts }));
 
@@ -346,15 +414,16 @@ export async function getLockoutStatistics(): Promise<{
  * Cleanup old failed attempts (should be run periodically)
  */
 export async function cleanupOldFailedAttempts(): Promise<number> {
-  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000);
-  
-  await db().delete(rateLimitAttempts)
-    .where(
-      and(
-        gte(rateLimitAttempts.createdAt, cutoffTime)
-      )
-    );
+  const supabase = await createClient();
+  const cutoffTime = new Date(Date.now() - LOCKOUT_CONFIG.CLEANUP_HOURS * 60 * 60 * 1000).toISOString();
+
+  const { data } = await supabase
+    .from('rate_limits')
+    .delete()
+    .eq('action_type', 'auth_login')
+    .lt('first_attempt_at', cutoffTime)
+    .select();
 
   console.log(`Cleaned up old failed login attempts`);
-  return 0; // Drizzle doesn't return affected rows count in delete
+  return data?.length || 0;
 }

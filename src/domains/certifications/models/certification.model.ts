@@ -1,12 +1,11 @@
 // src/domains/certifications/models/certification.model.ts
 
-import { InferModel } from 'drizzle-orm';
-import { certifications } from '@/lib/db/schema/certifications';
+import type { Database } from '@/lib/db/database.types';
 import { CertificationType } from '@/types/certifications';
 
 // Βασικοί τύποι που προέρχονται από το schema της βάσης δεδομένων
-export type Certification = InferModel<typeof certifications, 'select'>;
-export type NewCertification = InferModel<typeof certifications, 'insert'>;
+export type Certification = Database['public']['Tables']['certifications']['Row'];
+export type NewCertification = Database['public']['Tables']['certifications']['Insert'];
 
 // Μοντέλο για τα αποτελέσματα ερωτημάτων
 export interface CertificationsQueryResult {
@@ -25,5 +24,4 @@ export interface CertificationsSearchParams {
 }
 
 // Εξαγωγή
-export * from '@/lib/db/schema/certifications';
 export type { CertificationType } from '@/types/certifications';

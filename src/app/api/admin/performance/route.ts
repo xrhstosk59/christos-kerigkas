@@ -2,9 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAdminAuth } from '@/lib/auth/admin-auth';
 import { handleApiError } from '@/lib/utils/errors/error-handler';
-import { getDbClient } from '@/lib/db/server-db-client';
-import { auditLogs } from '@/lib/db/schema/audit';
-import { desc, gte, and, eq } from 'drizzle-orm';
+import { getDbClient } from '@/lib/db/server-db';
+import type { Database } from '@/lib/db/database.types';
+
+type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 
 /**
  * Get performance metrics and analytics
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const db = await getDbClient();
-    
+
     // Get URL parameters
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '7');
@@ -30,52 +31,52 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Get performance-related audit logs
-    const performanceLogs = await db
-      .select({
-        timestamp: auditLogs.timestamp,
-        action: auditLogs.action,
-        severity: auditLogs.severity,
-        details: auditLogs.details,
-        source: auditLogs.source,
-      })
-      .from(auditLogs)
-      .where(
-        and(
-          gte(auditLogs.timestamp, startDate),
-          eq(auditLogs.source, 'performance')
-        )
-      )
-      .orderBy(desc(auditLogs.timestamp))
+    const { data: performanceLogs, error } = await db
+      .from('audit_logs')
+      .select('created_at, action, severity, details, source')
+      .eq('source', 'performance')
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: false })
       .limit(1000);
+
+    if (error) {
+      console.error('Error fetching performance logs:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch performance logs' },
+        { status: 500 }
+      );
+    }
+
+    const logs = performanceLogs || [];
 
     // Process performance metrics
     const metrics = {
       // Page Performance
       pageMetrics: {
-        slowPageLoads: performanceLogs.filter(log => log.action === 'slow_page_load').length,
-        slowLCP: performanceLogs.filter(log => log.action === 'slow_lcp').length,
-        slowFID: performanceLogs.filter(log => log.action === 'slow_fid').length,
-        poorCLS: performanceLogs.filter(log => log.action === 'poor_cls').length,
+        slowPageLoads: logs.filter((log: any) => log.action === 'slow_page_load').length,
+        slowLCP: logs.filter((log: any) => log.action === 'slow_lcp').length,
+        slowFID: logs.filter((log: any) => log.action === 'slow_fid').length,
+        poorCLS: logs.filter((log: any) => log.action === 'poor_cls').length,
       },
 
       // API Performance
       apiMetrics: {
-        slowAPICalls: performanceLogs.filter(log => log.action === 'slow_api_call').length,
-        apiErrors: performanceLogs.filter(log => log.action === 'api_error').length,
-        failedOperations: performanceLogs.filter(log => log.action === 'failed_operation').length,
+        slowAPICalls: logs.filter((log: any) => log.action === 'slow_api_call').length,
+        apiErrors: logs.filter((log: any) => log.action === 'api_error').length,
+        failedOperations: logs.filter((log: any) => log.action === 'failed_operation').length,
       },
 
       // Resource Performance
       resourceMetrics: {
-        slowResources: performanceLogs.filter(log => log.action === 'slow_resource').length,
-        largeResources: performanceLogs.filter(log => log.action === 'large_resource').length,
-        highMemoryUsage: performanceLogs.filter(log => log.action === 'high_memory_usage').length,
+        slowResources: logs.filter((log: any) => log.action === 'slow_resource').length,
+        largeResources: logs.filter((log: any) => log.action === 'large_resource').length,
+        highMemoryUsage: logs.filter((log: any) => log.action === 'high_memory_usage').length,
       },
 
       // Recent Issues (last 24 hours)
-      recentIssues: performanceLogs
-        .filter(log => {
-          const logDate = new Date(log.timestamp);
+      recentIssues: logs
+        .filter((log: any) => {
+          const logDate = new Date(log.created_at);
           const oneDayAgo = new Date();
           oneDayAgo.setDate(oneDayAgo.getDate() - 1);
           return logDate >= oneDayAgo && log.severity === 'warning';
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
         .slice(0, 20),
 
       // Timeline data for charts
-      timeline: await generateTimelineData(performanceLogs, days),
+      timeline: await generateTimelineData(logs, days),
     };
 
     // Calculate performance scores
@@ -115,22 +116,22 @@ async function generateTimelineData(logs: any[], days: number) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
     date.setHours(0, 0, 0, 0);
-    
+
     const nextDate = new Date(date);
     nextDate.setDate(nextDate.getDate() + 1);
 
-    const dayLogs = logs.filter(log => {
-      const logDate = new Date(log.timestamp);
+    const dayLogs = logs.filter((log: any) => {
+      const logDate = new Date(log.created_at);
       return logDate >= date && logDate < nextDate;
     });
 
     timeline.push({
       date: date.toISOString().split('T')[0],
-      slowPageLoads: dayLogs.filter(log => log.action === 'slow_page_load').length,
-      apiErrors: dayLogs.filter(log => log.action === 'api_error').length,
-      memoryIssues: dayLogs.filter(log => log.action === 'high_memory_usage').length,
-      resourceIssues: dayLogs.filter(log => log.action === 'slow_resource').length,
-      totalIssues: dayLogs.filter(log => log.severity === 'warning' || log.severity === 'error').length,
+      slowPageLoads: dayLogs.filter((log: any) => log.action === 'slow_page_load').length,
+      apiErrors: dayLogs.filter((log: any) => log.action === 'api_error').length,
+      memoryIssues: dayLogs.filter((log: any) => log.action === 'high_memory_usage').length,
+      resourceIssues: dayLogs.filter((log: any) => log.action === 'slow_resource').length,
+      totalIssues: dayLogs.filter((log: any) => log.severity === 'warning' || log.severity === 'error').length,
     });
   }
 

@@ -8,7 +8,9 @@ import { CVData, Experience, Education, Skill } from '@/types/cv';
 import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
 import { Certification } from '@/types/certifications';
 import { studentProjects } from './mock-projects';
-import { Project as DbProject } from '../db/schema';
+import type { Database } from '../db/database.types';
+
+type DbProject = Database['public']['Tables']['projects']['Row'];
 
 // Δημιουργούμε ένα fallback array για όταν δεν υπάρχουν πιστοποιητικά
 const fallbackCertifications: Certification[] = [
@@ -208,11 +210,11 @@ function mapProjectsFromDb(projects: DbProject[]): Project[] {
     slug: project.slug,
     description: project.description,
     categories: project.categories.map((cat: unknown) => cat as ProjectCategory),
-    tech: project.tech,
+    tech: project.technologies,
     github: project.github,
-    demo: project.demo === null ? undefined : project.demo,
+    demo: project.live_demo === null ? undefined : project.live_demo,
     image: project.image,
-    featured: project.featured === null ? false : Boolean(project.featured),
+    featured: project.featured,
     status: 'Active' as ProjectStatus
   }));
 }

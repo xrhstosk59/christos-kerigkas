@@ -1,58 +1,83 @@
 // src/lib/db/repositories/newsletter-repository.ts
-import { newsletterSubscribers, type NewNewsletterSubscriber, type NewsletterSubscriber } from '@/lib/db/schema'
-import { ensureDatabaseConnection } from '@/lib/db/helpers'
-import { eq } from 'drizzle-orm'
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '@/lib/db/schema';
+import { ensureDatabaseConnection } from '@/lib/db/helpers';
+import type { Database } from '@/lib/db/database.types';
 
-type TypedDatabase = PostgresJsDatabase<typeof schema>;
+// Types based on Supabase schema
+type NewsletterSubscriber = Database['public']['Tables']['newsletter_subscribers']['Row'];
+type NewNewsletterSubscriber = Database['public']['Tables']['newsletter_subscribers']['Insert'];
 
 export const newsletterRepository = {
-  async subscribe(subscriber: NewNewsletterSubscriber): Promise<NewsletterSubscriber> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    
-    // Χρησιμοποιούμε τυποποιημένες λειτουργίες αντί για να βασιζόμαστε στην επιστροφή της ensureDatabaseConnection
-    const [result] = await database.insert(newsletterSubscribers)
-      .values(subscriber)
-      .returning() as NewsletterSubscriber[];
-    
-    return result;
-  },
-  
-  async unsubscribe(email: string): Promise<void> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    
-    // Ρητή τυποποίηση
-    await (database as TypedDatabase).update(newsletterSubscribers)
-      .set({
-        isActive: false,
-        unsubscribedAt: new Date()
-      })
-      .where(eq(newsletterSubscribers.email, email));
-  },
-  
-  async isSubscribed(email: string): Promise<boolean> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    
-    // Ρητή τυποποίηση της επιστροφής
-    const result = await (database as TypedDatabase).select()
-      .from(newsletterSubscribers)
-      .where(eq(newsletterSubscribers.email, email))
-      .limit(1);
-    
-    return result.length > 0;
-  },
-  
-  async getAll(includeUnsubscribed = false): Promise<NewsletterSubscriber[]> {
-    const database = await ensureDatabaseConnection(); // Προσθέτουμε await
-    
-    // Δημιουργία του αρχικού ερωτήματος με ρητό τύπο
-    const query = (database as TypedDatabase).select().from(newsletterSubscribers);
-    
-    if (!includeUnsubscribed) {
-      return await query.where(eq(newsletterSubscribers.isActive, true)) as NewsletterSubscriber[];
+  async subscribe(subscriber: NewNewsletterSubscriber): Promise<NewsletterSubscriber | null> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('newsletter_subscribers')
+      .insert(subscriber)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error subscribing to newsletter:', error);
+      return null;
     }
-    
-    return await query as NewsletterSubscriber[];
+
+    return data;
+  },
+
+  async unsubscribe(email: string): Promise<void> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { error } = await supabase
+      .from('newsletter_subscribers')
+      .update({
+        is_active: false,
+        unsubscribed_at: new Date().toISOString()
+      })
+      .eq('email', email);
+
+    if (error) {
+      console.error('Error unsubscribing from newsletter:', error);
+    }
+  },
+
+  async isSubscribed(email: string): Promise<boolean> {
+    const supabase = await ensureDatabaseConnection();
+
+    const { data, error } = await supabase
+      .from('newsletter_subscribers')
+      .select('id')
+      .eq('email', email)
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      return false;
+    }
+
+    return !!data;
+  },
+
+  async getAll(includeUnsubscribed = false): Promise<NewsletterSubscriber[]> {
+    const supabase = await ensureDatabaseConnection();
+
+    let query = supabase
+      .from('newsletter_subscribers')
+      .select('*');
+
+    if (!includeUnsubscribed) {
+      query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching newsletter subscribers:', error);
+      return [];
+    }
+
+    return data || [];
   }
-}
+};
+
+// Export types for convenience
+export type { NewsletterSubscriber, NewNewsletterSubscriber };

@@ -1,13 +1,14 @@
 // src/app/api/admin/audit-logs/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbClient } from '@/lib/db/server-db-client';
-import { auditLogs } from '@/lib/db/schema/audit';
-import { users } from '@/lib/db/schema/auth';
-import { desc, eq, count, like, and, gte, lte } from 'drizzle-orm';
+import { getDbClient } from '@/lib/db/server-db';
 import { checkAdminAuth } from '@/lib/auth/admin-auth';
 import { z } from 'zod';
+import type { Database } from '@/lib/db/database.types';
 
 export const dynamic = 'force-dynamic';
+
+type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
+type User = Database['public']['Tables']['users']['Row'];
 
 // Validation schema for query parameters
 const queryParamsSchema = z.object({
@@ -61,85 +62,60 @@ export async function GET(request: NextRequest) {
     const { page, limit, action, severity, source, resourceType, search, fromDate, toDate } = validationResult.data;
     const offset = (page - 1) * limit;
 
-    // Build where conditions
-    const whereConditions = [];
-    
+    // Build Supabase query
+    let query = db.from('audit_logs').select('*, users(email)', { count: 'exact' });
+
+    // Apply filters
     if (action && action !== 'all') {
-      whereConditions.push(eq(auditLogs.action, action));
-    }
-    
-    if (severity && severity !== 'all') {
-      whereConditions.push(eq(auditLogs.severity, severity));
-    }
-    
-    if (source && source !== 'all') {
-      whereConditions.push(eq(auditLogs.source, source));
-    }
-    
-    if (resourceType && resourceType !== 'all') {
-      whereConditions.push(eq(auditLogs.resourceType, resourceType));
-    }
-    
-    if (search) {
-      // Sanitize search input to prevent LIKE injection
-      const sanitizedSearch = search.replace(/[%_\\]/g, '\\$&');
-      whereConditions.push(
-        like(auditLogs.action, `%${sanitizedSearch}%`)
-      );
-    }
-    
-    if (fromDate) {
-      whereConditions.push(gte(auditLogs.timestamp, new Date(fromDate)));
-    }
-    
-    if (toDate) {
-      whereConditions.push(lte(auditLogs.timestamp, new Date(toDate)));
+      query = query.eq('action', action);
     }
 
-    const whereCondition = whereConditions.length > 0 ? and(...whereConditions) : undefined;
-    
-    // Get total count for pagination
-    const totalCountQuery = whereCondition 
-      ? db.select({ count: count() }).from(auditLogs).where(whereCondition)
-      : db.select({ count: count() }).from(auditLogs);
-    const totalCount = await totalCountQuery;
-    
-    // Get paginated results with user information
-    const baseQuery = db
-      .select({
-        id: auditLogs.id,
-        userId: auditLogs.userId,
-        action: auditLogs.action,
-        resourceType: auditLogs.resourceType,
-        resourceId: auditLogs.resourceId,
-        details: auditLogs.details,
-        ipAddress: auditLogs.ipAddress,
-        userAgent: auditLogs.userAgent,
-        sessionId: auditLogs.sessionId,
-        timestamp: auditLogs.timestamp,
-        severity: auditLogs.severity,
-        source: auditLogs.source,
-        userEmail: users.email,
-      })
-      .from(auditLogs)
-      .leftJoin(users, eq(auditLogs.userId, users.id));
-    
-    const logsQuery = whereCondition 
-      ? baseQuery.where(whereCondition)
-      : baseQuery;
-    
-    const logs = await logsQuery
-      .orderBy(desc(auditLogs.timestamp))
-      .limit(limit)
-      .offset(offset);
+    if (severity && severity !== 'all') {
+      query = query.eq('severity', severity);
+    }
+
+    if (source && source !== 'all') {
+      query = query.eq('source', source);
+    }
+
+    if (resourceType && resourceType !== 'all') {
+      query = query.eq('resource_type', resourceType);
+    }
+
+    if (search) {
+      // Sanitize search input to prevent injection
+      const sanitizedSearch = search.replace(/[%_\\]/g, '\\$&');
+      query = query.ilike('action', `%${sanitizedSearch}%`);
+    }
+
+    if (fromDate) {
+      query = query.gte('created_at', fromDate);
+    }
+
+    if (toDate) {
+      query = query.lte('created_at', toDate);
+    }
+
+    // Apply pagination and ordering
+    const { data: logs, error, count: totalCount } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Error fetching audit logs:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch audit logs' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       logs,
       pagination: {
         page,
         limit,
-        total: totalCount[0]?.count || 0,
-        totalPages: Math.ceil((totalCount[0]?.count || 0) / limit)
+        total: totalCount || 0,
+        totalPages: Math.ceil((totalCount || 0) / limit)
       }
     });
 
@@ -168,37 +144,20 @@ export async function POST(request: NextRequest) {
     const { type } = body; // 'actions', 'severities', 'sources', 'resourceTypes'
 
     const db = await getDbClient();
-    
-    let results = [];
-    
+
+    let column: string;
     switch (type) {
       case 'actions':
-        results = await db
-          .selectDistinct({ value: auditLogs.action })
-          .from(auditLogs)
-          .where(eq(auditLogs.action, auditLogs.action))
-          .orderBy(auditLogs.action);
+        column = 'action';
         break;
       case 'severities':
-        results = await db
-          .selectDistinct({ value: auditLogs.severity })
-          .from(auditLogs)
-          .where(eq(auditLogs.severity, auditLogs.severity))
-          .orderBy(auditLogs.severity);
+        column = 'severity';
         break;
       case 'sources':
-        results = await db
-          .selectDistinct({ value: auditLogs.source })
-          .from(auditLogs)
-          .where(eq(auditLogs.source, auditLogs.source))
-          .orderBy(auditLogs.source);
+        column = 'source';
         break;
       case 'resourceTypes':
-        results = await db
-          .selectDistinct({ value: auditLogs.resourceType })
-          .from(auditLogs)
-          .where(eq(auditLogs.resourceType, auditLogs.resourceType))
-          .orderBy(auditLogs.resourceType);
+        column = 'resource_type';
         break;
       default:
         return NextResponse.json(
@@ -207,9 +166,24 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    return NextResponse.json({
-      values: results.map(r => r.value).filter(Boolean)
-    });
+    // Get distinct values
+    const { data, error } = await db
+      .from('audit_logs')
+      .select(column)
+      .order(column);
+
+    if (error) {
+      console.error('Error fetching filter values:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch filter values' },
+        { status: 500 }
+      );
+    }
+
+    // Extract unique values
+    const values = [...new Set(data.map((row: any) => row[column]).filter(Boolean))];
+
+    return NextResponse.json({ values });
 
   } catch (error) {
     console.error('Error fetching filter values:', error);

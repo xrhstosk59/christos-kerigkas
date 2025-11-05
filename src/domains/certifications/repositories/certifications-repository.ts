@@ -1,247 +1,278 @@
 // src/domains/certifications/repositories/certifications-repository.ts
-
-import { eq, desc, asc, sql, SQL } from 'drizzle-orm';
 import { ensureDatabaseConnection } from '@/lib/db/helpers';
-import { certifications } from '@/lib/db/schema/certifications';
-import { 
-  DatabaseError, 
-  NotFoundError 
+import {
+  DatabaseError,
+  NotFoundError
 } from '@/lib/utils/errors/app-error';
 import { logger } from '@/lib/utils/logger';
-
-import type { 
-  Certification, 
-  NewCertification, 
-  CertificationType 
+import type {
+  Certification,
+  NewCertification,
+  CertificationType
 } from '@/domains/certifications/models/certification.model';
 
 /**
- * Repository για την πρόσβαση και τη διαχείριση των certifications στη βάση δεδομένων.
+ * Repository for accessing and managing certifications in the database.
  */
 export class CertificationsRepository {
   /**
-   * Ανάκτηση όλων των πιστοποιητικών με προαιρετική ταξινόμηση.
+   * Retrieve all certifications with optional sorting.
    */
   public async findAll(
     sortBy: 'issueDate' | 'title' = 'issueDate',
     sortOrder: 'asc' | 'desc' = 'desc'
   ): Promise<Certification[]> {
     try {
-      const database = await ensureDatabaseConnection();
-      
-      // Δημιουργία του order by clause
-      let orderByClause: SQL<unknown>;
-      if (sortBy === 'issueDate') {
-        orderByClause = sortOrder === 'desc' 
-          ? desc(certifications.issueDate)
-          : asc(certifications.issueDate);
-      } else {
-        orderByClause = sortOrder === 'desc'
-          ? desc(certifications.title)
-          : asc(certifications.title);
+      const supabase = await ensureDatabaseConnection();
+
+      const column = sortBy === 'issueDate' ? 'issue_date' : 'title';
+      const ascending = sortOrder === 'asc';
+
+      const { data, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .order(column, { ascending });
+
+      if (error) {
+        throw error;
       }
-      
-      // Εκτέλεση του query κατευθείαν και λήψη των αποτελεσμάτων
-      return await database.select()
-        .from(certifications)
-        .orderBy(orderByClause);
+
+      return (data || []) as Certification[];
     } catch (error) {
       logger.error('Error retrieving all certifications:', error, 'certifications-repository');
       throw new DatabaseError(
-        'Σφάλμα κατά την ανάκτηση των πιστοποιητικών',
+        'Error retrieving certifications',
         error instanceof Error ? error : undefined
       );
     }
   }
-  
+
   /**
-   * Ανάκτηση πιστοποιητικού με βάση το ID.
+   * Retrieve certification by ID.
    */
   public async findById(id: string): Promise<Certification> {
     try {
-      const database = await ensureDatabaseConnection();
-      const [certification] = await database.select()
-        .from(certifications)
-        .where(eq(certifications.id, id))
-        .limit(1);
-      
-      if (!certification) {
-        throw new NotFoundError(`Το πιστοποιητικό με ID "${id}" δεν βρέθηκε`);
+      const supabase = await ensureDatabaseConnection();
+
+      const { data: certification, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !certification) {
+        throw new NotFoundError(`Certification with ID "${id}" not found`);
       }
-      
-      return certification;
+
+      return certification as Certification;
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      
+
       logger.error(`Error retrieving certification with ID ${id}:`, error, 'certifications-repository');
       throw new DatabaseError(
-        `Σφάλμα κατά την ανάκτηση του πιστοποιητικού με ID "${id}"`,
+        `Error retrieving certification with ID "${id}"`,
         error instanceof Error ? error : undefined
       );
     }
   }
-  
+
   /**
-   * Ανάκτηση επιλεγμένων πιστοποιητικών.
+   * Retrieve featured certifications.
    */
   public async findFeatured(): Promise<Certification[]> {
     try {
-      const database = await ensureDatabaseConnection();
-      return await database.select()
-        .from(certifications)
-        .where(eq(certifications.featured, true))
-        .orderBy(desc(certifications.issueDate));
+      const supabase = await ensureDatabaseConnection();
+
+      const { data, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('featured', true)
+        .order('issue_date', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data || []) as Certification[];
     } catch (error) {
       logger.error('Error retrieving featured certifications:', error, 'certifications-repository');
       throw new DatabaseError(
-        'Σφάλμα κατά την ανάκτηση των επιλεγμένων πιστοποιητικών',
+        'Error retrieving featured certifications',
         error instanceof Error ? error : undefined
       );
     }
   }
-  
+
   /**
-   * Ανάκτηση πιστοποιητικών με βάση το skill.
+   * Retrieve certifications by skill.
    */
   public async findBySkill(skill: string): Promise<Certification[]> {
     try {
-      const database = await ensureDatabaseConnection();
-      return await database.select()
-        .from(certifications)
-        .where(sql`${skill} = ANY(${certifications.skills})`)
-        .orderBy(desc(certifications.issueDate));
+      const supabase = await ensureDatabaseConnection();
+
+      const { data, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .contains('skills', [skill])
+        .order('issue_date', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data || []) as Certification[];
     } catch (error) {
       logger.error(`Error retrieving certifications for skill ${skill}:`, error, 'certifications-repository');
       throw new DatabaseError(
-        `Σφάλμα κατά την ανάκτηση των πιστοποιητικών για το skill "${skill}"`,
+        `Error retrieving certifications for skill "${skill}"`,
         error instanceof Error ? error : undefined
       );
     }
   }
-  
+
   /**
-   * Ανάκτηση πιστοποιητικών με βάση τον τύπο.
+   * Retrieve certifications by type.
    */
   public async findByType(type: CertificationType): Promise<Certification[]> {
     try {
-      const database = await ensureDatabaseConnection();
-      return await database.select()
-        .from(certifications)
-        .where(eq(certifications.type, type))
-        .orderBy(desc(certifications.issueDate));
+      const supabase = await ensureDatabaseConnection();
+
+      const { data, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('type', type)
+        .order('issue_date', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data || []) as Certification[];
     } catch (error) {
       logger.error(`Error retrieving certifications for type ${type}:`, error, 'certifications-repository');
       throw new DatabaseError(
-        `Σφάλμα κατά την ανάκτηση των πιστοποιητικών για τον τύπο "${type}"`,
+        `Error retrieving certifications for type "${type}"`,
         error instanceof Error ? error : undefined
       );
     }
   }
-  
+
   /**
-   * Δημιουργία νέου πιστοποιητικού.
+   * Create new certification.
    */
   public async create(certification: NewCertification): Promise<Certification> {
     try {
-      const database = await ensureDatabaseConnection();
-      const [result] = await database.insert(certifications)
-        .values(certification)
-        .returning();
-      
-      if (!result) {
-        throw new DatabaseError('Σφάλμα κατά τη δημιουργία του πιστοποιητικού');
+      const supabase = await ensureDatabaseConnection();
+
+      const { data: result, error } = await supabase
+        .from('certifications')
+        .insert(certification as any)
+        .select()
+        .single();
+
+      if (error || !result) {
+        throw new DatabaseError('Error creating certification');
       }
-      
-      return result;
+
+      return result as Certification;
     } catch (error) {
       logger.error(`Error creating certification:`, error, 'certifications-repository');
       throw new DatabaseError(
-        'Σφάλμα κατά τη δημιουργία του πιστοποιητικού',
+        'Error creating certification',
         error instanceof Error ? error : undefined
       );
     }
   }
-  
+
   /**
-   * Ενημέρωση υπάρχοντος πιστοποιητικού.
+   * Update existing certification.
    */
   public async update(id: string, data: Partial<Omit<NewCertification, 'id' | 'createdAt'>>): Promise<Certification> {
     try {
-      const database = await ensureDatabaseConnection();
-      
-      // Έλεγχος αν το πιστοποιητικό υπάρχει
-      const [existingCertification] = await database.select()
-        .from(certifications)
-        .where(eq(certifications.id, id))
-        .limit(1);
-      
+      const supabase = await ensureDatabaseConnection();
+
+      // Check if certification exists
+      const { data: existingCertification } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('id', id)
+        .single();
+
       if (!existingCertification) {
-        throw new NotFoundError(`Το πιστοποιητικό με ID "${id}" δεν βρέθηκε`);
+        throw new NotFoundError(`Certification with ID "${id}" not found`);
       }
-      
-      // Ενημέρωση του πιστοποιητικού
-      const [result] = await database.update(certifications)
-        .set({
+
+      // Update the certification
+      const { data: result, error } = await supabase
+        .from('certifications')
+        .update({
           ...data,
-          updatedAt: new Date()
-        })
-        .where(eq(certifications.id, id))
-        .returning();
-      
-      if (!result) {
-        throw new DatabaseError('Σφάλμα κατά την ενημέρωση του πιστοποιητικού');
+          updated_at: new Date().toISOString()
+        } as any)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error || !result) {
+        throw new DatabaseError('Error updating certification');
       }
-      
-      return result;
+
+      return result as Certification;
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      
+
       logger.error(`Error updating certification with ID ${id}:`, error, 'certifications-repository');
       throw new DatabaseError(
-        `Σφάλμα κατά την ενημέρωση του πιστοποιητικού με ID "${id}"`,
+        `Error updating certification with ID "${id}"`,
         error instanceof Error ? error : undefined
       );
     }
   }
-  
+
   /**
-   * Διαγραφή πιστοποιητικού.
+   * Delete certification.
    */
   public async delete(id: string): Promise<void> {
     try {
-      const database = await ensureDatabaseConnection();
-      
-      // Έλεγχος αν το πιστοποιητικό υπάρχει
-      const [existingCertification] = await database.select()
-        .from(certifications)
-        .where(eq(certifications.id, id))
-        .limit(1);
-      
+      const supabase = await ensureDatabaseConnection();
+
+      // Check if certification exists
+      const { data: existingCertification } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('id', id)
+        .single();
+
       if (!existingCertification) {
-        throw new NotFoundError(`Το πιστοποιητικό με ID "${id}" δεν βρέθηκε`);
+        throw new NotFoundError(`Certification with ID "${id}" not found`);
       }
-      
-      // Διαγραφή του πιστοποιητικού
-      await database.delete(certifications)
-        .where(eq(certifications.id, id));
-      
+
+      // Delete the certification
+      const { error } = await supabase
+        .from('certifications')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      
+
       logger.error(`Error deleting certification with ID ${id}:`, error, 'certifications-repository');
       throw new DatabaseError(
-        `Σφάλμα κατά τη διαγραφή του πιστοποιητικού με ID "${id}"`,
+        `Error deleting certification with ID "${id}"`,
         error instanceof Error ? error : undefined
       );
     }
   }
 }
 
-// Singleton instance για εύκολη πρόσβαση
+// Singleton instance for easy access
 export const certificationsRepository = new CertificationsRepository();
