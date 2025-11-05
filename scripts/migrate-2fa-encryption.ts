@@ -15,14 +15,6 @@ import { users } from '../src/lib/db/schema';
 import { isNotNull, eq } from 'drizzle-orm';
 import { encrypt, encryptBackupCodes, validateEncryptionSetup } from '../src/lib/utils/encryption';
 
-interface User2FA {
-  id: string;
-  email: string;
-  twoFactorSecret: string | null;
-  twoFactorBackupCodes: string | null;
-  twoFactorEnabled: boolean | null;
-}
-
 async function migrate2FAData() {
   console.log('🔐 Starting 2FA Data Encryption Migration\n');
 

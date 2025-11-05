@@ -15,22 +15,6 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Ο κωδικός πρόσβασης είναι υποχρεωτικός'),
 });
 
-// Συνάρτηση για την καταγραφή αποτυχημένων προσπαθειών login
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function logFailedLoginAttempt(req: NextRequest, email: string, reason: string) {
-  const ip = req.headers.get('x-forwarded-for') || 
-           req.headers.get('x-real-ip') || 
-           'unknown';
-  
-  // Σε παραγωγικό περιβάλλον, θα μπορούσαμε να αποθηκεύσουμε αυτά τα logs
-  if (process.env.NODE_ENV === 'production') {
-    console.error(`Αποτυχημένη προσπάθεια login: ${email} από IP ${ip} - Λόγος: ${reason}`);
-    // Εδώ θα μπορούσαμε να προσθέσουμε κώδικα για αποθήκευση σε βάση δεδομένων
-  } else {
-    console.warn(`[DEV] Αποτυχημένη προσπάθεια login: ${email} από IP ${ip} - Λόγος: ${reason}`);
-  }
-}
-
 export async function POST(req: NextRequest) {
   try {
     // Λήψη και επικύρωση δεδομένων πρώτα για το email

@@ -21,7 +21,7 @@ const postSchema = z.object({
 
 // Στο Next.js 15, οι παράμετροι διαδρομής (params) είναι πλέον Promise
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -156,7 +156,7 @@ export async function PUT(
 
 // Διαγραφή blog post
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {

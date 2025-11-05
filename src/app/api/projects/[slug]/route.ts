@@ -27,7 +27,7 @@ const projectUpdateSchema = z.object({
  * GET - Ανάκτηση συγκεκριμένου project με βάση το slug.
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -152,7 +152,7 @@ export async function PUT(
  * DELETE - Διαγραφή συγκεκριμένου project.
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {

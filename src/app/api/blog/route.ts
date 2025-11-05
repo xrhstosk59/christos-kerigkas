@@ -42,7 +42,7 @@ const searchParamsSchema = z.object({
  */
 export const GET = createApiHandler(
   searchParamsSchema,
-  async (req, validData, _context) => {
+  async (_req, validData, _context) => {
     try {
       logger.info(`Αναζήτηση blog posts`, validData, 'api-blog-GET');
 
@@ -97,7 +97,7 @@ export const GET = createApiHandler(
  */
 export const POST = createApiHandler(
   postSchema,
-  async (req, validData, _context) => {
+  async (_req, validData, _context) => {
     try {
       // Λήψη του τρέχοντος χρήστη με το νέο API
       const { user, role } = await supabaseServer.auth.getUserWithRole();
