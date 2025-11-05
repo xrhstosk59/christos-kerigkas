@@ -2,73 +2,83 @@
 import { Project, CryptoProject } from '@/types/projects';
 import { Bitcoin, LineChart, Network, Code, RefreshCw } from 'lucide-react';
 
-// Mock projects που αντιπροσωπεύουν εργασίες/projects ενός φοιτητή πληροφορικής
+// Real projects from my portfolio
 export const studentProjects: Project[] = [
   {
-    title: "University Course Manager",
-    slug: "university-course-manager",
-    description: "Εφαρμογή διαχείρισης μαθημάτων και υλικού σπουδών για φοιτητές. Αναπτύχθηκε ως μέρος εργασίας για το μάθημα 'Τεχνολογίες Web'. Επιτρέπει στους φοιτητές να οργανώνουν το πρόγραμμα σπουδών τους, να αποθηκεύουν σημειώσεις και να παρακολουθούν την πρόοδό τους.",
-    categories: ["web-development", "education"],
-    tech: ["React", "Node.js", "Express", "MongoDB", "Bootstrap"],
-    github: "https://github.com/christoskerigkas/university-course-manager",
-    demo: "https://ucm-demo.vercel.app",
-    image: "/uploads/projects/ucm-preview.jpg",
+    title: "Travel Planner - AI-Powered Travel Platform",
+    slug: "travel-planner",
+    description: "Bachelor's Thesis project (In Development) - Community-driven travel platform where locals share knowledge to earn points, and travelers use those points to generate AI-powered personalized trip plans. Features 3D interactive globe with rotating Earth showing contribution pins, points economy system, and real-time updates with Supabase.",
+    categories: ["web-development", "ai", "travel"],
+    tech: ["Next.js 15", "TypeScript", "Google Gemini AI", "Stripe", "Supabase", "Globe.gl", "PostgreSQL"],
+    image: "/uploads/projects/travel-planner.jpg",
     featured: true,
-    status: "Completed"
-  },
-  {
-    title: "Local Business Finder",
-    slug: "local-business-finder",
-    description: "Web εφαρμογή για την εύρεση τοπικών επιχειρήσεων στην περιοχή της Καβάλας. Χρησιμοποιεί το Google Maps API για την εμφάνιση των επιχειρήσεων στο χάρτη και επιτρέπει το φιλτράρισμα με βάση διάφορες κατηγορίες.",
-    categories: ["web-development", "real-estate"],
-    tech: ["JavaScript", "HTML", "CSS", "Google Maps API", "Firebase"],
-    github: "https://github.com/christoskerigkas/local-business-finder",
-    image: "/uploads/projects/lbf-preview.jpg",
-    featured: true,
-    status: "Active"
-  },
-  {
-    title: "Weather Dashboard",
-    slug: "weather-dashboard",
-    description: "Μια διαδραστική εφαρμογή πρόγνωσης καιρού που χρησιμοποιεί το OpenWeatherMap API για να παρέχει τρέχουσες καιρικές συνθήκες και προβλέψεις 5 ημερών. Περιλαμβάνει αποθήκευση τοποθεσιών και γραφικές απεικονίσεις δεδομένων.",
-    categories: ["web-development", "data-analysis"],
-    tech: ["React", "Chart.js", "API Integration", "Tailwind CSS"],
-    github: "https://github.com/christoskerigkas/weather-dashboard",
-    demo: "https://weather.christoskerigkas.com",
-    image: "/uploads/projects/weather-preview.jpg",
-    status: "Completed"
-  },
-  {
-    title: "E-commerce Platform",
-    slug: "ecommerce-platform",
-    description: "Μια πλήρης λύση ηλεκτρονικού εμπορίου με λειτουργίες καλαθιού αγορών, διαχείρισης προϊόντων, αναζήτησης και επεξεργασίας πληρωμών. Αναπτύχθηκε ως εργασία για το μάθημα 'Ηλεκτρονικό Επιχειρείν'.",
-    categories: ["web-development"],
-    tech: ["Next.js", "Stripe API", "MongoDB", "Tailwind CSS", "NextAuth.js"],
-    github: "https://github.com/christoskerigkas/ecommerce-platform",
-    image: "/uploads/projects/ecommerce-preview.jpg",
     status: "In Development"
   },
   {
-    title: "Pet Care App",
-    slug: "pet-care-app",
-    description: "Εφαρμογή για κινητά που βοηθά τους ιδιοκτήτες κατοικίδιων να παρακολουθούν τις ανάγκες φροντίδας των ζώων τους, όπως εμβολιασμούς, ιατρικά ραντεβού, διατροφή και άσκηση. Περιλαμβάνει υπενθυμίσεις και ημερολόγιο δραστηριοτήτων.",
-    categories: ["mobile", "animals"],
-    tech: ["React Native", "Firebase", "Redux", "Expo"],
-    github: "https://github.com/christoskerigkas/pet-care-app",
-    image: "/uploads/projects/petcare-preview.jpg",
-    status: "Active"
+    title: "Bluewave Properties - Real Estate Platform",
+    slug: "bluewave-properties",
+    description: "Full-stack real estate platform with advanced property search and filtering capabilities, real-time updates, and optimized performance using Next.js Server Components. Features authentication system with NextAuth.js, role-based access control, and optimistic UI updates for enhanced user experience.",
+    categories: ["web-development", "real-estate"],
+    tech: ["Next.js 15", "TypeScript", "Supabase", "NextAuth.js", "PostgreSQL", "Tailwind CSS", "Sentry"],
+    image: "/uploads/projects/bluewave-properties.jpg",
+    featured: true,
+    status: "In Development"
   },
   {
-    title: "Personal Portfolio",
-    slug: "personal-portfolio",
-    description: "Ο προσωπικός μου ιστότοπος portfolio που παρουσιάζει τα έργα, τις δεξιότητες και την εμπειρία μου. Σχεδιασμένος με γνώμονα την ταχύτητα και τη βελτιστοποίηση SEO.",
-    categories: ["web-development", "portfolio"],
-    tech: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion"],
-    github: "https://github.com/christoskerigkas/personal-website",
-    demo: "https://christoskerigkas.com",
-    image: "/uploads/projects/portfolio-preview.jpg",
+    title: "Wait-Less - Restaurant Queue Management",
+    slug: "wait-less",
+    description: "Cross-platform mobile application for iOS and Android built with React Native. Features real-time queue updates using Supabase Realtime, push notifications via Firebase, comprehensive admin dashboard for restaurant analytics and queue management. Monorepo structure with backend, admin panel, and mobile app.",
+    categories: ["mobile", "business"],
+    tech: ["React Native", "Node.js", "Supabase", "Firebase", "Expo", "TypeScript", "Docker"],
+    image: "/uploads/projects/wait-less.jpg",
     featured: true,
-    status: "Active"
+    status: "In Development"
+  },
+  {
+    title: "Grade-Calc - University Grade Calculator",
+    slug: "grade-calc",
+    description: "Progressive Web App (PWA) designed for university students to track and calculate their grades. Features offline capabilities, AI-powered grade predictions, gamification system with achievements, interactive analytics dashboard, and comprehensive testing with Vitest and Playwright.",
+    categories: ["web-development", "education", "pwa"],
+    tech: ["Next.js 15", "TypeScript", "PWA", "AI/ML", "Chart.js", "Tailwind CSS", "Supabase"],
+    image: "/uploads/projects/grade-calc.jpg",
+    featured: true,
+    status: "In Development"
+  },
+  {
+    title: "Smart Trader Bot - Crypto Trading Automation",
+    slug: "smart-trader-bot",
+    description: "Automated cryptocurrency trading bot with intelligent algorithms for market analysis and trade execution. Built with Next.js for the dashboard interface and real-time monitoring capabilities.",
+    categories: ["web-development", "crypto", "trading"],
+    tech: ["Next.js", "TypeScript", "Trading APIs", "Real-time Data", "Tailwind CSS"],
+    image: "/uploads/projects/smart-trader-bot.jpg",
+    status: "In Development"
+  },
+  {
+    title: "Sniper4Crypto - Crypto Sniping Tool",
+    slug: "sniper4crypto",
+    description: "Advanced cryptocurrency sniping tool for identifying and executing rapid trades on new token launches. Python-based system with real-time blockchain monitoring and automated execution.",
+    categories: ["crypto", "trading", "automation"],
+    tech: ["Python", "Web3", "Blockchain APIs", "Real-time Monitoring"],
+    image: "/uploads/projects/sniper4crypto.jpg",
+    status: "In Development"
+  },
+  {
+    title: "Zwologikos Khpos - Zoo Management System",
+    slug: "zwologikos-khpos",
+    description: "Database management system for zoo operations including visitor management, ticket sales, species tracking, and supplier management. Full-stack application with PHP backend and MySQL database. University project for Database Systems course.",
+    categories: ["web-development", "database"],
+    tech: ["PHP", "MySQL", "JavaScript", "HTML/CSS"],
+    image: "/uploads/projects/zoo.jpg",
+    status: "Completed"
+  },
+  {
+    title: "SQLatch - Database Learning Tool",
+    slug: "sqlatch",
+    description: "Educational platform for learning SQL and database concepts. Interactive tutorials and exercises help students master database design and query optimization. University project for Database Systems course.",
+    categories: ["web-development", "education"],
+    tech: ["Next.js", "TypeScript", "PostgreSQL", "Tailwind CSS"],
+    image: "/uploads/projects/sqlatch.jpg",
+    status: "In Development"
   }
 ];
 

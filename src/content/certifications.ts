@@ -15,6 +15,51 @@ export const certifications: Certification[] = [
     featured: true
   },
   {
+    id: 'reactjs-beginners',
+    title: 'ReactJS for Beginners',
+    issuer: 'Online Learning Platform',
+    issueDate: '2024-01-01',
+    type: 'course',
+    skills: ['React.js', 'Frontend Development'],
+    description: 'Comprehensive course covering React fundamentals and best practices'
+  },
+  {
+    id: 'typescript-basics',
+    title: 'TypeScript Basics',
+    issuer: 'Online Learning Platform',
+    issueDate: '2024-01-01',
+    type: 'course',
+    skills: ['TypeScript', 'JavaScript'],
+    description: 'Introduction to TypeScript and type-safe development'
+  },
+  {
+    id: 'nodejs-getting-started',
+    title: 'Getting Started with Node.js',
+    issuer: 'Online Learning Platform',
+    issueDate: '2024-01-01',
+    type: 'course',
+    skills: ['Node.js', 'Backend Development'],
+    description: 'Fundamentals of server-side JavaScript with Node.js'
+  },
+  {
+    id: 'network-defense',
+    title: 'Network Defense',
+    issuer: 'Cisco Networking Academy',
+    issueDate: '2024-01-01',
+    type: 'badge',
+    skills: ['Network Security', 'Cybersecurity'],
+    description: 'Advanced network defense techniques and security practices'
+  },
+  {
+    id: 'negotiation-mastery',
+    title: 'Negotiation Mastery',
+    issuer: 'Workearly',
+    issueDate: '2024-01-01',
+    type: 'course',
+    skills: ['Negotiation', 'Professional Skills'],
+    description: 'Professional negotiation skills and techniques'
+  },
+  {
     id: 'intro-cybersecurity',
     title: 'Introduction to Cybersecurity',
     issuer: 'Cisco Networking Academy',

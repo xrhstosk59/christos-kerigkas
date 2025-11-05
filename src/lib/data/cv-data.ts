@@ -44,56 +44,29 @@ const fallbackCertifications: Certification[] = [
   }
 ];
 
-// Mock data for professional experience - tailored for a student
+// Professional experience based on CV - Currently a student with 3-month internship
 const mockExperience: Experience[] = [
   {
     id: "exp1",
-    company: "Uni Web Projects",
-    position: "Freelance Web Developer",
-    startDate: "2023-06-01",
-    endDate: null, // Current employment
-    description: "Development of web applications for small businesses and individuals.",
+    company: "Municipality of Nea Propontida, Halkidiki",
+    position: "Technical Support Intern",
+    startDate: "2025-05-01",
+    endDate: "2025-07-31",
+    description: "3-month summer internship providing technical support and IT assistance at the Municipality of Nea Propontida. Gained hands-on experience in troubleshooting, system maintenance, and user support in a professional municipal environment.",
     responsibilities: [
-      "Design and implementation of responsive websites",
-      "Development of custom WordPress themes",
-      "Creation of simple e-commerce solutions"
+      "Provided technical support to municipal staff for daily IT operations",
+      "Assisted in troubleshooting hardware and software issues",
+      "Helped maintain computer systems and network infrastructure",
+      "Supported users with software applications and tools",
+      "Documented common issues and solutions for knowledge base"
     ],
-    technologies: ["HTML", "CSS", "JavaScript", "React", "WordPress", "PHP"],
+    technologies: ["Windows", "Microsoft Office", "Basic Networking", "IT Support", "System Maintenance"],
     achievements: [
-      "Completion of 5+ projects for local businesses",
-      "Positive feedback and recurring clients"
+      "Gained practical experience in enterprise IT support",
+      "Developed problem-solving and communication skills",
+      "Successfully completed 3-month internship program"
     ],
-    location: "Kavala/Chalkidiki"
-  },
-  {
-    id: "exp2",
-    company: "DigitalLab DUTh",
-    position: "Research Assistant (Part-time)",
-    startDate: "2022-09-01",
-    endDate: "2023-06-30",
-    description: "Participation in a research project of the Department of Computer Science.",
-    responsibilities: [
-      "Development of web-based applications for research purposes",
-      "Data collection and analysis",
-      "Collaboration with the research team"
-    ],
-    technologies: ["React", "Node.js", "Express", "MongoDB", "Data Analysis"],
-    location: "Kavala"
-  },
-  {
-    id: "exp3",
-    company: "Local Web Agency",
-    position: "Web Development Intern",
-    startDate: "2021-07-01",
-    endDate: "2021-08-31",
-    description: "Internship at a local web development company.",
-    responsibilities: [
-      "Support for front-end development",
-      "Creation and optimization of websites",
-      "Learning professional tools and methodologies"
-    ],
-    technologies: ["HTML", "CSS", "JavaScript", "jQuery", "Bootstrap"],
-    location: "Chalkidiki"
+    location: "Nea Propontida, Halkidiki, Greece"
   }
 ];
 

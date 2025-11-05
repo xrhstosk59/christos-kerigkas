@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
-import { Code2, Dumbbell, GraduationCap, Home, Binary } from 'lucide-react'
+import { Code2, GraduationCap, MapPin, Briefcase } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 
 const details = [
@@ -15,22 +15,17 @@ const details = [
   {
     icon: GraduationCap,
     title: 'Computer Science Student',
-    description: 'Studying Computer Science with focus on web development and software engineering'
+    description: 'Studying Computer Science at Democritus University of Thrace (4th Year)'
   },
   {
-    icon: Binary,
-    title: 'Crypto Enthusiast',
-    description: 'Developing analysis tools and trading bots for cryptocurrency markets'
+    icon: Briefcase,
+    title: 'Internship',
+    description: '3-month Technical Support Intern at Municipality of Nea Propontida (Summer 2025)'
   },
   {
-    icon: Home,
+    icon: MapPin,
     title: 'Location',
-    description: 'Based in Kavala, Greece with roots in Chalkidiki'
-  },
-  {
-    icon: Dumbbell,
-    title: 'Lifestyle',
-    description: 'Daily gym workouts and healthy nutrition enthusiast'
+    description: 'Based in Halkidiki, Greece'
   }
 ]
 
@@ -171,9 +166,9 @@ export function About() {
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             )}
           >
-            21 years old, passionate about technology and developing innovative solutions. 
-            Combining computer science studies with hands-on experience in modern web development 
-            and blockchain technologies.
+            Fourth-year Computer Science student passionate about technology and developing innovative solutions.
+            Currently working on various web development projects including my Bachelor's Thesis on an AI-powered travel platform.
+            Focused on learning modern web technologies and building practical applications that solve real-world problems.
           </motion.p>
         </motion.div>
       </div>

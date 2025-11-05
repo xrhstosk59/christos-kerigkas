@@ -36,21 +36,21 @@ export default function Hero() {
   const socialLinks: SocialLink[] = [
     {
       icon: Github,
-      href: 'https://github.com/yourusername',
+      href: 'https://github.com/xrhstosk59',
       label: 'GitHub Profile',
-      username: '@yourusername'
+      username: '@xrhstosk59'
     },
     {
       icon: Linkedin,
-      href: 'https://linkedin.com/in/yourusername',
+      href: 'https://linkedin.com/in/christoskerigkas',
       label: 'LinkedIn Profile',
       username: 'Christos Kerigkas'
     },
     {
       icon: Mail,
-      href: 'mailto:your-email@example.com',
+      href: 'mailto:xrhstosk59@gmail.com',
       label: 'Email Contact',
-      username: 'your-email@example.com'
+      username: 'xrhstosk59@gmail.com'
     }
   ]
 
