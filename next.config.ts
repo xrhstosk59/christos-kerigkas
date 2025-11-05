@@ -60,6 +60,7 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'], // Modern formats first
     deviceSizes: [640, 750, 828, 1080, 1200, 1920], // Optimized sizes
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384], // Common icon sizes
+    qualities: [75, 90, 100], // Configure allowed quality values
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year cache
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -208,14 +209,6 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error']
     } : false,
-  },
-  
-  // ✅ RUNTIME CONFIG
-  serverRuntimeConfig: {
-    // Server-only config
-  },
-  publicRuntimeConfig: {
-    // Client-side config
   },
 }
 

@@ -2,31 +2,45 @@
 import { Post, BlogQueryParams, BlogResponse } from '@/types/blog'
 
 /**
+ * Get the base URL for API calls
+ * Works in both server and client environments
+ */
+function getBaseUrl() {
+  // Server-side: use localhost or NEXT_PUBLIC_API_URL
+  if (typeof window === 'undefined') {
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+  }
+  // Client-side: use current origin
+  return window.location.origin
+}
+
+/**
  * Fetches blog posts with optional filtering and pagination
  */
 export async function getBlogPosts(params?: Partial<BlogQueryParams>): Promise<Post[]> {
   try {
     // Build the URL with query parameters
     const searchParams = new URLSearchParams()
-    
+
     if (params?.category && params.category !== 'all') {
       searchParams.set('category', params.category)
     }
-    
+
     if (params?.search) {
       searchParams.set('search', params.search)
     }
-    
+
     if (params?.page) {
       searchParams.set('page', params.page.toString())
     }
-    
+
     if (params?.postsPerPage) {
       searchParams.set('limit', params.postsPerPage.toString())
     }
-    
-    // Fetch from the API
-    const response = await fetch(`/api/blog/search?${searchParams.toString()}`)
+
+    // Fetch from the API with absolute URL
+    const baseUrl = getBaseUrl()
+    const response = await fetch(`${baseUrl}/api/blog/search?${searchParams.toString()}`)
     
     if (!response.ok) {
       throw new Error(`Failed to fetch blog posts: ${response.statusText}`)
@@ -64,9 +78,10 @@ export async function getBlogPostsWithMeta(params?: Partial<BlogQueryParams>): P
     
     const postsPerPage = params?.postsPerPage || 9
     searchParams.set('limit', postsPerPage.toString())
-    
-    // Fetch from the API
-    const response = await fetch(`/api/blog/search?${searchParams.toString()}`)
+
+    // Fetch from the API with absolute URL
+    const baseUrl = getBaseUrl()
+    const response = await fetch(`${baseUrl}/api/blog/search?${searchParams.toString()}`)
     
     if (!response.ok) {
       throw new Error(`Failed to fetch blog posts: ${response.statusText}`)
