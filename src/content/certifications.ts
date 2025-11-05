@@ -45,10 +45,11 @@ export const certifications: Certification[] = [
     id: 'network-defense',
     title: 'Network Defense',
     issuer: 'Cisco Networking Academy',
-    issueDate: '2024-01-01',
+    issueDate: '2025-05-09',
     type: 'badge',
     skills: ['Network Security', 'Cybersecurity'],
-    description: 'Advanced network defense techniques and security practices'
+    description: 'Advanced network defense techniques and security practices',
+    filename: 'NetworkDefenseUpdate20250509-28-afxm48.pdf'
   },
   {
     id: 'negotiation-mastery',
