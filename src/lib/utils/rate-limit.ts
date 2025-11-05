@@ -75,7 +75,6 @@ async function redisRateLimit(
 
   const { maxRequests, windowMs } = config;
   const now = Date.now();
-  const resetTime = now + windowMs;
   const windowSeconds = Math.ceil(windowMs / 1000);
 
   try {
