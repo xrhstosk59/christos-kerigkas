@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { blogRepository } from '@/domains/blog/repositories/blog.repository';
 import { handleApiError } from '@/lib/utils/errors/error-handler';
+import { rateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 
 const viewRequestSchema = z.object({
@@ -28,18 +29,21 @@ export async function POST(
 
     const { slug } = validation.data;
 
-    // Get client IP for basic rate limiting (prevent spam)
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    // Rate limit: max 3 views per IP per post per hour (prevent spam/bots)
+    const rateLimitResult = await rateLimit(
+      request,
+      {
+        maxRequests: 3,
+        windowMs: 60 * 60 * 1000, // 1 hour
+        message: 'Too many view requests for this post. Please try again later.',
+      },
+      `blog_view:${slug}` // Custom key per blog post
+    );
 
-    // Check if this IP has viewed this post recently (basic spam prevention)
-    // In a production environment, you might want to use Redis for this
-    const _rateLimitKey = `view_${slug}_${clientIP}`;
-    
-    // For now, we'll just increment the view count
-    // TODO: Implement proper rate limiting with Redis
-    
+    if (!rateLimitResult.success && rateLimitResult.response) {
+      return rateLimitResult.response;
+    }
+
     const updatedPost = await blogRepository.incrementViews(slug);
     
     if (!updatedPost) {

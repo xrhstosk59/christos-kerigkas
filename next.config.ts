@@ -209,14 +209,6 @@ const nextConfig: NextConfig = {
       exclude: ['error']
     } : false,
   },
-  
-  // ✅ RUNTIME CONFIG
-  serverRuntimeConfig: {
-    // Server-only config
-  },
-  publicRuntimeConfig: {
-    // Client-side config
-  },
 }
 
 // ✅ SENTRY CONFIG
