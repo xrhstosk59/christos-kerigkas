@@ -4,7 +4,6 @@ import type { Database } from '@/lib/db/database.types';
 import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
 
-type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 type NewAuditLog = Database['public']['Tables']['audit_logs']['Insert'];
 
 // Type aliases for backward compatibility

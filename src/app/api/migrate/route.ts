@@ -1,7 +1,7 @@
 // src/app/api/migrate/route.ts
 import { NextRequest } from 'next/server';
 import { handleApiError } from '@/lib/utils/errors/error-handler';
-import { env, isDev } from '@/lib/config/env';
+import { isDev } from '@/lib/config/env';
 
 /**
  * Migration API Endpoint

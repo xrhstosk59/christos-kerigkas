@@ -45,7 +45,7 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
   const renderProjectLinks = (project: Pick<Project, 'github' | 'demo'>, currentTheme: 'light' | 'dark') => (
     <>
       <motion.a
-        href={project.github}
+        href={project.github ?? undefined}
         target="_blank"
         rel="noopener noreferrer"
         className={cn("inline-flex items-center gap-1 transition-colors duration-200",

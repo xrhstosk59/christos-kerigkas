@@ -3,9 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkAdminAuth } from '@/lib/auth/admin-auth';
 import { handleApiError } from '@/lib/utils/errors/error-handler';
 import { getDbClient } from '@/lib/db/server-db';
-import type { Database } from '@/lib/db/database.types';
-
-type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 
 /**
  * Get performance metrics and analytics

@@ -22,7 +22,7 @@ export interface BlogResponse {
 export async function getBlogPosts(
   page = 1,
   postsPerPage = 10,
-  category?: string
+  _category?: string
 ): Promise<BlogResponse> {
   console.warn('getBlogPosts is disabled - use blog repository instead');
   return {
@@ -38,13 +38,13 @@ export async function getBlogPosts(
   };
 }
 
-export async function getBlogPostBySlug(slug: string): Promise<any | null> {
+export async function getBlogPostBySlug(_slug: string): Promise<any | null> {
   console.warn('getBlogPostBySlug is disabled - use blog repository instead');
   return null;
 }
 
 export async function searchBlogPosts(
-  searchTerm: string,
+  _searchTerm: string,
   page = 1,
   postsPerPage = 10
 ): Promise<BlogResponse> {
@@ -62,14 +62,14 @@ export async function searchBlogPosts(
   };
 }
 
-export async function createBlogPost(postData: any, categoryIds: number[]): Promise<any> {
+export async function createBlogPost(_postData: any, _categoryIds: number[]): Promise<any> {
   throw new Error('createBlogPost is disabled - use blog repository instead');
 }
 
-export async function updateBlogPost(id: number, postData: any, categoryIds?: number[]): Promise<any> {
+export async function updateBlogPost(_id: number, _postData: any, _categoryIds?: number[]): Promise<any> {
   throw new Error('updateBlogPost is disabled - use blog repository instead');
 }
 
-export async function deleteBlogPost(id: number): Promise<{ success: boolean }> {
+export async function deleteBlogPost(_id: number): Promise<{ success: boolean }> {
   throw new Error('deleteBlogPost is disabled - use blog repository instead');
 }

@@ -3,12 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbClient } from '@/lib/db/server-db';
 import { checkAdminAuth } from '@/lib/auth/admin-auth';
 import { z } from 'zod';
-import type { Database } from '@/lib/db/database.types';
 
 export const dynamic = 'force-dynamic';
-
-type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
-type User = Database['public']['Tables']['users']['Row'];
 
 // Validation schema for query parameters
 const queryParamsSchema = z.object({

@@ -123,12 +123,10 @@ export async function PATCH(request: NextRequest) {
 
     if (action === 'delete') {
       // Delete subscriber completely
-      const { data: deletedSubscriber, error } = await db
+      const { error } = await db
         .from('newsletter_subscribers')
         .delete()
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -227,7 +225,7 @@ export async function POST(request: NextRequest) {
     const db = await getDbClient();
 
     // Check if subscriber already exists
-    const { data: existingSubscriber, error: checkError } = await db
+    const { data: existingSubscriber } = await db
       .from('newsletter_subscribers')
       .select()
       .eq('email', email)

@@ -7,11 +7,8 @@ import {
   emergencyUnlockAccount,
   getLockoutStatistics
 } from '@/lib/auth/lockout';
-import type { Database } from '@/lib/db/database.types';
 
 export const dynamic = 'force-dynamic';
-
-type RateLimit = Database['public']['Tables']['rate_limits']['Row'];
 
 // Get locked accounts and lockout statistics
 export async function GET(request: NextRequest) {
