@@ -5,7 +5,7 @@
 import { projectsRepository } from '../db/repositories/projects-repository';
 import { getCertifications } from '../db/repositories/certifications-repository';
 import { CVData, Experience, Education, Skill } from '@/types/cv';
-import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
+import { Project, ProjectStatus } from '@/types/projects';
 import { Certification } from '@/types/certifications';
 import { studentProjects } from './mock-projects';
 import type { Database } from '../db/database.types';
@@ -209,10 +209,10 @@ function mapProjectsFromDb(projects: DbProject[]): Project[] {
     title: project.title,
     slug: project.slug,
     description: project.description,
-    categories: project.categories.map((cat: unknown) => cat as ProjectCategory),
-    tech: project.technologies,
+    categories: [], // Projects table doesn't have categories field
+    tech: project.tech,
     github: project.github,
-    demo: project.live_demo === null ? undefined : project.live_demo,
+    demo: project.live_url === null ? undefined : project.live_url,
     image: project.image,
     featured: project.featured,
     status: 'Active' as ProjectStatus

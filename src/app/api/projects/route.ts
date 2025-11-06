@@ -92,8 +92,6 @@ export const POST = createApiHandler(
       // Δεν περνάμε πλέον τα createdAt και updatedAt, θα τα διαχειριστεί το Drizzle
       const newProject = await projectsService.createProject({
         ...validData,
-        tags: validData.categories, // Use categories as tags
-        technologies: validData.tech, // Map tech to technologies
       }, {
         id: '1', // Mock ID for demonstration
         email: 'admin@example.com',
