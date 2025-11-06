@@ -47,12 +47,12 @@ export default function Projects({ theme }: ProjectsProps) {
       <h2 className={cn("text-3xl font-bold tracking-tight sm:text-4xl mb-4 text-center",
         theme === 'dark' ? 'text-white' : 'text-gray-900')}
       >
-        Projects & Technologies
+        Projects & Experience
       </h2>
       <p className={cn("text-center mb-16",
         theme === 'dark' ? 'text-gray-400' : 'text-gray-600')}
       >
-        A collection of my work showcasing various technologies and skills
+        A showcase of my academic and personal projects across various technologies
       </p>
 
       {loading && (
