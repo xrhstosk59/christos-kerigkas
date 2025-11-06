@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
-import { Code2, Dumbbell, GraduationCap, Home, Binary } from 'lucide-react'
+import { Code2, GraduationCap, Home, Binary } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 
 const details = [
@@ -26,11 +26,6 @@ const details = [
     icon: Home,
     title: 'Location',
     description: 'Based in Kavala, Greece with roots in Chalkidiki'
-  },
-  {
-    icon: Dumbbell,
-    title: 'Lifestyle',
-    description: 'Daily gym workouts and healthy nutrition enthusiast'
   }
 ]
 
