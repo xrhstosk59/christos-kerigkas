@@ -8,7 +8,6 @@ import Hero from '@/components/layout/hero';
 // ✅ NON-CRITICAL COMPONENTS - Normal imports
 import { About } from '@/components/features/about/about';
 import { Experience } from '@/components/features/experience/experience';
-import { Skills } from '@/components/features/skills/skills';
 import { Certifications } from '@/components/features/certifications/certifications';
 import { Projects } from '@/components/features/projects/projects';
 import { Contact } from '@/components/features/contact/contact';
@@ -68,13 +67,7 @@ export default function Home() {
           <Experience />
         </Suspense>
       </LazySection>
-      
-      <LazySection>
-        <Suspense fallback={<SectionSkeleton />}>
-          <Skills />
-        </Suspense>
-      </LazySection>
-      
+
       <LazySection>
         <Suspense fallback={<SectionSkeleton />}>
           <Certifications />
