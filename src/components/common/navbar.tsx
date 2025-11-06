@@ -9,12 +9,11 @@ import { useRouter, usePathname } from 'next/navigation'
 
 const navigation = [
   { name: 'About', href: '#about', ariaLabel: 'Learn about Christos Kerigkas' },
-  { name: 'Experience', href: '#experience', ariaLabel: 'View professional experience' },
-  { name: 'Skills', href: '#skills', ariaLabel: 'See technical skills' },
   { name: 'Projects', href: '#projects', ariaLabel: 'Explore portfolio projects' },
-  { name: 'CV', href: '/cv', ariaLabel: 'View interactive CV' },  
-  { name: 'Blog', href: '/blog', ariaLabel: 'Read blog articles' },  
-  { name: 'Settings', href: '/settings', ariaLabel: 'Account settings' },  
+  { name: 'Certifications', href: '#certifications', ariaLabel: 'View certifications' },
+  { name: 'CV', href: '/cv', ariaLabel: 'View interactive CV' },
+  { name: 'Blog', href: '/blog', ariaLabel: 'Read blog articles' },
+  { name: 'Settings', href: '/settings', ariaLabel: 'Account settings' },
   { name: 'Contact', href: '#contact', ariaLabel: 'Get in touch' },
 ] as const
 
