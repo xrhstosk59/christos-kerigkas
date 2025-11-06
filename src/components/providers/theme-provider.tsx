@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import type { ThemeProviderProps } from 'next-themes/dist/types';
+import { PROFILE_IMAGE_URL } from '@/lib/utils/storage';
 
 // Separate context for profile image (not related to theme)
 interface ProfileContextType {
@@ -14,7 +15,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 // Profile Provider (separate from theme)
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const [profileImage, setProfileImage] = useState<string>('/uploads/profile.jpg');
+  const [profileImage, setProfileImage] = useState<string>(PROFILE_IMAGE_URL);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

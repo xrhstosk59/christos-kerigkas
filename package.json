@@ -13,13 +13,10 @@
     "path": false
   },
   "scripts": {
-    "predev": "node -e \"require('fs').existsSync('./public/uploads') || require('fs').mkdirSync('./public/uploads', { recursive: true })\"",
     "dev": "next dev --turbo",
-    "prebuild": "node -e \"require('fs').existsSync('./public/uploads') || require('fs').mkdirSync('./public/uploads', { recursive: true })\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup": "node -e \"require('fs').existsSync('./public/uploads') || require('fs').mkdirSync('./public/uploads', { recursive: true })\"",
     "db:seed-certifications": "tsx ./scripts/seed-certifications.ts",
     "db:apply-rls": "tsx ./scripts/apply-rls-policies.ts",
     "db:dump": "tsx ./scripts/db-backup.ts",

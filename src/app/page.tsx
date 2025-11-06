@@ -11,7 +11,6 @@ import { Experience } from '@/components/features/experience/experience';
 import { Skills } from '@/components/features/skills/skills';
 import { Certifications } from '@/components/features/certifications/certifications';
 import { Projects } from '@/components/features/projects/projects';
-import { CryptoProjects } from '@/components/features/crypto/crypto-projects';
 import { Contact } from '@/components/features/contact/contact';
 import { Footer } from '@/components/common/footer';
 
@@ -87,13 +86,7 @@ export default function Home() {
           <Projects />
         </Suspense>
       </LazySection>
-      
-      <LazySection>
-        <Suspense fallback={<SectionSkeleton />}>
-          <CryptoProjects />
-        </Suspense>
-      </LazySection>
-      
+
       <LazySection>
         <Suspense fallback={<SectionSkeleton />}>
           <Contact />

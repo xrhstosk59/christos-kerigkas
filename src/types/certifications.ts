@@ -1,5 +1,5 @@
 //src/types/certifications.ts
-export type CertificationType = 'course' | 'badge' | 'seminar' | 'conference';
+export type CertificationType = 'course' | 'badge' | 'seminar' | 'conference' | 'certification';
 
 export interface Certification {
   id: string;

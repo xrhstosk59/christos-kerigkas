@@ -1,5 +1,6 @@
 // src/lib/utils/seo.ts
 import { Metadata } from 'next';
+import { getProfileImageUrl } from './storage';
 
 // Προσθήκη του siteConfig για συμβατότητα με τα υπόλοιπα αρχεία
 export const siteConfig = {
@@ -7,7 +8,7 @@ export const siteConfig = {
   url: 'https://christoskerigkas.com',
   author: {
     name: 'Christos Kerigkas',
-    image: '/uploads/profile.jpg',
+    image: getProfileImageUrl(),
     jobTitle: 'Full Stack Developer',
     email: 'contact@christoskerigkas.com',
     location: 'Kavala, Greece',

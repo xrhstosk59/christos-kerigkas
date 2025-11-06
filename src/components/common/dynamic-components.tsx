@@ -37,14 +37,6 @@ export const TradingDashboard = dynamic(
   }
 );
 
-export const CryptoProjects = dynamic(
-  () => import('@/components/features/crypto/crypto-projects'),
-  {
-    loading: () => <ProjectCardSkeleton />,
-    ssr: true,
-  }
-);
-
 // CV Components
 export const InteractiveCV = dynamic(
   () => import('@/components/features/cv/interactive-cv'),

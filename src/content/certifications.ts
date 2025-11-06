@@ -3,6 +3,17 @@ import { Certification } from '@/types/certifications';
 
 export const certifications: Certification[] = [
   {
+    id: 'oracle-ai-foundations',
+    title: 'Oracle Cloud Infrastructure 2025 Certified AI Foundations Associate',
+    issuer: 'Oracle',
+    issueDate: '2024-11-05',
+    description: 'Professional certification demonstrating foundational knowledge of Artificial Intelligence and Oracle Cloud Infrastructure AI services',
+    skills: ['Artificial Intelligence', 'Oracle Cloud Infrastructure', 'AI Foundations', 'Cloud Computing'],
+    type: 'certification',
+    filename: 'Oracle_Cloud_Infrastructure_2025_Certified_AI_Foundations_Associate.pdf',
+    featured: true
+  },
+  {
     id: 'univators-cloud',
     title: 'Univators Skilling Future Digital Innovators - Cloud Engineering',
     issuer: 'Univators & Democritus University of Thrace',
@@ -12,6 +23,17 @@ export const certifications: Certification[] = [
     skills: ['Cloud Engineering'],
     type: 'course',
     filename: 'Certificate-of-Completion-24C014989-Univators-Skilling-Future-Digital-Innovators-CHRISTOS-KERIGKAS.pdf',
+    featured: true
+  },
+  {
+    id: 'career-essentials-microsoft',
+    title: 'Career Essentials in Generative AI by Microsoft and LinkedIn',
+    issuer: 'Microsoft & LinkedIn Learning',
+    issueDate: '2024-09-24',
+    description: 'Professional certificate covering essential skills in Generative AI technologies and applications',
+    skills: ['Generative AI', 'Artificial Intelligence', 'Microsoft AI'],
+    type: 'certification',
+    filename: 'Christos-Kerigkas-Career-Essentials-Certificate.pdf',
     featured: true
   },
   {
@@ -62,6 +84,15 @@ export const certifications: Certification[] = [
     filename: 'Network_Support_and_Security_Badge20240113-29-1n54sk.pdf'
   },
   {
+    id: 'network-defense',
+    title: 'Network Defense',
+    issuer: 'Cisco Networking Academy',
+    issueDate: '2025-05-09',
+    type: 'badge',
+    skills: ['Network Security', 'Network Defense', 'Cybersecurity'],
+    filename: 'NetworkDefenseUpdate20250509-28-afxm48.pdf'
+  },
+  {
     id: 'networking-basics',
     title: 'Networking Basics',
     issuer: 'Cisco Networking Academy',
@@ -87,7 +118,7 @@ export const certifications: Certification[] = [
     description: 'Παρακολούθηση του συνεδρίου «Οι ΤΠΕ στην Εκπαίδευση» και «Διδακτική της Πληροφορικής»',
     type: 'conference',
     skills: ['ICT in Education', 'Computer Science Teaching'],
-    filename: 'Βεβαίωση Παρακολούθησης - Κέριγκας  - Χρήστος .pdf'
+    filename: 'ICT-Education-Conference-Certificate.pdf'
   },
   {
     id: 'quality-management',
@@ -97,6 +128,6 @@ export const certifications: Certification[] = [
     description: 'Σεμινάριο για τη Διοίκηση Ποιότητας στο πλαίσιο του έργου «Αναβάθμιση των διαδικασιών ποιότητας και υποστήριξη της Μονάδας Διασφάλισης Ποιότητας του Διεθνούς Πανεπιστημίου της Ελλάδος»',
     type: 'seminar',
     skills: ['Quality Management'],
-    filename: 'ΚΕΡΙΓΚΑΣ ΧΡΗΣΤΟΣ.pdf'
+    filename: 'Quality-Management-Certificate.pdf'
   }
 ];

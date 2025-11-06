@@ -2,6 +2,7 @@
 import { ExternalLink, Download } from 'lucide-react'
 import { Certification } from '@/types/certifications'
 import { cn } from  '@/lib/utils/utils'
+import { getCertificateUrl } from '@/lib/utils/storage'
 
 interface CertificationCardProps {
   certification: Certification
@@ -73,15 +74,15 @@ export default function CertificationCard({
               </a>
             )}
             
-            <a 
-              href={`/uploads/certificates/${certification.filename}`} 
+            <a
+              href={getCertificateUrl(certification.filename)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className={cn(
                 "p-1.5 rounded-full transition-colors",
-                theme === 'dark' 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                theme === 'dark'
+                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               )}
               aria-label="Download certificate"

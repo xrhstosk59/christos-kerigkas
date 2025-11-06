@@ -9,7 +9,7 @@ import { motion } from 'framer-motion'
 import { ArrowDownCircle, Github, Linkedin, Mail, Upload, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 import Link from 'next/link'
-import { isSupabaseUrl } from '@/lib/utils/storage'
+import { isSupabaseUrl, PROFILE_IMAGE_URL } from '@/lib/utils/storage'
 
 interface SocialLink {
   icon: React.ComponentType<{ className?: string }>
@@ -89,7 +89,7 @@ export default function Hero() {
 
       const data = await response.json()
       if (data.success) {
-        if (profileImage !== '/profile.jpg' && isSupabaseUrl(profileImage)) {
+        if (profileImage !== PROFILE_IMAGE_URL && isSupabaseUrl(profileImage)) {
           try {
             const deleteResponse = await fetch('/api/upload', {
               method: 'DELETE',
@@ -118,7 +118,7 @@ export default function Hero() {
   }
 
   const handleDeleteImage = async () => {
-    if (profileImage === '/profile.jpg') return
+    if (profileImage === PROFILE_IMAGE_URL) return
 
     try {
       setIsUploading(true)
@@ -135,7 +135,7 @@ export default function Hero() {
 
       const data = await response.json()
       if (data.success) {
-        setProfileImage('/profile.jpg')
+        setProfileImage(PROFILE_IMAGE_URL)
       } else {
         throw new Error(data.error || 'Unknown error during deletion')
       }
@@ -160,9 +160,9 @@ export default function Hero() {
   const handleImageError = useCallback(() => {
     setImageError(true)
     console.warn('Profile image failed to load, falling back to default')
-    
-    if (profileImage !== '/uploads/profile.jpg') {
-      setProfileImage('/uploads/profile.jpg')
+
+    if (profileImage !== PROFILE_IMAGE_URL) {
+      setProfileImage(PROFILE_IMAGE_URL)
     }
   }, [profileImage, setProfileImage])
 
@@ -266,7 +266,7 @@ export default function Hero() {
               >
                 <Upload className="w-5 h-5 text-white" />
               </button>
-              {profileImage !== '/profile.jpg' && (
+              {profileImage !== PROFILE_IMAGE_URL && (
                 <button
                   onClick={handleDeleteImage}
                   disabled={isUploading}
