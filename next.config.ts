@@ -76,6 +76,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'glxsayutlvqyajerownj.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
     ],
     qualities: [75, 90, 100], // Configure image qualities to fix warnings
   },
