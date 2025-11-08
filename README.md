@@ -9,7 +9,13 @@
 - **Modern Stack**: Next.js 15, React 19, TypeScript και Tailwind CSS
 - **Responsive Design**: Προσαρμόζεται σε όλες τις συσκευές (mobile, tablet, desktop)
 - **Dark/Light Mode**: Πλήρης υποστήριξη σκοτεινού/φωτεινού θέματος
-- **Διαδραστικό CV**: Με δυνατότητα εξαγωγής σε PDF
+- **Διαδραστικό CV**:
+  - Skills με επίπεδα γνώσης και χρόνια εμπειρίας
+  - Experience section με λεπτομέρειες πρακτικής
+  - Education section με σπουδές και επιτεύγματα
+  - Certifications από τη βάση δεδομένων
+  - Projects από τη βάση δεδομένων
+  - Δυνατότητα εξαγωγής σε PDF με πολλαπλά templates
 - **Blog Platform**: Ολοκληρωμένη λειτουργικότητα blog με αναζήτηση και κατηγορίες
 - **Admin Panel**: Ασφαλές διαχειριστικό για ενημέρωση περιεχομένου
 - **2FA Authentication**: Two-factor authentication με encrypted storage
