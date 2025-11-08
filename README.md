@@ -25,6 +25,7 @@
 - **Contact Form**: Με rate limiting και αποθήκευση στη βάση δεδομένων
 - **Newsletter**: Δυνατότητα εγγραφής σε newsletter
 - **Analytics**: Ενσωματωμένη υποστήριξη για Google Analytics
+- **Error Tracking**: Sentry integration για monitoring και performance tracking
 - **Security Features**: Encrypted 2FA, rate limiting, audit logging, hardened CSP
 
 ## 📋 Προαπαιτούμενα
