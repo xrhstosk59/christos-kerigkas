@@ -49,11 +49,11 @@ export async function GET(request: Request) {
       slug: post.slug,
       title: post.title,
       description: post.description,
-      date: post.date.toISOString(),
+      date: post.date,
       image: post.image,
       author: {
-        name: post.authorName,
-        image: post.authorImage
+        name: post.author_name,
+        image: post.author_image
       },
       categories: post.categories,
       content: post.content

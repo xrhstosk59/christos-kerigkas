@@ -338,5 +338,4 @@ export async function logoutAction() {
 }
 
 // Type exports
-export type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 export type { Database }

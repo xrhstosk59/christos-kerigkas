@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Activity, 
-  TrendingUp, 
-  TrendingDown, 
-  Clock, 
+import {
+  Activity,
+  Clock,
   AlertTriangle,
   Server,
   RefreshCw,
@@ -86,9 +84,10 @@ export default function PerformanceMonitor() {
       const interval = setInterval(fetchMetrics, 30000); // Refresh every 30 seconds
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [autoRefresh, period]);
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number): string => {
     if (score >= 80) return 'text-green-600 dark:text-green-400';
     if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
     return 'text-red-600 dark:text-red-400';
@@ -317,7 +316,7 @@ export default function PerformanceMonitor() {
             </div>
             
             <div className="space-y-4">
-              {metrics.timeline.map((day, index) => (
+              {metrics.timeline.map((day) => (
                 <div key={day.date} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">

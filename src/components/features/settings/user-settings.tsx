@@ -52,7 +52,7 @@ export default function UserSettings() {
       
       setSuccess('Profile updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (_err) {
+    } catch {
       setError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);

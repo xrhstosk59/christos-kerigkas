@@ -53,9 +53,9 @@ export async function POST(req: Request) {
     const ipAddress = typeof ip === 'string' ? ip : ip[0]
     await newsletterRepository.subscribe({
       email,
-      subscribedAt: new Date(),
-      ipAddress,
-      isActive: true
+      subscribed_at: new Date().toISOString(),
+      ip_address: ipAddress,
+      is_active: true
     })
 
     // Send confirmation email if SMTP is configured

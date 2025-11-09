@@ -170,7 +170,7 @@ export function SentryBasedErrorBoundary({
     <SentryErrorBoundary
       fallback={fallback || ((props: any) => <ErrorFallback error={props.error} resetError={props.resetError} />)}
       showDialog={showDialog}
-      beforeCapture={(scope, error, errorInfo) => {
+      beforeCapture={(scope, _error, errorInfo) => {
         scope.setTag('errorBoundary', 'sentry');
         if (typeof errorInfo === 'object' && errorInfo !== null) {
           scope.setContext('errorInfo', {

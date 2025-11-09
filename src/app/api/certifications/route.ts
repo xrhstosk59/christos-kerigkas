@@ -1,6 +1,6 @@
 // src/app/api/certifications/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbClient } from '@/lib/db/server-db-client';
+import { getDbClient } from '@/lib/db/server-db';
 
 // ✅ FORCE DYNAMIC RENDERING - Prevents caching issues
 export const dynamic = 'force-dynamic';
@@ -20,102 +20,99 @@ export async function GET(_request: NextRequest) {
 
     // ✅ FALLBACK: Return mock data if database is not available
     try {
-      const db = await getDbClient();
-      
-      // ✅ DYNAMIC IMPORT TO AVOID CIRCULAR DEPENDENCIES
-      const { certifications } = await import('@/lib/db/schema');
-      
-      // ✅ FIXED: Use correct field name 'issueDate' instead of 'date_issued'
-      const result = await db
-        .select()
-        .from(certifications)
-        .orderBy(certifications.issueDate)
-        .catch((error) => {
-          console.error('Database query error:', error);
-          throw new Error('Failed to query certifications');
-        });
-    
+      const supabase = await getDbClient();
+
+      const { data: result, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .order('issue_date', { ascending: false });
+
+      if (error) {
+        console.error('Database query error:', error);
+        throw new Error('Failed to query certifications');
+      }
+
       // ✅ VALIDATE RESULT
       if (!Array.isArray(result)) {
         throw new Error('Invalid data format from database');
       }
-      
+
       console.log(`Successfully fetched ${result.length} certifications`);
-      
+
       return NextResponse.json(result, {
         status: 200,
         headers: corsHeaders,
       });
-      
+
     } catch (dbError) {
       console.warn('Database unavailable, returning mock data:', dbError);
-      
+
       // ✅ MOCK DATA FALLBACK
       const mockCertifications = [
         {
-          id: 'aws-cloud-practitioner',
-          title: 'AWS Certified Cloud Practitioner',
+          id: 1,
+          name: 'AWS Certified Cloud Practitioner',
           issuer: 'Amazon Web Services',
-          issueDate: '2024-01-15',
-          expirationDate: '2027-01-15',
-          credentialId: 'ABC123DEF456',
-          credentialUrl: 'https://aws.amazon.com/verification',
-          description: 'Foundational understanding of AWS Cloud services',
-          skills: ['AWS', 'Cloud Computing', 'Infrastructure'],
+          issue_date: '2024-01-15',
+          expiry_date: '2027-01-15',
+          credential_id: 'ABC123DEF456',
+          credential_url: 'https://aws.amazon.com/verification',
           type: 'cloud',
+          skills: ['AWS', 'Cloud Computing', 'Infrastructure'],
           filename: 'aws-cloud-practitioner.pdf',
-          featured: true
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
         {
-          id: 'google-analytics-certified',
-          title: 'Google Analytics Individual Qualification',
+          id: 2,
+          name: 'Google Analytics Individual Qualification',
           issuer: 'Google',
-          issueDate: '2023-12-10',
-          expirationDate: '2024-12-10',
-          credentialId: 'GA456789',
-          credentialUrl: 'https://skillshop.exceedlms.com/student/award/123',
-          description: 'Advanced Google Analytics implementation and analysis',
-          skills: ['Google Analytics', 'Digital Marketing', 'Data Analysis'],
+          issue_date: '2023-12-10',
+          expiry_date: '2024-12-10',
+          credential_id: 'GA456789',
+          credential_url: 'https://skillshop.exceedlms.com/student/award/123',
           type: 'marketing',
+          skills: ['Google Analytics', 'Digital Marketing', 'Data Analysis'],
           filename: 'google-analytics-cert.pdf',
-          featured: true
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
         {
-          id: 'react-developer-cert',
-          title: 'React Developer Certificate',
+          id: 3,
+          name: 'React Developer Certificate',
           issuer: 'Meta',
-          issueDate: '2023-11-20',
-          expirationDate: null,
-          credentialId: 'REACT789XYZ',
-          credentialUrl: 'https://developers.facebook.com/certification',
-          description: 'Advanced React.js development and best practices',
-          skills: ['React', 'JavaScript', 'Frontend Development'],
+          issue_date: '2023-11-20',
+          expiry_date: null,
+          credential_id: 'REACT789XYZ',
+          credential_url: 'https://developers.facebook.com/certification',
           type: 'development',
+          skills: ['React', 'JavaScript', 'Frontend Development'],
           filename: 'react-developer-cert.pdf',
-          featured: true
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }
       ];
-      
+
       return NextResponse.json(mockCertifications, {
         status: 200,
         headers: corsHeaders,
       });
     }
-    
+
   } catch (error) {
     console.error('Certifications API Error:', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString(),
     });
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch certifications',
         message: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       },
-      { 
+      {
         status: 500,
         headers: {
           'Cache-Control': 'no-store',
@@ -128,56 +125,43 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const db = await getDbClient();
-    const { certifications } = await import('@/lib/db/schema');
-    
+    const supabase = await getDbClient();
+
     // ✅ VALIDATE REQUIRED FIELDS
-    if (!body.id || !body.title || !body.issuer || !body.filename || !body.type) {
+    if (!body.name || !body.issuer || !body.issue_date || !body.type) {
       return NextResponse.json(
-        { error: 'Required fields: id, title, issuer, filename, type' },
+        { error: 'Required fields: name, issuer, issue_date, type' },
         { status: 400 }
       );
     }
-    
-    // ✅ VALIDATE issueDate if provided
-    let issueDate: Date;
-    if (body.issueDate) {
-      issueDate = new Date(body.issueDate);
-      if (isNaN(issueDate.getTime())) {
-        return NextResponse.json(
-          { error: 'Invalid issueDate format' },
-          { status: 400 }
-        );
-      }
-    } else {
-      issueDate = new Date(); // Default to current date
-    }
-    
+
     // ✅ FIXED: Use correct field names matching the schema
-    const result = await db
-      .insert(certifications)
-      .values({
-        id: body.id,
-        title: body.title,
+    const { data, error } = await supabase
+      .from('certifications')
+      .insert({
+        name: body.name,
         issuer: body.issuer,
-        issueDate: issueDate,
-        expirationDate: body.expirationDate ? new Date(body.expirationDate) : null,
-        credentialId: body.credentialId || null,
-        credentialUrl: body.credentialUrl || null,
-        description: body.description || null,
-        skills: body.skills || [],
+        issue_date: body.issue_date,
+        expiry_date: body.expiry_date || null,
+        credential_id: body.credential_id || null,
+        credential_url: body.credential_url || null,
         type: body.type,
-        filename: body.filename,
-        featured: body.featured || false,
+        skills: body.skills || [],
+        filename: body.filename || null,
       })
-      .returning();
-    
-    return NextResponse.json(result[0], { status: 201 });
-    
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json(data, { status: 201 });
+
   } catch (error) {
     console.error('Create certification error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to create certification',
         message: error instanceof Error ? error.message : 'Database error'
       },

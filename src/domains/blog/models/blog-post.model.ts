@@ -1,11 +1,11 @@
 // src/domains/blog/models/blog-post.model.ts
 
 // Εισαγωγή των τύπων από το schema της βάσης δεδομένων
-import type { BlogPost as DbBlogPost, NewBlogPost as DbNewBlogPost } from '@/lib/db/schema/blog';
+import type { Database } from '@/lib/db/database.types';
 
 // Επανεξαγωγή των τύπων με νέα ονόματα
-export type BlogPost = DbBlogPost;
-export type NewBlogPost = DbNewBlogPost;
+export type BlogPost = Database['public']['Tables']['blog_posts']['Row'];
+export type NewBlogPost = Database['public']['Tables']['blog_posts']['Insert'];
 
 /**
  * Παράμετροι αναζήτησης για blog posts.

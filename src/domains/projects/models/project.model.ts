@@ -1,11 +1,10 @@
 // src/domains/projects/models/project.model.ts
 
-import { InferModel } from 'drizzle-orm';
-import { projects } from '@/lib/db/schema/projects';
+import type { Database } from '@/lib/db/database.types';
 
 // Βασικοί τύποι που προέρχονται από το schema της βάσης δεδομένων
-export type Project = InferModel<typeof projects, 'select'>;
-export type NewProject = InferModel<typeof projects, 'insert'>;
+export type Project = Database['public']['Tables']['projects']['Row'];
+export type NewProject = Database['public']['Tables']['projects']['Insert'];
 
 // Τύπος για τα αποτελέσματα των ερωτημάτων
 export interface ProjectsQueryResult {
@@ -26,6 +25,3 @@ export interface ProjectsSearchParams {
   sortBy?: 'order' | 'title' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
 }
-
-// Εξαγωγή
-export * from '@/lib/db/schema/projects';

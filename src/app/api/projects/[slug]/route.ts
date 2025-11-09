@@ -27,7 +27,7 @@ const projectUpdateSchema = z.object({
  * GET - Ανάκτηση συγκεκριμένου project με βάση το slug.
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -121,8 +121,8 @@ export async function PUT(
     // Μετατροπή των ημερομηνιών σε string μόνο αν υπάρχουν
     const formattedProject = {
       ...updatedProject,
-      createdAt: updatedProject.createdAt ? updatedProject.createdAt.toISOString() : undefined,
-      updatedAt: updatedProject.updatedAt ? updatedProject.updatedAt.toISOString() : undefined,
+      created_at: updatedProject.created_at || undefined,
+      updated_at: updatedProject.updated_at || undefined,
     };
     
     return apiResponse.success(
@@ -152,7 +152,7 @@ export async function PUT(
  * DELETE - Διαγραφή συγκεκριμένου project.
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {

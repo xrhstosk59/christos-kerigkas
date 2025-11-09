@@ -37,7 +37,7 @@ const searchParamsSchema = z.object({
  */
 export const GET = createApiHandler(
   searchParamsSchema,
-  async (req, validData) => {
+  async (_req, validData) => {
     try {
       logger.info(`Αναζήτηση projects`, validData, 'api-projects-GET');
 
@@ -76,7 +76,7 @@ export const GET = createApiHandler(
  */
 export const POST = createApiHandler(
   projectSchema,
-  async (req, validData) => {
+  async (_req, validData) => {
     try {
       logger.info(`Δημιουργία νέου project: ${validData.title}`, null, 'api-projects-POST');
       
@@ -90,7 +90,9 @@ export const POST = createApiHandler(
       }
       
       // Δεν περνάμε πλέον τα createdAt και updatedAt, θα τα διαχειριστεί το Drizzle
-      const newProject = await projectsService.createProject(validData, {
+      const newProject = await projectsService.createProject({
+        ...validData,
+      }, {
         id: '1', // Mock ID for demonstration
         email: 'admin@example.com',
         role: Role.ADMIN

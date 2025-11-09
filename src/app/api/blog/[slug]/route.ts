@@ -21,7 +21,7 @@ const postSchema = z.object({
 
 // Στο Next.js 15, οι παράμετροι διαδρομής (params) είναι πλέον Promise
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -49,11 +49,11 @@ export async function GET(
       slug: post.slug,
       title: post.title,
       description: post.description,
-      date: post.date.toISOString(),
+      date: post.date,
       image: post.image,
       author: {
-        name: post.authorName,
-        image: post.authorImage
+        name: post.author_name,
+        image: post.author_image
       },
       categories: post.categories,
       content: post.content
@@ -110,20 +110,15 @@ export async function PUT(
       slug: postData.slug,
       title: postData.title,
       description: postData.description,
-      date: new Date(postData.date),
+      date: postData.date,
       image: postData.image,
-      authorName: postData.author.name,
-      authorImage: postData.author.image,
+      author_name: postData.author.name,
+      author_image: postData.author.image,
       categories: postData.categories,
       content: postData.content,
       // Προσθήκη των υποχρεωτικών πεδίων του μοντέλου
-      published: true,
       featured: false,
-      category: postData.categories[0],
-      excerpt: postData.description.slice(0, 160),
-      metaTitle: postData.title,
-      metaDescription: postData.description.slice(0, 160),
-      updatedAt: new Date()
+      updated_at: new Date().toISOString()
     })
     
     if (!updatedPost) {
@@ -156,7 +151,7 @@ export async function PUT(
 
 // Διαγραφή blog post
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   try {

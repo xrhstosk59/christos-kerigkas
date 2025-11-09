@@ -4,6 +4,8 @@ import BundleAnalyzer from "@next/bundle-analyzer"
 import { withSentryConfig } from "@sentry/nextjs"
 
 // ✅ COMPREHENSIVE SECURITY HEADERS
+const isDev = process.env.NODE_ENV === 'development';
+
 const essentialHeaders = [
   {
     key: 'X-Content-Type-Options',
@@ -23,7 +25,9 @@ const essentialHeaders = [
   },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;"
+    value: isDev
+      ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io ws: wss:;"
+      : "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io; upgrade-insecure-requests;"
   },
   {
     key: 'Strict-Transport-Security',
@@ -71,9 +75,14 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'tnwbnlbmlqoxypsqdqii.supabase.co',
+        hostname: 'glxsayutlvqyajerownj.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
       },
     ],
+    qualities: [75, 90, 100], // Configure image qualities to fix warnings
   },
   
   // ✅ BUILD OPTIMIZATIONS

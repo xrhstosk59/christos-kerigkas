@@ -25,7 +25,7 @@ const details = [
   {
     icon: MapPin,
     title: 'Location',
-    description: 'Based in Halkidiki, Greece'
+    description: 'Based in Kavala, Greece with roots in Chalkidiki'
   }
 ]
 

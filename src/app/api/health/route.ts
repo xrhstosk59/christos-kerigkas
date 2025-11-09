@@ -1,13 +1,12 @@
 // src/app/api/health/route.ts
 import { NextRequest } from 'next/server';
-import { getMigrationStatus, verifyDatabaseSchema } from '@/lib/db/migrator';
-import { getDb } from '@/lib/db/database';
+import { createClient } from '@/lib/supabase/server';
 import { handleApiError } from '@/lib/utils/errors/error-handler';
 import { env, features } from '@/lib/config/env';
 
 /**
  * Health Check API Endpoint
- * Provides system health status including database, migrations, and services
+ * Provides system health status including database and services
  */
 export async function GET(request: NextRequest) {
   try {
@@ -21,8 +20,13 @@ export async function GET(request: NextRequest) {
 
     // Database health check
     try {
-      const db = getDb();
-      await db.execute('SELECT 1');
+      const supabase = await createClient();
+      const { error } = await supabase
+        .from('users')
+        .select('count', { count: 'exact', head: true });
+
+      if (error) throw error;
+
       healthData.database = {
         status: 'connected',
         responseTime: Date.now() - startTime,
@@ -33,46 +37,6 @@ export async function GET(request: NextRequest) {
         error: error instanceof Error ? error.message : 'Unknown database error',
       };
       healthData.status = 'degraded';
-    }
-
-    // Migration status check
-    try {
-      const migrationStatus = await getMigrationStatus();
-      healthData.migrations = {
-        status: migrationStatus.pending === 0 ? 'up-to-date' : 'pending',
-        available: migrationStatus.available,
-        applied: migrationStatus.applied,
-        pending: migrationStatus.pending,
-        lastMigration: migrationStatus.lastMigration,
-      };
-
-      if (migrationStatus.pending > 0) {
-        healthData.status = 'degraded';
-      }
-    } catch (error) {
-      healthData.migrations = {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Migration check failed',
-      };
-      healthData.status = 'degraded';
-    }
-
-    // Schema verification check
-    try {
-      const schemaValid = await verifyDatabaseSchema();
-      healthData.schema = {
-        status: schemaValid ? 'valid' : 'invalid',
-      };
-
-      if (!schemaValid) {
-        healthData.status = 'error';
-      }
-    } catch (error) {
-      healthData.schema = {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Schema verification failed',
-      };
-      healthData.status = 'error';
     }
 
     // Feature flags status
@@ -101,10 +65,10 @@ export async function GET(request: NextRequest) {
     healthData.responseTime = Date.now() - startTime;
 
     // Set appropriate HTTP status
-    const httpStatus = healthData.status === 'ok' ? 200 : 
+    const httpStatus = healthData.status === 'ok' ? 200 :
                       healthData.status === 'degraded' ? 200 : 503;
 
-    return Response.json(healthData, { 
+    return Response.json(healthData, {
       status: httpStatus,
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -153,7 +117,7 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    return Response.json(healthData, { 
+    return Response.json(healthData, {
       status: basicHealth.status,
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',

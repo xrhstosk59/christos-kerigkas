@@ -113,3 +113,30 @@ export function isSupabaseUrl(url: string): boolean {
   if (typeof url !== 'string') return false
   return url.includes('supabase') || url.includes(BUCKET_NAME)
 }
+
+// Supabase Storage URL helpers
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://glxsayutlvqyajerownj.supabase.co';
+
+// Σταθερές για τα URLs (μπορούν να χρησιμοποιηθούν και σε client components)
+export const PROFILE_IMAGE_URL = `${SUPABASE_URL}/storage/v1/object/public/profile-images/profile.jpg`;
+
+/**
+ * Επιστρέφει το πλήρες Supabase Storage URL για ένα αρχείο πιστοποιητικού
+ */
+export function getCertificateUrl(filename: string): string {
+  return `${SUPABASE_URL}/storage/v1/object/public/certificates/${filename}`;
+}
+
+/**
+ * Επιστρέφει το πλήρες Supabase Storage URL για την εικόνα profile
+ */
+export function getProfileImageUrl(): string {
+  return `${SUPABASE_URL}/storage/v1/object/public/profile-images/profile.jpg`;
+}
+
+/**
+ * Generic helper για Supabase Storage URLs
+ */
+export function getStorageUrl(bucket: string, path: string): string {
+  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+}

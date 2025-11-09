@@ -15,15 +15,24 @@
 - **Modern Stack**: Next.js 15, React 19, TypeScript και Tailwind CSS
 - **Responsive Design**: Προσαρμόζεται σε όλες τις συσκευές (mobile, tablet, desktop)
 - **Dark/Light Mode**: Πλήρης υποστήριξη σκοτεινού/φωτεινού θέματος
-- **Διαδραστικό CV**: Με δυνατότητα εξαγωγής σε PDF
+- **Διαδραστικό CV**:
+  - Skills με επίπεδα γνώσης και χρόνια εμπειρίας
+  - Experience section με λεπτομέρειες πρακτικής
+  - Education section με σπουδές και επιτεύγματα
+  - Certifications από τη βάση δεδομένων
+  - Projects από τη βάση δεδομένων
+  - Δυνατότητα εξαγωγής σε PDF με πολλαπλά templates
 - **Blog Platform**: Ολοκληρωμένη λειτουργικότητα blog με αναζήτηση και κατηγορίες
 - **Admin Panel**: Ασφαλές διαχειριστικό για ενημέρωση περιεχομένου
+- **2FA Authentication**: Two-factor authentication με encrypted storage
 - **Animated UI**: Εντυπωσιακά animations με Framer Motion
 - **SEO Optimized**: Βελτιστοποιημένο για μηχανές αναζήτησης
 - **Fast Performance**: Server-side rendering και βελτιστοποιημένα assets
 - **Contact Form**: Με rate limiting και αποθήκευση στη βάση δεδομένων
 - **Newsletter**: Δυνατότητα εγγραφής σε newsletter
 - **Analytics**: Ενσωματωμένη υποστήριξη για Google Analytics
+- **Error Tracking**: Sentry integration για monitoring και performance tracking
+- **Security Features**: Encrypted 2FA, rate limiting, audit logging, hardened CSP
 
 ## 📋 Προαπαιτούμενα
 
@@ -51,7 +60,11 @@ yarn install
 
 3. **Ρύθμιση μεταβλητών περιβάλλοντος**
 
-Δημιουργήστε ένα αρχείο `.env.local` στον ριζικό κατάλογο και προσθέστε τις απαραίτητες μεταβλητές περιβάλλοντος:
+Δημιουργήστε ένα αρχείο `.env.local` στον ριζικό κατάλογο και προσθέστε τις απαραίτητες μεταβλητές περιβάλλοντος.
+
+> 📖 **Για πλήρεις οδηγίες setup δες το [SETUP.md](./SETUP.md)**
+
+Ελάχιστες απαιτούμενες μεταβλητές:
 
 ```env
 # Database

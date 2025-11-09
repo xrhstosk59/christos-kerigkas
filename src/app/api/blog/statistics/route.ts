@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
           slug: post.slug,
           title: post.title,
           views: post.views,
-          readingTime: post.readingTime,
+          readingTime: post.reading_time,
           date: post.date
         }))
       });

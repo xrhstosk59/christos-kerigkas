@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { ExternalLink, Download } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 import { Certification } from '@/types/certifications'
+import { getCertificateUrl } from '@/lib/utils/storage'
 
 interface CertificationDialogProps {
   certification: Certification | null
@@ -77,7 +78,7 @@ export default function CertificationDialog({
         
         <div className="aspect-[4/3] w-full mb-6">
           <iframe
-            src={`/uploads/certificates/${certification.filename}`}
+            src={getCertificateUrl(certification.filename)}
             className="w-full h-full rounded border"
             title={certification.title}
           ></iframe>
@@ -191,7 +192,7 @@ export default function CertificationDialog({
           )}
           
           <a
-            href={`/uploads/certificates/${certification.filename}`}
+            href={getCertificateUrl(certification.filename)}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(

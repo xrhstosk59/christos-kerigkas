@@ -35,17 +35,17 @@ export default function ProjectCard({
       </div>
       
       <div className="lg:w-1/2 space-y-4">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-3 mb-1">
           <h3 className={cn("text-2xl font-bold",
             theme === 'dark' ? 'text-white' : 'text-gray-900')}>
             {project.title}
           </h3>
-          
+
           <span className={cn(
             "text-xs font-medium px-2.5 py-1 rounded",
-            "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+            "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
           )}>
-            {project.status || 'In Development'}
+            In Progress
           </span>
         </div>
         

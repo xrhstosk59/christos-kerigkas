@@ -1,12 +1,20 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Github, Linkedin, Mail } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
 export function Footer() {
   const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Use neutral class until mounted to prevent hydration mismatch
   return (
-    <footer className={theme === 'dark' ? 'bg-gray-950' : 'bg-gray-900'}>
+    <footer className={mounted && theme === 'dark' ? 'bg-gray-950' : 'bg-gray-900'}>
       <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
         <div className="flex justify-center space-x-6 md:order-2">
           <a href="https://github.com/yourusername" className="text-gray-400 hover:text-gray-300 transition-colors duration-200">

@@ -194,9 +194,9 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
                       className="flex items-center gap-1"
                       asChild
                     >
-                      <a 
-                        href={filteredProjects[currentProject].github} 
-                        target="_blank" 
+                      <a
+                        href={filteredProjects[currentProject].github ?? undefined}
+                        target="_blank"
                         rel="noopener noreferrer"
                       >
                         <Github className="w-4 h-4" />
@@ -353,9 +353,9 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
                     className="flex items-center gap-1"
                     asChild
                   >
-                    <a 
-                      href={project.github} 
-                      target="_blank" 
+                    <a
+                      href={project.github ?? undefined}
+                      target="_blank"
                       rel="noopener noreferrer"
                     >
                       <Github className="w-3.5 h-3.5" />
