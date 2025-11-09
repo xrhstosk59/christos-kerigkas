@@ -12,7 +12,14 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(code --list-extensions)"
+      "Bash(code --list-extensions)",
+      "Bash(git fetch:*)",
+      "Bash(git for-each-ref:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(test:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
