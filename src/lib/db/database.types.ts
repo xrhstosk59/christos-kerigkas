@@ -7,188 +7,130 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
-      projects: {
+      __drizzle_migrations: {
         Row: {
           created_at: string | null
-          description: string
-          featured: boolean | null
-          github: string | null
+          hash: string
           id: number
-          image: string
-          live_url: string | null
-          order: number | null
-          slug: string
-          status: string | null
-          tech: string[]
-          title: string
-          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          description: string
-          featured?: boolean | null
-          github?: string | null
+          hash: string
           id?: number
-          image: string
-          live_url?: string | null
-          order?: number | null
-          slug: string
-          status?: string | null
-          tech: string[]
-          title: string
-          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          description?: string
-          featured?: boolean | null
-          github?: string | null
+          hash?: string
           id?: number
-          image?: string
-          live_url?: string | null
-          order?: number | null
-          slug?: string
-          status?: string | null
-          tech?: string[]
-          title?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
-      certifications: {
+      __migration_history: {
         Row: {
-          created_at: string | null
-          credential_id: string | null
-          credential_url: string | null
-          description: string | null
-          expiry_date: string | null
-          featured: boolean | null
-          filename: string | null
+          applied_at: string | null
+          checksum: string
+          error_message: string | null
+          execution_time_ms: number | null
           id: string
-          issue_date: string
-          issuer: string
-          skills: string[] | null
-          title: string
-          type: string
-          updated_at: string | null
+          migration_name: string
+          success: boolean | null
         }
         Insert: {
-          created_at?: string | null
-          credential_id?: string | null
-          credential_url?: string | null
-          description?: string | null
-          expiry_date?: string | null
-          featured?: boolean | null
-          filename?: string | null
-          id: string
-          issue_date: string
-          issuer: string
-          skills?: string[] | null
-          title: string
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          credential_id?: string | null
-          credential_url?: string | null
-          description?: string | null
-          expiry_date?: string | null
-          featured?: boolean | null
-          filename?: string | null
+          applied_at?: string | null
+          checksum: string
+          error_message?: string | null
+          execution_time_ms?: number | null
           id?: string
-          issue_date?: string
-          issuer?: string
-          skills?: string[] | null
-          title?: string
-          type?: string
-          updated_at?: string | null
+          migration_name: string
+          success?: boolean | null
+        }
+        Update: {
+          applied_at?: string | null
+          checksum?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          migration_name?: string
+          success?: boolean | null
         }
         Relationships: []
       }
-      contact_messages: {
+      audit_logs: {
         Row: {
-          created_at: string | null
-          email: string
+          action: string
+          created_at: string
+          details: Json | null
           id: number
           ip_address: string | null
-          message: string
-          name: string
-          read: boolean | null
-          replied: boolean | null
-          responded_at: string | null
-          responded_by_id: string | null
-          status: string | null
-          subject: string | null
+          resource_id: string | null
+          resource_type: string | null
+          severity: string
+          source: string
+          status: string
           user_agent: string | null
+          user_id: string | null
         }
         Insert: {
-          created_at?: string | null
-          email: string
+          action: string
+          created_at?: string
+          details?: Json | null
           id?: number
           ip_address?: string | null
-          message: string
-          name: string
-          read?: boolean | null
-          replied?: boolean | null
-          responded_at?: string | null
-          responded_by_id?: string | null
-          status?: string | null
-          subject?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity: string
+          source: string
+          status: string
           user_agent?: string | null
+          user_id?: string | null
         }
         Update: {
-          created_at?: string | null
-          email?: string
+          action?: string
+          created_at?: string
+          details?: Json | null
           id?: number
           ip_address?: string | null
-          message?: string
-          name?: string
-          read?: boolean | null
-          replied?: boolean | null
-          responded_at?: string | null
-          responded_by_id?: string | null
-          status?: string | null
-          subject?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity?: string
+          source?: string
+          status?: string
           user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
-      newsletter_subscribers: {
+      blog_categories: {
         Row: {
-          email: string
+          created_at: string
+          description: string | null
           id: number
-          ip_address: string | null
-          is_active: boolean | null
-          subscribed_at: string | null
-          unsubscribed_at: string | null
-          verification_token: string | null
-          verified: boolean | null
+          name: string
+          slug: string
+          updated_at: string
         }
         Insert: {
-          email: string
+          created_at?: string
+          description?: string | null
           id?: number
-          ip_address?: string | null
-          is_active?: boolean | null
-          subscribed_at?: string | null
-          unsubscribed_at?: string | null
-          verification_token?: string | null
-          verified?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string
         }
         Update: {
-          email?: string
+          created_at?: string
+          description?: string | null
           id?: number
-          ip_address?: string | null
-          is_active?: boolean | null
-          subscribed_at?: string | null
-          unsubscribed_at?: string | null
-          verification_token?: string | null
-          verified?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -249,87 +191,132 @@ export type Database = {
         }
         Relationships: []
       }
-      rate_limits: {
+      blog_posts_to_categories: {
         Row: {
-          action_type: string
-          attempt_count: number
-          created_at: string
-          first_attempt_at: string
-          id: number
-          identifier: string
-          is_locked: boolean
-          last_attempt_at: string
-          locked_until: string | null
-          updated_at: string
+          category_id: number
+          post_id: number
         }
         Insert: {
-          action_type: string
-          attempt_count?: number
-          created_at?: string
-          first_attempt_at?: string
-          id?: number
-          identifier: string
-          is_locked?: boolean
-          last_attempt_at?: string
-          locked_until?: string | null
-          updated_at?: string
+          category_id: number
+          post_id: number
         }
         Update: {
-          action_type?: string
-          attempt_count?: number
-          created_at?: string
-          first_attempt_at?: string
-          id?: number
-          identifier?: string
-          is_locked?: boolean
-          last_attempt_at?: string
-          locked_until?: string | null
-          updated_at?: string
+          category_id?: number
+          post_id?: number
         }
         Relationships: []
       }
-      audit_logs: {
+      certifications: {
         Row: {
-          action: string
-          created_at: string
-          details: Json | null
-          id: number
-          ip_address: string | null
-          resource_id: string | null
-          resource_type: string | null
-          severity: string
-          source: string
-          status: string
-          user_agent: string | null
-          user_id: string | null
+          created_at: string | null
+          credential_id: string | null
+          credential_url: string | null
+          description: string | null
+          expiry_date: string | null
+          featured: boolean | null
+          filename: string | null
+          id: string
+          issue_date: string
+          issuer: string
+          skills: string[] | null
+          title: string
+          type: string
+          updated_at: string | null
         }
         Insert: {
-          action: string
-          created_at?: string
-          details?: Json | null
-          id?: number
-          ip_address?: string | null
-          resource_id?: string | null
-          resource_type?: string | null
-          severity: string
-          source: string
-          status: string
-          user_agent?: string | null
-          user_id?: string | null
+          created_at?: string | null
+          credential_id?: string | null
+          credential_url?: string | null
+          description?: string | null
+          expiry_date?: string | null
+          featured?: boolean | null
+          filename?: string | null
+          id: string
+          issue_date: string
+          issuer: string
+          skills?: string[] | null
+          title: string
+          type: string
+          updated_at?: string | null
         }
         Update: {
-          action?: string
-          created_at?: string
-          details?: Json | null
+          created_at?: string | null
+          credential_id?: string | null
+          credential_url?: string | null
+          description?: string | null
+          expiry_date?: string | null
+          featured?: boolean | null
+          filename?: string | null
+          id?: string
+          issue_date?: string
+          issuer?: string
+          skills?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      certifications_to_skills: {
+        Row: {
+          certification_id: string
+          skill_id: number
+        }
+        Insert: {
+          certification_id: string
+          skill_id: number
+        }
+        Update: {
+          certification_id?: string
+          skill_id?: number
+        }
+        Relationships: []
+      }
+      contact_messages: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: number
+          ip_address: string | null
+          message: string
+          name: string
+          read: boolean | null
+          replied: boolean | null
+          responded_at: string | null
+          responded_by_id: string | null
+          status: string | null
+          subject: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
           id?: number
           ip_address?: string | null
-          resource_id?: string | null
-          resource_type?: string | null
-          severity?: string
-          source?: string
-          status?: string
+          message: string
+          name: string
+          read?: boolean | null
+          replied?: boolean | null
+          responded_at?: string | null
+          responded_by_id?: string | null
+          status?: string | null
+          subject?: string | null
           user_agent?: string | null
-          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: number
+          ip_address?: string | null
+          message?: string
+          name?: string
+          read?: boolean | null
+          replied?: boolean | null
+          responded_at?: string | null
+          responded_by_id?: string | null
+          status?: string | null
+          subject?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -375,35 +362,260 @@ export type Database = {
         }
         Relationships: []
       }
-      users: {
+      newsletter_subscribers: {
         Row: {
-          id: string
-          email: string | null
-          role: string | null
-          two_factor_enabled: boolean | null
-          two_factor_secret: string | null
-          two_factor_backup_codes: string | null
+          email: string
+          id: number
+          ip_address: string | null
+          is_active: boolean | null
+          subscribed_at: string | null
+          unsubscribed_at: string | null
+          verification_token: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          email: string
+          id?: number
+          ip_address?: string | null
+          is_active?: boolean | null
+          subscribed_at?: string | null
+          unsubscribed_at?: string | null
+          verification_token?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          email?: string
+          id?: number
+          ip_address?: string | null
+          is_active?: boolean | null
+          subscribed_at?: string | null
+          unsubscribed_at?: string | null
+          verification_token?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      project_categories: {
+        Row: {
           created_at: string | null
+          description: string | null
+          id: number
+          name: string
+          slug: string
           updated_at: string | null
         }
         Insert: {
-          id: string
-          email?: string | null
-          role?: string | null
-          two_factor_enabled?: boolean | null
-          two_factor_secret?: string | null
-          two_factor_backup_codes?: string | null
           created_at?: string | null
+          description?: string | null
+          id?: number
+          name: string
+          slug: string
           updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string
+          featured: boolean | null
+          github: string | null
+          id: number
+          image: string
+          live_url: string | null
+          order: number | null
+          slug: string
+          status: string | null
+          tech: string[]
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          featured?: boolean | null
+          github?: string | null
+          id?: number
+          image: string
+          live_url?: string | null
+          order?: number | null
+          slug: string
+          status?: string | null
+          tech: string[]
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          featured?: boolean | null
+          github?: string | null
+          id?: number
+          image?: string
+          live_url?: string | null
+          order?: number | null
+          slug?: string
+          status?: string | null
+          tech?: string[]
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects_to_categories: {
+        Row: {
+          category_id: number
+          project_id: number
+        }
+        Insert: {
+          category_id: number
+          project_id: number
+        }
+        Update: {
+          category_id?: number
+          project_id?: number
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          action_type: string
+          attempt_count: number
+          created_at: string
+          first_attempt_at: string
+          id: number
+          identifier: string
+          is_locked: boolean
+          last_attempt_at: string
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          attempt_count?: number
+          created_at?: string
+          first_attempt_at?: string
+          id?: number
+          identifier: string
+          is_locked?: boolean
+          last_attempt_at?: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          attempt_count?: number
+          created_at?: string
+          first_attempt_at?: string
+          id?: number
+          identifier?: string
+          is_locked?: boolean
+          last_attempt_at?: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: number
+          name: string
+          proficiency_level: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: number
+          name: string
+          proficiency_level?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: number
+          name?: string
+          proficiency_level?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          id: number
+          location: string | null
+          updated_at: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: number
+          location?: string | null
+          updated_at?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: number
+          location?: string | null
+          updated_at?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          role: string | null
+          two_factor_backup_codes: string | null
+          two_factor_enabled: boolean | null
+          two_factor_secret: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
           id?: string
-          email?: string | null
           role?: string | null
+          two_factor_backup_codes?: string | null
           two_factor_enabled?: boolean | null
           two_factor_secret?: string | null
-          two_factor_backup_codes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
           created_at?: string | null
+          email?: string
+          id?: string
+          role?: string | null
+          two_factor_backup_codes?: string | null
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -506,3 +718,43 @@ export type TablesUpdate<
       ? U
       : never
     : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
