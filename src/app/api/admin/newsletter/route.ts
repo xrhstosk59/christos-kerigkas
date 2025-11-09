@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       recentSubscriptions: allSubscribers?.filter(s => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        return new Date(s.subscribed_at) > sevenDaysAgo;
+        return s.subscribed_at && new Date(s.subscribed_at) > sevenDaysAgo;
       }).length || 0,
     };
 

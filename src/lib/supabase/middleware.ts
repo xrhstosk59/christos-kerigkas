@@ -175,7 +175,7 @@ export async function checkRateLimit(
 
   // Έλεγχος για rate limit attempts στη βάση
   const { data: attempts, error } = await supabase
-    .from('rate_limit_attempts')
+    .from('rate_limits')
     .select('id')
     .eq('identifier', identifier)
     .gte('created_at', windowStart.toISOString())
@@ -193,8 +193,8 @@ export async function checkRateLimit(
     // Καταγραφή του attempt με try/catch αντί για .catch()
     try {
       await supabase
-        .from('rate_limit_attempts')
-        .insert({ identifier })
+        .from('rate_limits')
+        .insert({ identifier, action_type: 'request' })
     } catch (err) {
       console.error('Rate limit insert error:', err)
     }

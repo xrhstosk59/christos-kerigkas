@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     try {
       const supabase = await createClient();
       const { error } = await supabase
-        .from('users')
+        .from('projects')
         .select('count', { count: 'exact', head: true });
 
       if (error) throw error;

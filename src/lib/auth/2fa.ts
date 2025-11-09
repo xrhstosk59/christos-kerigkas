@@ -95,7 +95,7 @@ export async function verify2FASetup(
   const secret = Secret.fromBase32(decryptedSecret);
   const totp = new TOTP({
     issuer: process.env.NEXT_PUBLIC_APP_NAME || 'Christos Kerigkas Portfolio',
-    label: user.email,
+    label: user.email || `user_${userId}`,
     algorithm: 'SHA1',
     digits: 6,
     period: 30,
@@ -148,7 +148,7 @@ export async function verify2FAToken(
   const secret = Secret.fromBase32(decryptedSecret);
   const totp = new TOTP({
     issuer: process.env.NEXT_PUBLIC_APP_NAME || 'Christos Kerigkas Portfolio',
-    label: user.email,
+    label: user.email || `user_${userId}`,
     algorithm: 'SHA1',
     digits: 6,
     period: 30,

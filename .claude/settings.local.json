@@ -19,7 +19,14 @@
       "Bash(git merge:*)",
       "Bash(git checkout:*)",
       "Bash(test:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npm run deps:check:*)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__generate_typescript_types",
+      "Bash(node -e:*)",
+      "Bash(python:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

@@ -128,9 +128,9 @@ export async function POST(request: NextRequest) {
     const supabase = await getDbClient();
 
     // ✅ VALIDATE REQUIRED FIELDS
-    if (!body.name || !body.issuer || !body.issue_date || !body.type) {
+    if (!body.title || !body.issuer || !body.issue_date || !body.type) {
       return NextResponse.json(
-        { error: 'Required fields: name, issuer, issue_date, type' },
+        { error: 'Required fields: title, issuer, issue_date, type' },
         { status: 400 }
       );
     }
@@ -139,12 +139,14 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('certifications')
       .insert({
-        name: body.name,
+        id: body.id,
+        title: body.title,
         issuer: body.issuer,
         issue_date: body.issue_date,
         expiry_date: body.expiry_date || null,
         credential_id: body.credential_id || null,
         credential_url: body.credential_url || null,
+        description: body.description || null,
         type: body.type,
         skills: body.skills || [],
         filename: body.filename || null,
