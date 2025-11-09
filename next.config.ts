@@ -82,7 +82,6 @@ const nextConfig: NextConfig = {
         hostname: 'placehold.co',
       },
     ],
-    qualities: [75, 90, 100], // Configure image qualities to fix warnings
   },
   
   // ✅ BUILD OPTIMIZATIONS
