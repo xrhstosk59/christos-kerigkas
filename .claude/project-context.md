@@ -10,6 +10,12 @@
 - **NEVER** create custom scripts for database operations
 - **ALWAYS** use the MCP Server for Supabase operations
 - Use Supabase MCP tools for all database queries and migrations
+- **PERIODIC HEALTH CHECKS**: Regularly verify database health using MCP server:
+  - Run `mcp__supabase__get_advisors` for security and performance checks
+  - Check for RLS disabled warnings (critical security issues)
+  - Monitor unused indexes and performance warnings
+  - Verify type definitions match actual database schema with `mcp__supabase__generate_typescript_types`
+  - Recommended: Check after major changes or weekly during active development
 
 ### Build Verification
 - **ALWAYS** run `npm run build` after making changes to the project

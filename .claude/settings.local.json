@@ -31,7 +31,20 @@
       "mcp__supabase__list_tables",
       "mcp__supabase__list_migrations",
       "mcp__supabase__get_advisors",
-      "mcp__supabase__apply_migration"
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__execute_sql",
+      "Bash(cat:*)",
+      "Bash(for dir in bluewave-properties grade-calc smart-trader-bot sniper4crypto SQLatch travel-planner wait-less)",
+      "Bash(do:*)",
+      "Bash(if [ -f \"$dir/README.md\" ])",
+      "Bash(then head -20 \"$dir/README.md\")",
+      "Bash(elif [ -f \"$dir/package.json\" ])",
+      "Bash(then cat \"$dir/package.json\")",
+      "Bash(else echo \"No info\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(if [ -f \"$dir/package.json\" ])",
+      "Bash(else echo \"=== $dir (NOT FOUND) ===\")"
     ],
     "deny": [],
     "ask": []
