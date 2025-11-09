@@ -44,7 +44,12 @@
       "Bash(fi)",
       "Bash(done)",
       "Bash(if [ -f \"$dir/package.json\" ])",
-      "Bash(else echo \"=== $dir (NOT FOUND) ===\")"
+      "Bash(else echo \"=== $dir (NOT FOUND) ===\")",
+      "Bash(tree:*)",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_publishable_keys",
+      "Bash(set SUPABASE_ACCESS_TOKEN=%SUPABASE_SERVICE_ROLE_KEY%)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
