@@ -46,7 +46,7 @@
 1. **Κλωνοποίηση του repository**
 
 ```bash
-git clone https://github.com/yourusername/christos-kerigkas.git
+git clone https://github.com/xrhstosk59/christos-kerigkas.git
 cd christos-kerigkas
 ```
 
@@ -295,4 +295,4 @@ Contributions are welcome! Αν θέλετε να συνεισφέρετε:
 
 ## 📞 Επικοινωνία
 
-Για οποιεσδήποτε ερωτήσεις ή προτάσεις, επικοινωνήστε μαζί μου στο [your-email@example.com].
+Για οποιεσδήποτε ερωτήσεις ή προτάσεις, επικοινωνήστε μαζί μου στο [xrhstosk59@gmail.com].

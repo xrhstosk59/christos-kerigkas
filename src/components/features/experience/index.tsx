@@ -21,7 +21,7 @@ const projects = [
         ],
         tech: ['Next.js', 'React', 'Supabase', 'Drizzle', 'Tailwind CSS', 'PostgreSQL'],
         status: 'In Development',
-        link: 'https://github.com/yourusername/real-estate'
+        link: 'https://github.com/xrhstosk59/real-estate'
     },
     {
         name: 'Sniper4Crypto',
@@ -40,7 +40,7 @@ const projects = [
         ],
         tech: ['Python', 'Scikit-learn', 'Telegram Bot API', 'MongoDB', 'PostgreSQL'],
         status: 'In Development',
-        link: 'https://github.com/yourusername/sniper4crypto'
+        link: 'https://github.com/xrhstosk59/sniper4crypto'
     },
     {
         name: 'Trading Bot',
@@ -59,7 +59,7 @@ const projects = [
         ],
         tech: ['Python', 'Exchange APIs', 'Telegram Bot API', 'Technical Analysis', 'Data Science'],
         status: 'In Development',
-        link: 'https://github.com/yourusername/trading-bot'
+        link: 'https://github.com/xrhstosk59/trading-bot'
     }
 ]
 

@@ -6,5 +6,5 @@ interface ImageLoaderProps {
    }
    
    export default function imageLoader({ src, width, quality = 75 }: ImageLoaderProps): string {
-    return `https://res.cloudinary.com/your-cloud/image/fetch/q_${quality},w_${width}/${src}`
+    return `https://res.cloudinary.com/your-cloudinary-name/image/fetch/q_${quality},w_${width}/${src}`
    }

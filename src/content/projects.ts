@@ -11,7 +11,7 @@ export const generalProjects: Project[] = [
     description: 'A modern web application for real estate listings built with Next.js, featuring dynamic property search, user authentication, and responsive design.',
     categories: ['web-development', 'real-estate'],
     tech: ['Next.js', 'React', 'TypeScript', 'Supabase', 'Tailwind CSS', 'PostgreSQL'],
-    github: 'https://github.com/yourusername/real-estate',
+    github: 'https://github.com/xrhstosk59/real-estate',
     demo: 'https://real-estate-demo.com',
     image: '/real-estate-preview.jpg',
     featured: true,
@@ -23,7 +23,7 @@ export const generalProjects: Project[] = [
     description: 'An educational tool that helps students calculate their grades and track academic progress. Features custom grading schemes and multiple subject tracking.',
     categories: ['web-development', 'education'],
     tech: ['React', 'JavaScript', 'CSS', 'LocalStorage'],
-    github: 'https://github.com/yourusername/grade-calc',
+    github: 'https://github.com/xrhstosk59/grade-calc',
     demo: 'https://grade-calc-demo.com',
     image: '/grade-calc-preview.jpg',
     featured: true,
@@ -35,7 +35,7 @@ export const generalProjects: Project[] = [
     description: 'A comprehensive travel planning application that helps users organize trips, find destinations, and create detailed itineraries.',
     categories: ['web-development', 'mobile'],
     tech: ['React Native', 'Redux', 'Node.js', 'MongoDB', 'Google Maps API'],
-    github: 'https://github.com/yourusername/travel-planer',
+    github: 'https://github.com/xrhstosk59/travel-planer',
     demo: 'https://travel-planer-demo.com',
     image: '/travel-planer-preview.jpg',
     featured: true,
@@ -47,7 +47,7 @@ export const generalProjects: Project[] = [
     description: 'A SQL query builder and database management tool designed to simplify complex queries and database operations for developers and data analysts.',
     categories: ['web-development', 'data-analysis'],
     tech: ['TypeScript', 'Express.js', 'PostgreSQL', 'React', 'Redux'],
-    github: 'https://github.com/yourusername/sqlatch-main',
+    github: 'https://github.com/xrhstosk59/sqlatch-main',
     demo: 'https://sqlatch-demo.com',
     image: '/sqlatch-preview.jpg',
     featured: true,
@@ -59,7 +59,7 @@ export const generalProjects: Project[] = [
     description: 'A comprehensive management system for zoos, featuring animal tracking, feeding schedules, health records, and visitor management.',
     categories: ['web-development', 'animals'],
     tech: ['Laravel', 'PHP', 'MySQL', 'Bootstrap', 'jQuery'],
-    github: 'https://github.com/yourusername/zwologikos-khpos',
+    github: 'https://github.com/xrhstosk59/zwologikos-khpos',
     demo: 'https://zwologikos-khpos-demo.com',
     image: '/zoo-preview.jpg',
     featured: true,
@@ -71,7 +71,7 @@ export const generalProjects: Project[] = [
     description: 'My personal portfolio website built with Next.js, showcasing my projects, skills, and professional experience in a clean, modern design.',
     categories: ['web-development', 'portfolio'],
     tech: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Supabase'],
-    github: 'https://github.com/yourusername/christos-kerigkas',
+    github: 'https://github.com/xrhstosk59/christos-kerigkas',
     demo: 'https://christos-kerigkas.com',
     image: '/portfolio-preview.jpg',
     featured: false,
@@ -93,7 +93,7 @@ export const cryptoProjects: CryptoProject[] = [
       'Telegram notifications with detailed metrics'
     ],
     tech: ['Python', 'TensorFlow', 'MongoDB', 'Telegram API', 'Web3.py', 'Data Mining'],
-    github: 'https://github.com/yourusername/sniper4crypto',
+    github: 'https://github.com/xrhstosk59/sniper4crypto',
     status: 'In Development'
   },
   {
@@ -109,7 +109,7 @@ export const cryptoProjects: CryptoProject[] = [
       'Performance analytics dashboard'
     ],
     tech: ['Python', 'CCXT', 'PostgreSQL', 'RESTful APIs', 'Technical Analysis', 'Statistics'],
-    github: 'https://github.com/yourusername/trading-bot',
+    github: 'https://github.com/xrhstosk59/trading-bot',
     status: 'In Development'
   },
   {
@@ -125,7 +125,7 @@ export const cryptoProjects: CryptoProject[] = [
       'CSV/JSON export for further analysis'
     ],
     tech: ['Python', 'Pandas', 'NumPy', 'Matplotlib', 'Scikit-learn', 'Jupyter'],
-    github: 'https://github.com/yourusername/market-analyzer',
+    github: 'https://github.com/xrhstosk59/market-analyzer',
     status: 'In Development'
   },
   {
@@ -141,7 +141,7 @@ export const cryptoProjects: CryptoProject[] = [
       'Mobile-responsive web dashboard'
     ],
     tech: ['Next.js', 'TypeScript', 'Supabase', 'Chart.js', 'CCXT', 'TailwindCSS'],
-    github: 'https://github.com/yourusername/crypto-portfolio',
+    github: 'https://github.com/xrhstosk59/crypto-portfolio',
     status: 'In Development'
   },
   {
@@ -157,7 +157,7 @@ export const cryptoProjects: CryptoProject[] = [
       'Model persistence and versioning'
     ],
     tech: ['Python', 'TensorFlow', 'Keras', 'Scikit-learn', 'PyTorch', 'Pandas'],
-    github: 'https://github.com/yourusername/ai-trading-predictor',
+    github: 'https://github.com/xrhstosk59/ai-trading-predictor',
     status: 'In Development'
   }
 ];
