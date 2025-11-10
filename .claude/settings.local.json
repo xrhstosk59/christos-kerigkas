@@ -49,7 +49,9 @@
       "mcp__supabase__get_project_url",
       "mcp__supabase__get_publishable_keys",
       "Bash(set SUPABASE_ACCESS_TOKEN=%SUPABASE_SERVICE_ROLE_KEY%)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(nul)",
+      "Bash(if exist .next rmdir /s /q .next)"
     ],
     "deny": [],
     "ask": []

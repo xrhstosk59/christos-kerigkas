@@ -31,6 +31,7 @@
     "class-variance-authority": "^0.7.1",
     "client-only": "^0.0.1",
     "clsx": "^2.1.1",
+    "critters": "^0.0.23",
     "dompurify": "^3.2.6",
     "jsdom": "^26.1.0",
     "jspdf": "^3.0.3",

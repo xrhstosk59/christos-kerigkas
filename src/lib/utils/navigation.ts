@@ -15,7 +15,7 @@ export function smoothScroll(e: React.MouseEvent<HTMLAnchorElement>, id: string)
   export function prefetchRoutes() {
     if (typeof window !== 'undefined') {
       // Prefetch main pages
-      const links = ['/', '/blog', '/projects']
+      const links = ['/', '/projects']
       links.forEach(href => {
         const link = document.createElement('link')
         link.rel = 'prefetch'

@@ -12,8 +12,6 @@ const navigation = [
   { name: 'Projects', href: '#projects', ariaLabel: 'Explore portfolio projects' },
   { name: 'Certifications', href: '#certifications', ariaLabel: 'View certifications' },
   { name: 'CV', href: '/cv', ariaLabel: 'View interactive CV' },
-  { name: 'Blog', href: '/blog', ariaLabel: 'Read blog articles' },
-  { name: 'Settings', href: '/settings', ariaLabel: 'Account settings' },
   { name: 'Contact', href: '#contact', ariaLabel: 'Get in touch' },
 ] as const
 

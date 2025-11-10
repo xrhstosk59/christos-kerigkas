@@ -209,16 +209,14 @@ export class AuditLogger {
    * Logs a content management event
    */
   async logContentAction(
-    action: 'BLOG_POST_CREATE' | 'BLOG_POST_UPDATE' | 'BLOG_POST_DELETE' | 'PROJECT_CREATE' | 'PROJECT_UPDATE' | 'PROJECT_DELETE',
+    action: 'PROJECT_CREATE' | 'PROJECT_UPDATE' | 'PROJECT_DELETE',
     resourceId: string,
     details?: Record<string, any>
   ): Promise<void> {
-    const resourceType = action.startsWith('BLOG_POST') ? 'BLOG_POST' : 'PROJECT';
-    
     await createAuditLog({
       ...this.context,
       action,
-      resourceType,
+      resourceType: 'PROJECT',
       resourceId,
       details,
       severity: action.includes('DELETE') ? 'WARN' : 'INFO',

@@ -80,13 +80,13 @@ export async function POST(req: Request) {
           text: `
             Thank you for subscribing to the newsletter!
             
-            You'll receive updates about new blog posts and other announcements.
+            You'll receive updates and announcements.
             
             If you didn't subscribe, please ignore this email.
           `,
           html: `
             <h3>Thank you for subscribing!</h3>
-            <p>You'll receive updates about new blog posts and other announcements.</p>
+            <p>You'll receive updates and announcements.</p>
             <p>If you didn't subscribe, please ignore this email.</p>
           `,
         })

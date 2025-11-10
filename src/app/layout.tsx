@@ -109,7 +109,7 @@ export default function RootLayout({
               // Preload critical pages when idle
               if ('requestIdleCallback' in window) {
                 requestIdleCallback(() => {
-                  const preloadPages = ['/cv', '/blog'];
+                  const preloadPages = ['/cv'];
                   preloadPages.forEach(page => {
                     const link = document.createElement('link');
                     link.rel = 'prefetch';

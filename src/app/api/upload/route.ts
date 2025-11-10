@@ -26,7 +26,7 @@ const ALLOWED_FILE_TYPES = {
 };
 
 // Τύποι υποφακέλων για οργάνωση των uploads
-const ALLOWED_UPLOAD_TYPES = ['profile', 'certificate', 'blog', 'project'] as const;
+const ALLOWED_UPLOAD_TYPES = ['profile', 'certificate', 'project'] as const;
 
 // Τύπος για τους επιτρεπόμενους φακέλους upload
 type UploadType = typeof ALLOWED_UPLOAD_TYPES[number];

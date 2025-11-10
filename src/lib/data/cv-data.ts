@@ -57,7 +57,26 @@ export async function getCVData(): Promise<CVData> {
 
     return {
       personalInfo: getPersonalInfo(),
-      experience: [], // TODO: Add experience table to database
+      experience: [
+        {
+          id: '1',
+          company: 'ΔΗΜΟΣ ΝΕΑΣ ΠΡΟΠΟΝΤΙΔΑΣ ΝΟΜΟΥ ΧΑΛΚΙΔΙΚΗΣ',
+          position: 'ΤΕΧΝΙΚΗ ΥΠΟΣΤΗΡΙΞΗ ΣΤΟ ΤΜΗΜΑ ΤΕΧΝΟΛΟΓΙΩΝ ΠΛΗΡΟΦΟΡΙΚΗΣ ΚΑΙ ΕΠΙΚΟΙΝΩΝΙΩΝ (ΤΠΕ)',
+          startDate: '2025-05-01',
+          endDate: '2025-07-31',
+          description: 'Part-time technical support position in the IT and Communications Department.',
+          location: 'Χαλκιδική',
+          responsibilities: [
+            'Λειτουργία του δικτύου των κεντρικών και περιφερειακών συστημάτων και όλων των ασύρματων δικτύων.',
+            'Συντήρηση και την αποκατάσταση βλαβών του εξοπλισμού ΤΠΕ του Δήμου.',
+            'Ασφάλεια των δεδομένων και την βελτίωση της χρηστικότητας των ιστοσελίδων και των βάσεων δεδομένων του Δήμου.',
+            'Συντήρηση και κατασκευή δικτυακών τόπων και ιστοσελίδων.',
+            'Υποστήριξη Active Directory.'
+          ],
+          technologies: ['Active Directory', 'Networking', 'Web Development', 'Database Management'],
+          achievements: []
+        }
+      ],
       education: [], // TODO: Add education table to database
       skills: [], // TODO: Add skills table to database
       certifications: certificationsFromDb,

@@ -15,20 +15,6 @@ function Skeleton({ className, ...props }: SkeletonProps) {
 }
 
 // Specialized skeleton components
-export function BlogCardSkeleton() {
-  return (
-    <div className="space-y-3">
-      <Skeleton className="h-48 w-full rounded-lg" />
-      <div className="space-y-2 p-4">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-2/3" />
-      </div>
-    </div>
-  );
-}
-
 export function ProjectCardSkeleton() {
   return (
     <div className="space-y-3">

@@ -41,12 +41,20 @@ export default function ProjectCard({
             {project.title}
           </h3>
 
-          <span className={cn(
-            "text-xs font-medium px-2.5 py-1 rounded",
-            "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
-          )}>
-            In Progress
-          </span>
+          {project.status && (
+            <span className={cn(
+              "text-xs font-medium px-2.5 py-1 rounded",
+              project.status === 'Completed'
+                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                : project.status === 'In Progress'
+                ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
+                : project.status === 'In Development'
+                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300"
+            )}>
+              {project.status}
+            </span>
+          )}
         </div>
         
         <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>

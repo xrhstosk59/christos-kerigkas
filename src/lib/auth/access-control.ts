@@ -4,11 +4,6 @@
  * Δικαιώματα που μπορούν να ανατεθούν σε ρόλους.
  */
 export enum Permission {
-    // Δικαιώματα ιστολογίου
-    READ_BLOG = 'read:blog',
-    WRITE_BLOG = 'write:blog',
-    DELETE_BLOG = 'delete:blog',
-    
     // Δικαιώματα προφίλ
     READ_PROFILE = 'read:profile',
     UPDATE_PROFILE = 'update:profile',
@@ -55,9 +50,6 @@ export enum Permission {
   const rolePermissions: Record<Role, Permission[]> = {
     [Role.ADMIN]: [
       // Ο διαχειριστής έχει όλα τα δικαιώματα
-      Permission.READ_BLOG,
-      Permission.WRITE_BLOG,
-      Permission.DELETE_BLOG,
       Permission.READ_PROFILE,
       Permission.UPDATE_PROFILE,
       Permission.READ_USERS,
@@ -79,8 +71,6 @@ export enum Permission {
     
     [Role.EDITOR]: [
       // Ο συντάκτης μπορεί να διαχειριστεί περιεχόμενο
-      Permission.READ_BLOG,
-      Permission.WRITE_BLOG,
       Permission.READ_PROFILE,
       Permission.UPDATE_PROFILE,
       Permission.READ_PROJECTS,
@@ -92,7 +82,6 @@ export enum Permission {
     
     [Role.USER]: [
       // Ο απλός χρήστης έχει βασική πρόσβαση ανάγνωσης
-      Permission.READ_BLOG,
       Permission.READ_PROFILE,
       Permission.UPDATE_PROFILE,
       Permission.READ_PROJECTS,
@@ -101,7 +90,6 @@ export enum Permission {
     
     [Role.GUEST]: [
       // Ο επισκέπτης έχει μόνο δικαιώματα ανάγνωσης δημόσιου περιεχομένου
-      Permission.READ_BLOG,
       Permission.READ_PROJECTS,
       Permission.READ_CERTIFICATIONS,
     ],

@@ -17,9 +17,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // ✅ Skip public paths (no processing needed)
-  if (pathname === '/' || 
-      pathname.startsWith('/blog') || 
-      pathname.startsWith('/cv') || 
+  if (pathname === '/' ||
+      pathname.startsWith('/cv') ||
       pathname.startsWith('/trading-dashboard') ||
       pathname === '/admin/login') {
     return NextResponse.next()

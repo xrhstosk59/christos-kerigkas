@@ -11,7 +11,7 @@ export type ProjectCategory =
   | 'animals'
   | 'portfolio';
 
-export type ProjectStatus = 'In Development' | 'Active' | 'Completed' | 'Maintenance';
+export type ProjectStatus = 'In Development' | 'In Progress' | 'Completed' | 'Maintenance';
 
 export interface TechStack {
   name: string;

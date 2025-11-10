@@ -33,7 +33,7 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
   const [filters, setFilters] = useState({
     skills: [] as string[],
     categories: [] as string[],
-    years: { min: 0, max: 10 }
+    years: { min: 2000, max: new Date().getFullYear() + 1 }
   })
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     includePersonalInfo: true,

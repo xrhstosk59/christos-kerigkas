@@ -2,31 +2,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { 
-  BlogCardSkeleton, 
-  ProjectCardSkeleton, 
-  DashboardSkeleton, 
-  EditorSkeleton,
+import {
+  ProjectCardSkeleton,
+  DashboardSkeleton,
   CVSkeleton,
-  CertificationCardSkeleton 
+  CertificationCardSkeleton
 } from '@/components/ui/skeleton';
-
-// Blog Components με lazy loading
-export const BlogEditor = dynamic(
-  () => import('@/components/features/admin/blog-post-form'),
-  {
-    loading: () => <EditorSkeleton />,
-    ssr: false, // Client-only component
-  }
-);
-
-export const BlogPostView = dynamic(
-  () => import('@/components/client/blog/blog-post-view'),
-  {
-    loading: () => <BlogCardSkeleton />,
-    ssr: true, // Important for SEO
-  }
-);
 
 // Trading Dashboard Components
 export const TradingDashboard = dynamic(
@@ -126,15 +107,6 @@ export const PerformanceMonitor = dynamic(
 //     ssr: false,
 //   }
 // );
-
-// Search Components
-export const BlogSearch = dynamic(
-  () => import('@/components/features/blog/blog-search.client'),
-  {
-    loading: () => <div className="h-10 bg-gray-200 rounded animate-pulse" />,
-    ssr: false, // Search is interactive
-  }
-);
 
 // ProjectSearch and AnalyticsDashboard removed - not implemented yet
 // export const ProjectSearch = dynamic(

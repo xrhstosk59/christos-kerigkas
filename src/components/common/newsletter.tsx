@@ -73,7 +73,7 @@ export function Newsletter() {
         "mb-4 text-sm",
         theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
       )}>
-        Subscribe to the newsletter to get the latest blog posts and updates about web development, cryptocurrency trading, and more!
+        Subscribe to the newsletter to get updates about web development, cryptocurrency trading, and more!
       </p>
       
       {status === 'success' ? (
