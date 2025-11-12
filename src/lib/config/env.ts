@@ -22,13 +22,6 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'Supabase service role key is required'),
   
-  // Authentication
-  AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 characters'),
-  
-  // Security
-  ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters').optional(),
-  CSRF_SECRET: z.string().min(32, 'CSRF_SECRET must be at least 32 characters').optional(),
-  
   // Email (Optional)
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
@@ -60,8 +53,6 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   
   // Feature Flags
-  ENABLE_2FA: z.string().transform(val => val === 'true').default('true'),
-  ENABLE_AUDIT_LOGGING: z.string().transform(val => val === 'true').default('true'),
   ENABLE_RATE_LIMITING: z.string().transform(val => val === 'true').default('true'),
   ENABLE_OFFLINE_SUPPORT: z.string().transform(val => val === 'true').default('true'),
   
@@ -115,8 +106,6 @@ export const isTest = env.NODE_ENV === 'test';
  * Feature flags
  */
 export const features = {
-  enable2FA: env.ENABLE_2FA,
-  enableAuditLogging: env.ENABLE_AUDIT_LOGGING,
   enableRateLimiting: env.ENABLE_RATE_LIMITING,
   enableOfflineSupport: env.ENABLE_OFFLINE_SUPPORT,
   enablePerformanceMonitoring: env.ENABLE_PERFORMANCE_MONITORING,
@@ -148,14 +137,6 @@ export const supabaseConfig = {
   serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
 } as const;
 
-/**
- * Security configuration
- */
-export const securityConfig = {
-  authSecret: env.AUTH_SECRET,
-  encryptionKey: env.ENCRYPTION_KEY,
-  csrfSecret: env.CSRF_SECRET,
-} as const;
 
 /**
  * Rate limiting configuration
@@ -222,17 +203,16 @@ export function validateCriticalEnv(): void {
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
-    'AUTH_SECRET',
   ];
-  
+
   const missing = criticalVars.filter(varName => !process.env[varName]);
-  
+
   if (missing.length > 0) {
     console.error('❌ Critical environment variables missing:');
     console.error(missing.map(varName => `  - ${varName}`).join('\n'));
     throw new Error(`Missing critical environment variables: ${missing.join(', ')}`);
   }
-  
+
   console.log('✅ All critical environment variables are present');
 }
 
@@ -251,8 +231,6 @@ export function logEnvConfig(): void {
   console.log(`  - Sentry: ${sentryConfig.dsn ? '✅ configured' : '⚠️  not configured'}`);
   console.log(`  - Analytics: ${analyticsConfig.googleAnalytics ? '✅ configured' : '⚠️  not configured'}`);
   console.log('🚀 Feature Flags:');
-  console.log(`  - 2FA: ${features.enable2FA ? '✅' : '❌'}`);
-  console.log(`  - Audit Logging: ${features.enableAuditLogging ? '✅' : '❌'}`);
   console.log(`  - Rate Limiting: ${features.enableRateLimiting ? '✅' : '❌'}`);
   console.log(`  - Offline Support: ${features.enableOfflineSupport ? '✅' : '❌'}`);
   console.log(`  - Performance Monitoring: ${features.enablePerformanceMonitoring ? '✅' : '❌'}`);

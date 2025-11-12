@@ -2,30 +2,12 @@
 
 import { z } from 'zod';
 import { apiResponse } from '@/lib/utils/api-response';
-import { supabaseServer } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
-import { Role } from '@/lib/auth/access-control';
 import { createApiHandler } from '@/lib/utils/api-middleware';
 import { BlogPost } from '@/domains/blog/models/blog-post.model';
 
 // Αλλαγή του import path για να δείχνει στο νέο domains folder
 import { blogService } from '@/domains/blog/services';
-
-// Post validation schema για δημιουργία/ενημέρωση
-const postSchema = z.object({
-  slug: z.string().min(1, 'Το slug είναι υποχρεωτικό')
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Το slug πρέπει να περιέχει μόνο πεζά γράμματα, αριθμούς και παύλες'),
-  title: z.string().min(1, 'Ο τίτλος είναι υποχρεωτικός').max(100, 'Ο τίτλος είναι πολύ μεγάλος'),
-  description: z.string().min(1, 'Η περιγραφή είναι υποχρεωτική').max(300, 'Η περιγραφή είναι πολύ μεγάλη'),
-  date: z.string().datetime({ message: 'Μη έγκυρη μορφή ημερομηνίας' }),
-  image: z.string().url({ message: 'Η εικόνα πρέπει να είναι έγκυρο URL' }),
-  author: z.object({
-    name: z.string().min(1, 'Το όνομα του συντάκτη είναι υποχρεωτικό'),
-    image: z.string().url({ message: 'Η εικόνα του συντάκτη πρέπει να είναι έγκυρο URL' }),
-  }),
-  categories: z.array(z.string()).min(1, 'Επιλέξτε τουλάχιστον μία κατηγορία'),
-  content: z.string().min(1, 'Το περιεχόμενο είναι υποχρεωτικό'),
-});
 
 // Search schema για επικύρωση παραμέτρων αναζήτησης
 const searchParamsSchema = z.object({
@@ -92,103 +74,4 @@ export const GET = createApiHandler(
   }
 );
 
-/**
- * POST - Δημιουργία νέου blog post.
- */
-export const POST = createApiHandler(
-  postSchema,
-  async (_req, validData, _context) => {
-    try {
-      // Λήψη του τρέχοντος χρήστη με το νέο API
-      const { user, role } = await supabaseServer.auth.getUserWithRole();
-      
-      if (!user) {
-        return apiResponse.unauthorized();
-      }
-      
-      // Έλεγχος αν ο χρήστης είναι admin ή editor
-      if (role !== 'admin' && role !== 'editor') {
-        return apiResponse.forbidden('Δεν έχετε τα απαραίτητα δικαιώματα για τη δημιουργία blog post');
-      }
-      
-      logger.info(`Δημιουργία νέου blog post: ${validData.title}`, null, 'api-blog-POST');
-      
-      // Μετατροπή από το schema του frontend στο schema του service/database
-      // Ασφαλέστερη μετατροπή του ρόλου του χρήστη στον τύπο Role του enum
-      let userRole: Role;
-      
-      switch (role) {
-        case 'admin':
-          userRole = Role.ADMIN;
-          break;
-        case 'editor':
-          userRole = Role.EDITOR;
-          break;
-        default:
-          userRole = Role.USER;
-      }
-      
-      // Calculate reading time (average reading speed: 200 words per minute)
-      const wordCount = validData.content.split(/\s+/).length;
-      const readingTime = Math.max(1, Math.ceil(wordCount / 200));
-
-      // Προσθήκη των απαραίτητων πεδίων για συμβατότητα με το NewBlogPost
-      const newPost = await blogService.createPost({
-        slug: validData.slug,
-        title: validData.title,
-        description: validData.description,
-        date: validData.date,
-        image: validData.image,
-        author_name: validData.author.name,
-        author_image: validData.author.image,
-        categories: validData.categories,
-        content: validData.content,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        // Προσθήκη των πεδίων που έλειπαν και προκαλούσαν το TypeScript σφάλμα
-        views: 0,
-        reading_time: readingTime,
-        featured: false
-      }, {
-        id: user.id,
-        email: user.email || '',
-        role: userRole
-      });
-
-      // Έλεγχος ότι τα created_at και updated_at δεν είναι undefined
-      const created_at = newPost.created_at || new Date().toISOString();
-      const updated_at = newPost.updated_at || new Date().toISOString();
-
-      return apiResponse.success(
-        {
-          message: 'Το blog post δημιουργήθηκε επιτυχώς',
-          post: {
-            ...newPost,
-            date: newPost.date,
-            created_at,
-            updated_at,
-          }
-        },
-        undefined,
-        201
-      );
-    } catch (error) {
-      logger.error('Σφάλμα κατά τη δημιουργία blog post:', error, 'api-blog-POST');
-      
-      if (error instanceof Error) {
-        if (error.message === 'Unauthorized') {
-          return apiResponse.unauthorized();
-        } else if (error.message === 'Δεν έχετε τα απαραίτητα δικαιώματα για τη δημιουργία blog post') {
-          return apiResponse.forbidden(error.message);
-        }
-      }
-      
-      return apiResponse.internalError('Παρουσιάστηκε σφάλμα κατά τη δημιουργία του blog post', error);
-    }
-  },
-  {
-    name: 'POST /api/blog',
-    source: 'body',
-    requireAuth: true
-  }
-);
+// POST endpoint removed - blog posts are managed directly in database or via CMS

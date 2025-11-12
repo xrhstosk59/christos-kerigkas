@@ -3,12 +3,10 @@ import { blogRepository } from '../repositories/blog.repository';
 import { cache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
 import { blogCacheKeys } from '../utils/blog-cache-keys';
-import { Permission, UserWithRole, checkPermission } from '@/lib/auth/access-control';
-import type { 
-  BlogPost, 
-  NewBlogPost, 
-  BlogSearchParams, 
-  PaginatedBlogResult 
+import type {
+  BlogPost,
+  BlogSearchParams,
+  PaginatedBlogResult
 } from '../models/blog-post.model';
 
 /**
@@ -129,162 +127,8 @@ export const blogService = {
     }
   },
   
-  /**
-   * Δημιουργία νέου blog post.
-   * 
-   * @param post Τα δεδομένα του νέου post
-   * @param user Ο χρήστης που επιχειρεί τη δημιουργία
-   * @returns Promise με το νέο blog post
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα
-   */
-  async createPost(post: NewBlogPost, user: UserWithRole): Promise<BlogPost> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.WRITE_BLOG)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για τη δημιουργία blog post');
-    }
-    
-    try {
-      // Δημιουργία του post
-      const newPost = await blogRepository.create(post);
+  // createPost, updatePost, and deletePost methods removed - blog posts managed directly in database or CMS
 
-      if (!newPost) {
-        throw new Error('Αποτυχία δημιουργίας blog post');
-      }
-
-      // Στοχευμένη εκκαθάριση του cache για τις λίστες posts
-      // Αντί να διαγράφουμε όλα τα κλειδιά, διαγράφουμε μόνο αυτά που επηρεάζονται
-
-      // 1. Διαγραφή της πρώτης σελίδας της λίστας όλων των posts, η οποία επηρεάζεται πάντα
-      await cache.delete(blogCacheKeys.posts.all(1, 10)); // Συνηθισμένο μέγεθος σελίδας
-
-      // 2. Διαγραφή των caches για τις κατηγορίες που περιέχονται στο νέο post
-      for (const category of post.categories) {
-        await cache.delete(blogCacheKeys.posts.byCategory(category, 1, 10));
-      }
-
-      logger.info(`Δημιουργία νέου blog post με slug: ${newPost.slug}`, null, 'blog-service');
-
-      return newPost;
-    } catch (error) {
-      logger.error('Σφάλμα κατά τη δημιουργία blog post:', error, 'blog-service');
-      throw new Error('Παρουσιάστηκε σφάλμα κατά τη δημιουργία του blog post');
-    }
-  },
-  
-  /**
-   * Ενημέρωση ενός υπάρχοντος blog post.
-   * 
-   * @param slug Το slug του blog post προς ενημέρωση
-   * @param postData Τα νέα δεδομένα του post
-   * @param user Ο χρήστης που επιχειρεί την ενημέρωση
-   * @returns Promise με το ενημερωμένο blog post
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα ή αν το post δεν βρεθεί
-   */
-  async updatePost(slug: string, postData: Partial<NewBlogPost>, user: UserWithRole): Promise<BlogPost | null> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.WRITE_BLOG)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για την ενημέρωση blog post');
-    }
-    
-    try {
-      // Έλεγχος αν το post υπάρχει
-      const existingPost = await blogRepository.findBySlug(slug);
-      if (!existingPost) {
-        throw new Error('Το blog post δεν βρέθηκε');
-      }
-      
-      // Ενημέρωση του post
-      const updatedPost = await blogRepository.update(slug, {
-        ...postData,
-        updated_at: new Date().toISOString()
-      });
-      
-      if (!updatedPost) {
-        throw new Error('Το blog post δεν βρέθηκε κατά την ενημέρωση');
-      }
-      
-      // Στοχευμένη εκκαθάριση του cache
-      
-      // 1. Διαγραφή του cache για το συγκεκριμένο post
-      await cache.delete(blogCacheKeys.posts.bySlug(slug));
-      
-      // 2. Αν άλλαξε το slug, διαγραφή και του cache για το νέο slug
-      if (postData.slug && postData.slug !== slug) {
-        await cache.delete(blogCacheKeys.posts.bySlug(postData.slug));
-      }
-      
-      // 3. Διαγραφή του cache για τις κατηγορίες του παλιού και του νέου post
-      const oldCategories = existingPost.categories || [];
-      const newCategories = postData.categories || oldCategories;
-      
-      const uniqueCategories = [...new Set([...oldCategories, ...newCategories])];
-      for (const category of uniqueCategories) {
-        await cache.delete(blogCacheKeys.posts.byCategory(category, 1, 10));
-      }
-      
-      // 4. Διαγραφή του cache για τη λίστα όλων των posts (μόνο την πρώτη σελίδα)
-      await cache.delete(blogCacheKeys.posts.all(1, 10));
-      
-      // 5. Διαγραφή του cache για τα σχετικά posts
-      await cache.delete(blogCacheKeys.posts.related(slug, 3));
-      if (postData.slug && postData.slug !== slug) {
-        await cache.delete(blogCacheKeys.posts.related(postData.slug, 3));
-      }
-      
-      logger.info(`Ενημέρωση blog post με slug: ${slug} -> ${updatedPost.slug}`, null, 'blog-service');
-      
-      return updatedPost;
-    } catch (error) {
-      logger.error(`Σφάλμα κατά την ενημέρωση blog post με slug ${slug}:`, error, 'blog-service');
-      throw error;
-    }
-  },
-  
-  /**
-   * Διαγραφή ενός blog post.
-   * 
-   * @param slug Το slug του blog post προς διαγραφή
-   * @param user Ο χρήστης που επιχειρεί τη διαγραφή
-   * @returns Promise που ολοκληρώνεται μετά τη διαγραφή
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα
-   */
-  async deletePost(slug: string, user: UserWithRole): Promise<void> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.DELETE_BLOG)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για τη διαγραφή blog post');
-    }
-    
-    try {
-      // Λήψη του post για να ξέρουμε τις κατηγορίες του
-      const post = await blogRepository.findBySlug(slug);
-      const categories = post?.categories || [];
-      
-      // Διαγραφή του post
-      await blogRepository.delete(slug);
-      
-      // Στοχευμένη εκκαθάριση του cache
-      
-      // 1. Διαγραφή του cache για το συγκεκριμένο post
-      await cache.delete(blogCacheKeys.posts.bySlug(slug));
-      
-      // 2. Διαγραφή του cache για τις κατηγορίες του post
-      for (const category of categories) {
-        await cache.delete(blogCacheKeys.posts.byCategory(category, 1, 10));
-      }
-      
-      // 3. Διαγραφή του cache για τη λίστα όλων των posts (μόνο την πρώτη σελίδα)
-      await cache.delete(blogCacheKeys.posts.all(1, 10));
-      
-      // 4. Διαγραφή του cache για τα σχετικά posts
-      await cache.delete(blogCacheKeys.posts.related(slug, 3));
-      
-      logger.info(`Διαγραφή blog post με slug: ${slug}`, null, 'blog-service');
-    } catch (error) {
-      logger.error(`Σφάλμα κατά τη διαγραφή blog post με slug ${slug}:`, error, 'blog-service');
-      throw new Error('Παρουσιάστηκε σφάλμα κατά τη διαγραφή του blog post');
-    }
-  },
-  
   /**
    * Εύρεση σχετικών blog posts.
    * 

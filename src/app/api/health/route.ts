@@ -41,8 +41,6 @@ export async function GET(request: NextRequest) {
 
     // Feature flags status
     healthData.features = {
-      twoFactorAuth: features.enable2FA,
-      auditLogging: features.enableAuditLogging,
       rateLimiting: features.enableRateLimiting,
       offlineSupport: features.enableOfflineSupport,
       performanceMonitoring: features.enablePerformanceMonitoring,
@@ -113,7 +111,6 @@ export async function POST(request: NextRequest) {
       environment: {
         databaseUrl: env.DATABASE_URL ? '✅ configured' : '❌ missing',
         supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL ? '✅ configured' : '❌ missing',
-        authSecret: env.AUTH_SECRET ? '✅ configured' : '❌ missing',
       },
     };
 

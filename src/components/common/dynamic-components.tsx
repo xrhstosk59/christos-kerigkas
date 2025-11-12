@@ -2,23 +2,16 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { 
-  BlogCardSkeleton, 
-  ProjectCardSkeleton, 
-  DashboardSkeleton, 
-  EditorSkeleton,
+import {
+  BlogCardSkeleton,
+  ProjectCardSkeleton,
+  DashboardSkeleton,
   CVSkeleton,
-  CertificationCardSkeleton 
+  CertificationCardSkeleton
 } from '@/components/ui/skeleton';
 
 // Blog Components με lazy loading
-export const BlogEditor = dynamic(
-  () => import('@/components/features/admin/blog-post-form'),
-  {
-    loading: () => <EditorSkeleton />,
-    ssr: false, // Client-only component
-  }
-);
+// BlogEditor removed - blog posts managed directly in database or CMS
 
 export const BlogPostView = dynamic(
   () => import('@/components/client/blog/blog-post-view'),
@@ -62,14 +55,7 @@ export const CVSkillsChart = dynamic(
   }
 );
 
-// Admin Components
-export const AdminNavbar = dynamic(
-  () => import('@/components/features/admin/navbar'),
-  {
-    loading: () => <div>Loading admin navigation...</div>,
-    ssr: false,
-  }
-);
+// Admin Components removed - no admin panel needed for portfolio
 
 // UserManagement component removed - not implemented yet
 // export const UserManagement = dynamic(
