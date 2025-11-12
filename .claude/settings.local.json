@@ -51,7 +51,10 @@
       "Bash(set SUPABASE_ACCESS_TOKEN=%SUPABASE_SERVICE_ROLE_KEY%)",
       "Bash(curl:*)",
       "Bash(nul)",
-      "Bash(if exist .next rmdir /s /q .next)"
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(if exist .next rmdir /s /q .next 2)",
+      "Bash(rm:*)",
+      "Bash(export:*)"
     ],
     "deny": [],
     "ask": []
