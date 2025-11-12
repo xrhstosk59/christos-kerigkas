@@ -125,15 +125,6 @@ export const PerformanceMonitor = dynamic(
 //   }
 // );
 
-// Newsletter Components
-export const NewsletterSignup = dynamic(
-  () => import('@/components/common/newsletter'),
-  {
-    loading: () => <div className="h-12 bg-gray-200 rounded animate-pulse" />,
-    ssr: true, // Newsletter signup should be immediately available
-  }
-);
-
 // More components removed - not implemented yet
 // export const FileUpload = dynamic(
 //   () => import('@/components/common/file-upload'),

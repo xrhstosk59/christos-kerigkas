@@ -46,7 +46,6 @@ export default function AdminNavbar() {
     { name: 'Migrations', href: '/admin/migrations', icon: Database },
     { name: 'Posts', href: '/admin', icon: FileText },
     { name: 'Contact Messages', href: '/admin/contact-messages', icon: MessageSquare },
-    { name: 'Newsletter', href: '/admin/newsletter', icon: Mail },
     { name: 'Audit Logs', href: '/admin/audit-logs', icon: Shield },
     { name: 'Account Lockouts', href: '/admin/lockouts', icon: Lock },
     { name: 'Users', href: '/admin/users', icon: Users },
