@@ -21,10 +21,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'Supabase service role key is required'),
-  
-  // Authentication
-  AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 characters'),
-  
+
   // Security
   ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters').optional(),
   CSRF_SECRET: z.string().min(32, 'CSRF_SECRET must be at least 32 characters').optional(),
@@ -152,7 +149,6 @@ export const supabaseConfig = {
  * Security configuration
  */
 export const securityConfig = {
-  authSecret: env.AUTH_SECRET,
   encryptionKey: env.ENCRYPTION_KEY,
   csrfSecret: env.CSRF_SECRET,
 } as const;
@@ -222,7 +218,6 @@ export function validateCriticalEnv(): void {
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
-    'AUTH_SECRET',
   ];
   
   const missing = criticalVars.filter(varName => !process.env[varName]);
