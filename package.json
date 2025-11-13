@@ -71,7 +71,7 @@
     "depcheck": "^1.4.7",
     "dotenv": "^16.5.0",
     "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "16.0.1",
     "framer-motion": "^11.18.2",
     "glob": "^11.0.2",
     "msw": "^2.7.5",
