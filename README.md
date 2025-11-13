@@ -22,14 +22,12 @@
   - Certifications από τη βάση δεδομένων
   - Projects από τη βάση δεδομένων
   - Δυνατότητα εξαγωγής σε PDF με πολλαπλά templates
-- **Blog Platform**: Ολοκληρωμένη λειτουργικότητα blog με αναζήτηση και κατηγορίες
-- **Admin Panel**: Ασφαλές διαχειριστικό για ενημέρωση περιεχομένου
+- **Admin Panel**: Ασφαλές διαχειριστικό για διαχείριση περιεχομένου
 - **2FA Authentication**: Two-factor authentication με encrypted storage
 - **Animated UI**: Εντυπωσιακά animations με Framer Motion
 - **SEO Optimized**: Βελτιστοποιημένο για μηχανές αναζήτησης
 - **Fast Performance**: Server-side rendering και βελτιστοποιημένα assets
 - **Contact Form**: Με rate limiting και αποθήκευση στη βάση δεδομένων
-- **Newsletter**: Δυνατότητα εγγραφής σε newsletter
 - **Analytics**: Ενσωματωμένη υποστήριξη για Google Analytics
 - **Error Tracking**: Sentry integration για monitoring και performance tracking
 - **Security Features**: Encrypted 2FA, rate limiting, audit logging, hardened CSP
@@ -110,7 +108,7 @@ yarn dev
 Το project ακολουθεί best practices για security:
 
 - **Authentication**: Supabase Auth με 2FA support
-- **Rate Limiting**: Upstash Redis για API protection
+- **Rate Limiting**: In-memory rate limiting για API protection
 - **Security Headers**: CSP, HSTS, X-Frame-Options, και άλλα
 - **Audit Logging**: Comprehensive logging για admin actions
 - **Input Validation**: Zod schemas για validation
@@ -248,9 +246,8 @@ npm run start
 Το admin panel είναι προσβάσιμο στη διαδρομή `/admin`.
 
 ### Features:
-- **Content Management**: Διαχείριση blog posts και projects
+- **Content Management**: Διαχείριση projects και certifications
 - **Communications**: Προβολή μηνυμάτων επικοινωνίας
-- **Newsletter**: Διαχείριση newsletter εγγραφών
 - **User Management**: Διαχείριση χρηστών και permissions
 - **Audit Logs**: Comprehensive audit trail για όλες τις actions
 - **Performance Monitor**: Real-time performance metrics
@@ -268,7 +265,7 @@ npm run start
 - **Code Splitting**: Automatic route-based code splitting
 - **Server Components**: Extensive use για μειωμένο client JS
 - **Middleware**: Optimized για minimal overhead
-- **Caching**: Redis caching για API responses
+- **Caching**: In-memory caching για API responses
 
 ## 🤝 Contributing
 
