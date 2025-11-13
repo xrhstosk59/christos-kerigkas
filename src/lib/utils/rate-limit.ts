@@ -1,10 +1,9 @@
 /**
- * Redis-based Rate Limiting with Upstash
- * Production-ready rate limiting using distributed Redis storage
+ * Memory-based Rate Limiting
+ * Simple in-memory rate limiting for development and small-scale deployments
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
 import { env } from '@/lib/config/env';
 
 type RateLimitConfig = {
@@ -23,21 +22,7 @@ interface RateLimitResponse {
   headers?: Record<string, string>;
 }
 
-// Initialize Redis client if credentials are available
-let redis: Redis | null = null;
-
-try {
-  if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
-    redis = new Redis({
-      url: env.UPSTASH_REDIS_REST_URL,
-      token: env.UPSTASH_REDIS_REST_TOKEN,
-    });
-  }
-} catch (error) {
-  console.warn('Failed to initialize Redis for rate limiting:', error);
-}
-
-// Fallback in-memory store for development
+// In-memory store for rate limiting
 interface RateLimitStore {
   [key: string]: {
     count: number;
@@ -63,83 +48,7 @@ function getRequestIdentifier(req: NextRequest | Request): string {
 }
 
 /**
- * Redis-based rate limiting
- */
-async function redisRateLimit(
-  key: string,
-  config: RateLimitConfig
-): Promise<RateLimitResponse> {
-  if (!redis) {
-    throw new Error('Redis client not initialized');
-  }
-
-  const { maxRequests, windowMs } = config;
-  const now = Date.now();
-  const windowSeconds = Math.ceil(windowMs / 1000);
-
-  try {
-    // Use Redis pipeline for atomic operations
-    const pipeline = redis.pipeline();
-
-    // Increment the counter
-    pipeline.incr(key);
-    // Set expiry if key was just created
-    pipeline.expire(key, windowSeconds);
-    // Get TTL to calculate reset time
-    pipeline.ttl(key);
-
-    const results = await pipeline.exec() as [number, number, number];
-    const count = results[0];
-    const ttl = results[2];
-
-    const actualResetTime = now + (ttl * 1000);
-    const remaining = Math.max(0, maxRequests - count);
-    const success = count <= maxRequests;
-
-    const headers = {
-      'X-RateLimit-Limit': String(maxRequests),
-      'X-RateLimit-Remaining': String(remaining),
-      'X-RateLimit-Reset': String(Math.ceil(actualResetTime / 1000)),
-    };
-
-    if (!success) {
-      const response = NextResponse.json(
-        { error: config.message || 'Too many requests, please try again later.' },
-        {
-          status: config.errorStatusCode || 429,
-          headers: {
-            ...headers,
-            'Retry-After': String(Math.ceil((actualResetTime - now) / 1000)),
-          },
-        }
-      );
-
-      return {
-        success: false,
-        limit: maxRequests,
-        remaining: 0,
-        resetTime: actualResetTime,
-        response,
-        headers,
-      };
-    }
-
-    return {
-      success: true,
-      limit: maxRequests,
-      remaining,
-      resetTime: actualResetTime,
-      headers,
-    };
-  } catch (error) {
-    console.error('Redis rate limit error:', error);
-    // Fall back to memory-based rate limiting
-    return memoryRateLimit(key, config);
-  }
-}
-
-/**
- * Memory-based rate limiting (fallback)
+ * Memory-based rate limiting
  */
 function memoryRateLimit(
   key: string,
@@ -201,7 +110,7 @@ function memoryRateLimit(
 
 /**
  * Main rate limiting function
- * Automatically uses Redis if available, falls back to memory
+ * Uses in-memory storage for rate limiting
  */
 export async function rateLimit(
   req: NextRequest | Request,
@@ -210,10 +119,6 @@ export async function rateLimit(
 ): Promise<RateLimitResponse> {
   const identifier = customKey || getRequestIdentifier(req);
   const key = `ratelimit:${identifier}`;
-
-  if (redis && env.ENABLE_RATE_LIMITING) {
-    return redisRateLimit(key, config);
-  }
 
   return memoryRateLimit(key, config);
 }
@@ -302,9 +207,9 @@ export function createRateLimitError(response: RateLimitResponse): RateLimitErro
 }
 
 /**
- * Cleanup memory store periodically (for development fallback)
+ * Cleanup memory store periodically
  */
-if (typeof setInterval !== 'undefined' && !redis) {
+if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     const now = Date.now();
     Object.keys(memoryStore).forEach((key) => {
@@ -313,13 +218,6 @@ if (typeof setInterval !== 'undefined' && !redis) {
       }
     });
   }, 5 * 60 * 1000); // Every 5 minutes
-}
-
-/**
- * Check if Redis is available
- */
-export function isRedisAvailable(): boolean {
-  return redis !== null;
 }
 
 /**

@@ -14,9 +14,6 @@ export async function register() {
       // Lower sample rate for server-side to reduce costs
       tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.05,
 
-      // Debug mode in development
-      debug: process.env.NODE_ENV === 'development',
-
       // Enhanced error filtering for server
       beforeSend(event, hint) {
         const error = hint.originalException;

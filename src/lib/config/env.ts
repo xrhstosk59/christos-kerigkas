@@ -50,12 +50,7 @@ const envSchema = z.object({
   // File Upload (Optional)
   MAX_FILE_SIZE: z.string().transform(Number).pipe(z.number().positive()).default('5242880'),
   ALLOWED_FILE_TYPES: z.string().default('image/jpeg,image/png,image/webp,application/pdf'),
-  
-  // Redis (Optional)
-  REDIS_URL: z.string().optional(),
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
-  
+
   // Feature Flags
   ENABLE_2FA: z.string().transform(val => val === 'true').default('true'),
   ENABLE_AUDIT_LOGGING: z.string().transform(val => val === 'true').default('true'),

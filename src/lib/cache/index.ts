@@ -1,191 +1,203 @@
 // src/lib/cache/index.ts
-import { Redis } from '@upstash/redis';
+// Simple in-memory cache implementation (no Redis)
+
 import { logger } from '../utils/logger';
 
 /**
- * Παράμετροι για τη ρύθμιση του caching.
+ * Cache options for storing data
  */
 export interface CacheOptions {
   /**
-   * Χρόνος λήξης σε δευτερόλεπτα.
+   * Expiration time in seconds
    */
   expireInSeconds?: number;
-  
+
   /**
-   * Προθέματα για ομαδοποίηση των κλειδιών cache.
+   * Prefix for grouping cache keys
    */
   prefix?: string;
 }
 
 /**
- * Προκαθορισμένες τιμές για το caching.
+ * Default cache options
  */
 const DEFAULT_CACHE_OPTIONS: CacheOptions = {
-  expireInSeconds: 60 * 5, // 5 λεπτά
+  expireInSeconds: 60 * 5, // 5 minutes
   prefix: 'api',
 };
 
 /**
- * Δημιουργία Redis client.
+ * In-memory cache store
  */
-const createRedisClient = () => {
-  // Έλεγχος ότι έχουν οριστεί τα απαραίτητα περιβαλλοντικά variables
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    logger.warn('Λείπουν οι μεταβλητές UPSTASH_REDIS_REST_URL ή UPSTASH_REDIS_REST_TOKEN. Το Redis cache είναι απενεργοποιημένο.');
-    return null;
-  }
+interface CacheEntry<T> {
+  value: T;
+  expiresAt: number;
+}
 
-  try {
-    // Δημιουργία Redis client με τα credentials από τις μεταβλητές περιβάλλοντος
-    return new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
-  } catch (error) {
-    logger.error('Σφάλμα δημιουργίας Redis client:', error);
-    return null;
-  }
-};
-
-// Αρχικοποίηση του Redis client (μπορεί να είναι null αν υπάρχει πρόβλημα)
-const redis = createRedisClient();
+const memoryCache = new Map<string, CacheEntry<any>>();
 
 /**
- * Σύστημα caching που χρησιμοποιεί Redis.
+ * Simple in-memory caching system
  */
 export const cache = {
   /**
-   * Ανάκτηση τιμής από το cache.
-   * 
-   * @param key Κλειδί για την τιμή που θέλουμε να ανακτήσουμε
-   * @param options Παράμετροι για το caching
-   * @returns Η τιμή από το cache ή null αν δεν υπάρχει
+   * Get value from cache
+   *
+   * @param key Cache key
+   * @param options Cache options
+   * @returns The cached value or null if not found
    */
   async get<T>(key: string, options?: CacheOptions): Promise<T | null> {
-    if (!redis) return null;
-
     const opts = { ...DEFAULT_CACHE_OPTIONS, ...options };
     const fullKey = this.generateKey(key, opts.prefix);
-    
-    try {
-      const value = await redis.get(fullKey);
-      
-      if (value) {
-        logger.debug(`Cache hit για το κλειδί: ${fullKey}`);
-        return value as T;
-      }
-      
-      logger.debug(`Cache miss για το κλειδί: ${fullKey}`);
-      return null;
-    } catch (error) {
-      logger.error(`Σφάλμα ανάκτησης από cache για το κλειδί ${fullKey}:`, error);
+
+    const entry = memoryCache.get(fullKey);
+
+    if (!entry) {
+      logger.debug(`Cache miss: ${fullKey}`);
       return null;
     }
+
+    // Check if entry has expired
+    if (Date.now() > entry.expiresAt) {
+      memoryCache.delete(fullKey);
+      logger.debug(`Cache expired: ${fullKey}`);
+      return null;
+    }
+
+    logger.debug(`Cache hit: ${fullKey}`);
+    return entry.value as T;
   },
-  
+
   /**
-   * Αποθήκευση τιμής στο cache.
-   * 
-   * @param key Κλειδί για την τιμή
-   * @param value Τιμή προς αποθήκευση
-   * @param options Παράμετροι για το caching
+   * Store value in cache
+   *
+   * @param key Cache key
+   * @param value Value to store
+   * @param options Cache options
    */
   async set<T>(key: string, value: T, options?: CacheOptions): Promise<void> {
-    if (!redis) return;
-
     const opts = { ...DEFAULT_CACHE_OPTIONS, ...options };
     const fullKey = this.generateKey(key, opts.prefix);
-    
-    try {
-      if (opts.expireInSeconds) {
-        await redis.set(fullKey, value, { ex: opts.expireInSeconds });
-        logger.debug(`Αποθηκεύτηκε στο cache με expiry ${opts.expireInSeconds}s: ${fullKey}`);
-      } else {
-        await redis.set(fullKey, value);
-        logger.debug(`Αποθηκεύτηκε στο cache χωρίς expiry: ${fullKey}`);
-      }
-    } catch (error) {
-      logger.error(`Σφάλμα αποθήκευσης στο cache για το κλειδί ${fullKey}:`, error);
-    }
+
+    const expiresAt = Date.now() + (opts.expireInSeconds! * 1000);
+
+    memoryCache.set(fullKey, {
+      value,
+      expiresAt,
+    });
+
+    logger.debug(`Cached with expiry ${opts.expireInSeconds}s: ${fullKey}`);
   },
-  
+
   /**
-   * Διαγραφή τιμής από το cache.
-   * 
-   * @param key Κλειδί της τιμής που θέλουμε να διαγράψουμε
-   * @param prefix Προαιρετικό πρόθεμα
+   * Delete value from cache
+   *
+   * @param key Cache key
+   * @param prefix Optional prefix
    */
   async delete(key: string, prefix?: string): Promise<void> {
-    if (!redis) return;
-
     const fullKey = this.generateKey(key, prefix || DEFAULT_CACHE_OPTIONS.prefix);
-    
-    try {
-      await redis.del(fullKey);
-      logger.debug(`Διαγράφηκε από το cache: ${fullKey}`);
-    } catch (error) {
-      logger.error(`Σφάλμα διαγραφής από cache για το κλειδί ${fullKey}:`, error);
-    }
+    memoryCache.delete(fullKey);
+    logger.debug(`Deleted from cache: ${fullKey}`);
   },
-  
+
   /**
-   * Διαγραφή πολλαπλών τιμών που ταιριάζουν σε ένα pattern.
-   * 
-   * @param pattern Pattern αναζήτησης κλειδιών προς διαγραφή
+   * Delete multiple values matching a pattern
+   *
+   * @param pattern Search pattern for keys to delete
    */
   async invalidatePattern(pattern: string): Promise<void> {
-    if (!redis) return;
-    
-    try {
-      const keys = await redis.keys(pattern);
-      if (keys.length > 0) {
-        // Διαγραφή όλων των κλειδιών που ταιριάζουν στο pattern
-        await Promise.all(keys.map(key => redis.del(key)));
-        logger.debug(`Διαγράφηκαν ${keys.length} κλειδιά με pattern: ${pattern}`);
+    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+    let deletedCount = 0;
+
+    for (const key of memoryCache.keys()) {
+      if (regex.test(key)) {
+        memoryCache.delete(key);
+        deletedCount++;
       }
-    } catch (error) {
-      logger.error(`Σφάλμα διαγραφής pattern από cache: ${pattern}`, error);
+    }
+
+    if (deletedCount > 0) {
+      logger.debug(`Deleted ${deletedCount} keys matching pattern: ${pattern}`);
     }
   },
-  
+
   /**
-   * Ανάκτηση από το cache ή εκτέλεση της λειτουργίας και αποθήκευση του αποτελέσματος.
-   * 
-   * @param key Κλειδί για την τιμή
-   * @param fn Συνάρτηση που επιστρέφει την τιμή αν δεν υπάρχει στο cache
-   * @param options Παράμετροι για το caching
-   * @returns Το αποτέλεσμα από το cache ή από την εκτέλεση της συνάρτησης
+   * Get from cache or execute function and store result
+   *
+   * @param key Cache key
+   * @param fn Function that returns the value if not in cache
+   * @param options Cache options
+   * @returns The result from cache or from executing the function
    */
   async getOrSet<T>(key: string, fn: () => Promise<T>, options?: CacheOptions): Promise<T> {
-    if (!redis) return fn();
-
     const cached = await this.get<T>(key, options);
     if (cached !== null) {
       return cached;
     }
-    
+
     const result = await fn();
     await this.set(key, result, options);
     return result;
   },
-  
+
   /**
-   * Δημιουργία πλήρους κλειδιού με πρόθεμα.
-   * 
-   * @param key Βασικό κλειδί
-   * @param prefix Προαιρετικό πρόθεμα
-   * @returns Πλήρες κλειδί
+   * Generate full key with prefix
+   *
+   * @param key Base key
+   * @param prefix Optional prefix
+   * @returns Full key
    */
   generateKey(key: string, prefix?: string): string {
     return prefix ? `${prefix}:${key}` : key;
   },
-  
+
   /**
-   * Έλεγχος αν το Redis είναι διαθέσιμο.
-   * 
-   * @returns Αν το Redis είναι διαθέσιμο
+   * Check if cache is available (always true for memory cache)
+   *
+   * @returns Whether cache is available
    */
   isAvailable(): boolean {
-    return redis !== null;
-  }
+    return true;
+  },
+
+  /**
+   * Get cache statistics
+   */
+  getStats(): { size: number; keys: string[] } {
+    return {
+      size: memoryCache.size,
+      keys: Array.from(memoryCache.keys()),
+    };
+  },
+
+  /**
+   * Clear all cache entries
+   */
+  clear(): void {
+    memoryCache.clear();
+    logger.debug('Cleared all cache entries');
+  },
 };
+
+/**
+ * Cleanup expired entries periodically
+ */
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    let deletedCount = 0;
+
+    for (const [key, entry] of memoryCache.entries()) {
+      if (now > entry.expiresAt) {
+        memoryCache.delete(key);
+        deletedCount++;
+      }
+    }
+
+    if (deletedCount > 0) {
+      logger.debug(`Cleaned up ${deletedCount} expired cache entries`);
+    }
+  }, 5 * 60 * 1000); // Every 5 minutes
+}
