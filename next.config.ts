@@ -97,9 +97,14 @@ const nextConfig: NextConfig = {
   compress: true, // Enable gzip compression
   reactStrictMode: true, // Enable React strict mode
   
-  // ✅ OPTIMIZED WEBPACK CONFIG
+  // ✅ MINIMAL WEBPACK CONFIG - Optimizations disabled to fix RSC bug
   webpack: (config, { isServer, dev }) => {
-    // Client-side optimizations
+    // Completely disable caching in development to prevent module resolution issues
+    if (dev) {
+      config.cache = false;
+    }
+
+    // Client-side fallbacks only
     if (!isServer) {
       config.resolve.fallback = {
         fs: false,
@@ -111,50 +116,21 @@ const nextConfig: NextConfig = {
         os: false,
         path: false,
       };
-      
-      // Production optimizations
-      if (!dev) {
-        config.optimization = {
-          ...config.optimization,
-          usedExports: true,
-          sideEffects: false,
-          splitChunks: {
-            chunks: 'all',
-            cacheGroups: {
-              vendor: {
-                test: /[\\/]node_modules[\\/]/,
-                name: 'vendors',
-                chunks: 'all',
-                maxSize: 244000, // ~240KB
-              },
-              common: {
-                minChunks: 2,
-                chunks: 'all',
-                enforce: true,
-                maxSize: 244000,
-              },
-            },
-          },
-        };
-      }
     }
-    
+
     return config;
   },
   
-  // ✅ EXPERIMENTAL FEATURES FOR PERFORMANCE
+  // ✅ MINIMAL EXPERIMENTAL FEATURES - Most disabled to fix RSC bug
   experimental: {
     serverActions: {
-      bodySizeLimit: '1mb', // Reduced from 2mb
+      bodySizeLimit: '1mb',
     },
-    optimizeCss: true, // Enable CSS optimization
-    serverMinification: true, // Minify server code
-    webVitalsAttribution: ['CLS', 'LCP'], // Track key metrics only
-    optimizePackageImports: [
-      'lucide-react',
-      'date-fns',
-      'lodash-es'
-    ], // Optimize specific packages
+    // Disabled to prevent module resolution issues:
+    // optimizeCss: true,
+    // serverMinification: true,
+    // webVitalsAttribution: ['CLS', 'LCP'],
+    // optimizePackageImports: ['lucide-react', 'date-fns', 'lodash-es'],
   },
   
   // ✅ OPTIMIZED HEADERS

@@ -46,14 +46,15 @@ export function OfflineProvider({
     },
   });
 
-  // Register service worker
+  // Register service worker - DISABLED temporarily due to webpack conflicts
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    // Service Worker disabled in development to prevent module resolution conflicts
+    if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
         .then((registration) => {
           console.log('Service Worker registered:', registration);
-          
+
           // Listen for updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
@@ -82,7 +83,7 @@ export function OfflineProvider({
       // Listen for service worker messages
       navigator.serviceWorker.addEventListener('message', (event) => {
         console.log('SW Message:', event.data);
-        
+
         if (event.data?.type === 'CACHE_UPDATED') {
           if (showToasts) {
             toast.info('Content updated', {

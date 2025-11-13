@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useTheme } from 'next-themes'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,13 +11,15 @@ import { Button } from '@/components/ui/button'
 import { CVData, ExportOptions } from '@/types/cv'
 import { getCVData } from '@/lib/data/cv-data'
 import { downloadCV } from '@/lib/utils/pdf-generator'
-import CVTimeline from './cv-timeline'
-import CVSkillsChart from './cv-skills-chart'
-import CVCertifications from './cv-certifications'
-import CVProjects from './cv-projects'
-import CVExport from './cv-export'
-import CVFilters from './cv-filters'
 import Image from 'next/image'
+
+// Dynamic imports to prevent webpack module resolution issues
+const CVTimeline = dynamic(() => import('./cv-timeline'), { ssr: false })
+const CVSkillsChart = dynamic(() => import('./cv-skills-chart'), { ssr: false })
+const CVCertifications = dynamic(() => import('./cv-certifications'), { ssr: false })
+const CVProjects = dynamic(() => import('./cv-projects'), { ssr: false })
+const CVExport = dynamic(() => import('./cv-export'), { ssr: false })
+const CVFilters = dynamic(() => import('./cv-filters'), { ssr: false })
 
 // Ορισμός των props του component
 interface InteractiveCVProps {

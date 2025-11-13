@@ -54,7 +54,13 @@
       "Bash(if exist .next rmdir /s /q .next)",
       "Bash(if exist .next rmdir /s /q .next 2)",
       "Bash(rm:*)",
-      "Bash(export:*)"
+      "Bash(export:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(pkill:*)",
+      "Bash(npm run dev:turbo:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)"
     ],
     "deny": [],
     "ask": []
