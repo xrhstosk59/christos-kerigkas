@@ -63,7 +63,9 @@
       "Bash(xargs kill -9)",
       "Bash(src/lib/db/database.types.ts)",
       "mcp__github__search_repositories",
-      "mcp__github__get_file_contents"
+      "mcp__github__get_file_contents",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
