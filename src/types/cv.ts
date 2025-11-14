@@ -22,13 +22,13 @@ export interface Experience {
 export interface Skill {
   name: string;
   level: number; // Σε κλίμακα 1-10 ή 1-100
-  category: SkillCategory;
+  category: string; // Can be any category string like "Languages & Frameworks", "Technologies & Tools", etc.
   yearsOfExperience?: number;
   description?: string;
   icon?: string;
 }
 
-export type SkillCategory = 
+export type SkillCategory =
   | 'frontend'
   | 'backend'
   | 'database'
@@ -39,7 +39,9 @@ export type SkillCategory =
   | 'frameworks'
   | 'tools'
   | 'soft-skills'
-  | 'other';
+  | 'other'
+  | 'Languages & Frameworks'
+  | 'Technologies & Tools';
 
 // Τύποι για την εκπαίδευση
 export interface Education {
@@ -83,6 +85,7 @@ export interface CVData {
       linkedin?: string;
       github?: string;
       twitter?: string;
+      credly?: string;
       other?: { label: string; url: string }[];
     };
   };

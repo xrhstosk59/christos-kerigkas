@@ -8,18 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Filter, Eye, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CVData, ExportOptions } from '@/types/cv'
+import { CVData } from '@/types/cv'
 import { getCVData } from '@/lib/data/cv-data'
-import { downloadCV } from '@/lib/utils/pdf-generator'
 import Image from 'next/image'
 
-// Dynamic imports to prevent webpack module resolution issues
-const CVTimeline = dynamic(() => import('./cv-timeline'), { ssr: false })
-const CVSkillsChart = dynamic(() => import('./cv-skills-chart'), { ssr: false })
-const CVCertifications = dynamic(() => import('./cv-certifications'), { ssr: false })
-const CVProjects = dynamic(() => import('./cv-projects'), { ssr: false })
-const CVExport = dynamic(() => import('./cv-export'), { ssr: false })
-const CVFilters = dynamic(() => import('./cv-filters'), { ssr: false })
+// Dynamic imports for code splitting
+const CVTimeline = dynamic(() => import('./cv-timeline'))
+const CVSkillsChart = dynamic(() => import('./cv-skills-chart'))
+const CVCertifications = dynamic(() => import('./cv-certifications'))
+const CVProjects = dynamic(() => import('./cv-projects'))
+const CVFilters = dynamic(() => import('./cv-filters'))
 
 // Ορισμός των props του component
 interface InteractiveCVProps {
@@ -28,6 +26,7 @@ interface InteractiveCVProps {
 
 export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
   const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [cvData, setCVData] = useState<CVData | null>(initialCVData || null)
   const [loading, setLoading] = useState(!initialCVData)
   const [error, setError] = useState<string | null>(null)
@@ -38,16 +37,11 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
     categories: [] as string[],
     years: { min: 2000, max: new Date().getFullYear() + 1 }
   })
-  const [exportOptions, setExportOptions] = useState<ExportOptions>({
-    includePersonalInfo: true,
-    includeExperience: true,
-    includeEducation: true,
-    includeSkills: true,
-    includeCertifications: true,
-    includeProjects: true,
-    template: 'standard',
-    colorScheme: theme === 'dark' ? 'dark' : 'light'
-  })
+
+  // Handle client-side mounting to prevent hydration errors
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Φόρτωση δεδομένων μόνο αν δεν έχουν δοθεί ως prop
   useEffect(() => {
@@ -69,24 +63,10 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
     loadCVData()
   }, [initialCVData])
 
-  // Update colorScheme when theme changes
-  useEffect(() => {
-    setExportOptions(prev => ({
-      ...prev,
-      colorScheme: theme === 'dark' ? 'dark' : 'light'
-    }))
-  }, [theme])
-
-  // Handle PDF export
-  const handleExport = async () => {
-    if (!cvData) return
-
-    try {
-      await downloadCV(cvData, exportOptions, `CV_${cvData.personalInfo.name.replace(/\s+/g, '_')}.pdf`)
-    } catch (err) {
-      console.error('Error exporting CV:', err)
-      setError('Error exporting CV. Please try again later.')
-    }
+  // Handle CV download from Supabase Storage
+  const handleDownloadCV = () => {
+    const cvUrl = 'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/cv/Christos_Kerigkas_CV.pdf'
+    window.open(cvUrl, '_blank')
   }
 
   // If loading, show spinner
@@ -118,7 +98,7 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
   }
 
   return (
-    <div className={`cv-container ${theme === 'dark' ? 'dark-theme' : 'light-theme'}`}>
+    <div className="cv-container">
       {/* Header with title, view options and export button */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -146,13 +126,13 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
             <Eye size={16} />
             <span>{activeView === 'compact' ? 'Detailed view' : 'Compact view'}</span>
           </Button>
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 flex items-center gap-2"
-            onClick={handleExport}
+            onClick={handleDownloadCV}
           >
             <Download size={16} />
-            <span>Export PDF</span>
+            <span>Download CV</span>
           </Button>
         </div>
       </div>
@@ -239,7 +219,7 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
                   </a>
                 )}
                 {cvData.personalInfo.socialLinks?.github && (
-                  <a 
+                  <a
                     href={cvData.personalInfo.socialLinks.github}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -247,6 +227,19 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                    </svg>
+                  </a>
+                )}
+                {cvData.personalInfo.socialLinks?.credly && (
+                  <a
+                    href={cvData.personalInfo.socialLinks.credly}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    title="Credly Badges"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2.4c5.302 0 9.6 4.298 9.6 9.6s-4.298 9.6-9.6 9.6S2.4 17.302 2.4 12 6.698 2.4 12 2.4zm0 3.6a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 2.4a3.6 3.6 0 1 1 0 7.2 3.6 3.6 0 0 1 0-7.2z"/>
                     </svg>
                   </a>
                 )}
@@ -258,12 +251,11 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
 
       {/* Main content with tabs */}
       <Tabs defaultValue="experience" className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-8">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-8">
           <TabsTrigger value="experience">Experience</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
           <TabsTrigger value="certifications">Certifications</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
-          <TabsTrigger value="export">Export</TabsTrigger>
         </TabsList>
         
         <TabsContent value="experience" className="mt-0">
@@ -292,18 +284,10 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
         </TabsContent>
         
         <TabsContent value="projects" className="mt-0">
-          <CVProjects 
+          <CVProjects
             projects={cvData.projects}
             viewMode={activeView}
             filters={filters}
-          />
-        </TabsContent>
-        
-        <TabsContent value="export" className="mt-0">
-          <CVExport 
-            exportOptions={exportOptions}
-            setExportOptions={setExportOptions}
-            onExport={handleExport}
           />
         </TabsContent>
       </Tabs>

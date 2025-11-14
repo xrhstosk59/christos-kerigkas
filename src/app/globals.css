@@ -61,7 +61,11 @@
 
   /* ✅ SELECTION - Using Tailwind utilities */
   ::selection {
-    @apply bg-primary text-primary-foreground;
+    @apply bg-indigo-600/30 text-foreground;
+  }
+
+  .dark ::selection {
+    @apply bg-indigo-500/40 text-foreground;
   }
 }
 

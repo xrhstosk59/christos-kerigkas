@@ -60,7 +60,10 @@
       "Bash(pkill:*)",
       "Bash(npm run dev:turbo:*)",
       "Bash(lsof:*)",
-      "Bash(xargs kill -9)"
+      "Bash(xargs kill -9)",
+      "Bash(src/lib/db/database.types.ts)",
+      "mcp__github__search_repositories",
+      "mcp__github__get_file_contents"
     ],
     "deny": [],
     "ask": []

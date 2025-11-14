@@ -3,6 +3,9 @@
 
 import { projectsRepository } from '../db/repositories/projects-repository';
 import { getCertifications } from '../db/repositories/certifications-repository';
+import { getExperience } from '../db/repositories/experience-repository';
+import { getEducation } from '../db/repositories/education-repository';
+import { getSkills } from '../db/repositories/skills-repository';
 import { CVData } from '@/types/cv';
 import { Project, ProjectStatus } from '@/types/projects';
 import type { Database } from '../db/database.types';
@@ -23,6 +26,7 @@ function getPersonalInfo() {
     socialLinks: {
       linkedin: "https://linkedin.com/in/christoskerigkas",
       github: "https://github.com/christoskerigkas",
+      credly: "https://www.credly.com/users/christos-kerigkas.cf8c18e5/badges",
     }
   };
 }
@@ -45,40 +49,27 @@ function mapProjectsFromDb(projects: DbProject[]): Project[] {
 
 /**
  * Get all CV data from database
- * All data (projects, certifications, skills, experience, education) should be stored in the database
+ * All data (projects, certifications, experience, education) are fetched from the database
  */
 export async function getCVData(): Promise<CVData> {
   try {
     const projectsFromDb = await projectsRepository.findAll();
     const certificationsFromDb = await getCertifications();
+    const experienceFromDb = await getExperience();
+    const educationFromDb = await getEducation();
+    const skillsFromDb = await getSkills();
 
     console.log(`[getCVData] Loaded ${certificationsFromDb.length} certifications from database`);
     console.log(`[getCVData] Loaded ${projectsFromDb.length} projects from database`);
+    console.log(`[getCVData] Loaded ${experienceFromDb.length} experience entries from database`);
+    console.log(`[getCVData] Loaded ${educationFromDb.length} education entries from database`);
+    console.log(`[getCVData] Loaded ${skillsFromDb.length} skills from database`);
 
     return {
       personalInfo: getPersonalInfo(),
-      experience: [
-        {
-          id: '1',
-          company: 'ΔΗΜΟΣ ΝΕΑΣ ΠΡΟΠΟΝΤΙΔΑΣ ΝΟΜΟΥ ΧΑΛΚΙΔΙΚΗΣ',
-          position: 'ΤΕΧΝΙΚΗ ΥΠΟΣΤΗΡΙΞΗ ΣΤΟ ΤΜΗΜΑ ΤΕΧΝΟΛΟΓΙΩΝ ΠΛΗΡΟΦΟΡΙΚΗΣ ΚΑΙ ΕΠΙΚΟΙΝΩΝΙΩΝ (ΤΠΕ)',
-          startDate: '2025-05-01',
-          endDate: '2025-07-31',
-          description: 'Part-time technical support position in the IT and Communications Department.',
-          location: 'Χαλκιδική',
-          responsibilities: [
-            'Λειτουργία του δικτύου των κεντρικών και περιφερειακών συστημάτων και όλων των ασύρματων δικτύων.',
-            'Συντήρηση και την αποκατάσταση βλαβών του εξοπλισμού ΤΠΕ του Δήμου.',
-            'Ασφάλεια των δεδομένων και την βελτίωση της χρηστικότητας των ιστοσελίδων και των βάσεων δεδομένων του Δήμου.',
-            'Συντήρηση και κατασκευή δικτυακών τόπων και ιστοσελίδων.',
-            'Υποστήριξη Active Directory.'
-          ],
-          technologies: ['Active Directory', 'Networking', 'Web Development', 'Database Management'],
-          achievements: []
-        }
-      ],
-      education: [], // TODO: Add education table to database
-      skills: [], // TODO: Add skills table to database
+      experience: experienceFromDb,
+      education: educationFromDb,
+      skills: skillsFromDb,
       certifications: certificationsFromDb,
       projects: mapProjectsFromDb(projectsFromDb),
       languages: [], // TODO: Add languages table to database

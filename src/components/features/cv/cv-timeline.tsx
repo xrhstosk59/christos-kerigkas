@@ -30,18 +30,20 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
 
   // Toggle experience cards open/close
   const toggleExperience = (id: string) => {
-    setExpandedExperience(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id) 
+    console.log('Toggling experience:', id)
+    setExpandedExperience(prev =>
+      prev.includes(id)
+        ? prev.filter(item => item !== id)
         : [...prev, id]
     )
   }
 
   // Toggle education cards open/close
   const toggleEducation = (id: string) => {
-    setExpandedEducation(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id) 
+    console.log('Toggling education:', id)
+    setExpandedEducation(prev =>
+      prev.includes(id)
+        ? prev.filter(item => item !== id)
         : [...prev, id]
     )
   }
@@ -116,8 +118,8 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                       transition={{ duration: 0.3 }}
                     >
                       {/* Header */}
-                      <div 
-                        className={`p-4 cursor-pointer ${
+                      <div
+                        className={`p-4 cursor-pointer select-none ${
                           expandedExperience.includes(exp.id) ? 'border-b border-gray-200 dark:border-gray-700' : ''
                         }`}
                         onClick={() => toggleExperience(exp.id)}
@@ -183,7 +185,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
 
                       {/* Expanded content */}
                       <AnimatePresence>
-                        {(expandedExperience.includes(exp.id) || viewMode === 'detailed') && (
+                        {expandedExperience.includes(exp.id) && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
@@ -279,8 +281,8 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                     transition={{ duration: 0.3 }}
                   >
                     {/* Header */}
-                    <div 
-                      className={`p-4 cursor-pointer ${
+                    <div
+                      className={`p-4 cursor-pointer select-none ${
                         expandedEducation.includes(edu.id) ? 'border-b border-gray-200 dark:border-gray-700' : ''
                       }`}
                       onClick={() => toggleEducation(edu.id)}
@@ -334,7 +336,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
 
                     {/* Expanded content */}
                     <AnimatePresence>
-                      {(expandedEducation.includes(edu.id) || viewMode === 'detailed') && (
+                      {expandedEducation.includes(edu.id) && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}

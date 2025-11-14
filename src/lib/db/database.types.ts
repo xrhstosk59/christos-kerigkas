@@ -14,198 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      __drizzle_migrations: {
-        Row: {
-          created_at: string | null
-          hash: string
-          id: number
-        }
-        Insert: {
-          created_at?: string | null
-          hash: string
-          id?: number
-        }
-        Update: {
-          created_at?: string | null
-          hash?: string
-          id?: number
-        }
-        Relationships: []
-      }
-      __migration_history: {
-        Row: {
-          applied_at: string | null
-          checksum: string
-          error_message: string | null
-          execution_time_ms: number | null
-          id: string
-          migration_name: string
-          success: boolean | null
-        }
-        Insert: {
-          applied_at?: string | null
-          checksum: string
-          error_message?: string | null
-          execution_time_ms?: number | null
-          id?: string
-          migration_name: string
-          success?: boolean | null
-        }
-        Update: {
-          applied_at?: string | null
-          checksum?: string
-          error_message?: string | null
-          execution_time_ms?: number | null
-          id?: string
-          migration_name?: string
-          success?: boolean | null
-        }
-        Relationships: []
-      }
-      audit_logs: {
-        Row: {
-          action: string
-          created_at: string
-          details: Json | null
-          id: number
-          ip_address: string | null
-          resource_id: string | null
-          resource_type: string | null
-          severity: string
-          source: string
-          status: string
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          details?: Json | null
-          id?: number
-          ip_address?: string | null
-          resource_id?: string | null
-          resource_type?: string | null
-          severity: string
-          source: string
-          status: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          details?: Json | null
-          id?: number
-          ip_address?: string | null
-          resource_id?: string | null
-          resource_type?: string | null
-          severity?: string
-          source?: string
-          status?: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      blog_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: number
-          name: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: number
-          name: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: number
-          name?: string
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      blog_posts: {
-        Row: {
-          author_id: string | null
-          author_image: string
-          author_name: string
-          categories: string[]
-          content: string
-          created_at: string | null
-          date: string
-          description: string
-          featured: boolean | null
-          id: number
-          image: string
-          reading_time: number | null
-          slug: string
-          title: string
-          updated_at: string | null
-          views: number | null
-        }
-        Insert: {
-          author_id?: string | null
-          author_image: string
-          author_name: string
-          categories: string[]
-          content: string
-          created_at?: string | null
-          date: string
-          description: string
-          featured?: boolean | null
-          id?: number
-          image: string
-          reading_time?: number | null
-          slug: string
-          title: string
-          updated_at?: string | null
-          views?: number | null
-        }
-        Update: {
-          author_id?: string | null
-          author_image?: string
-          author_name?: string
-          categories?: string[]
-          content?: string
-          created_at?: string | null
-          date?: string
-          description?: string
-          featured?: boolean | null
-          id?: number
-          image?: string
-          reading_time?: number | null
-          slug?: string
-          title?: string
-          updated_at?: string | null
-          views?: number | null
-        }
-        Relationships: []
-      }
-      blog_posts_to_categories: {
-        Row: {
-          category_id: number
-          post_id: number
-        }
-        Insert: {
-          category_id: number
-          post_id: number
-        }
-        Update: {
-          category_id?: number
-          post_id?: number
-        }
-        Relationships: []
-      }
       certifications: {
         Row: {
           created_at: string | null
@@ -257,21 +65,6 @@ export type Database = {
         }
         Relationships: []
       }
-      certifications_to_skills: {
-        Row: {
-          certification_id: string
-          skill_id: number
-        }
-        Insert: {
-          certification_id: string
-          skill_id: number
-        }
-        Update: {
-          certification_id?: string
-          skill_id?: number
-        }
-        Relationships: []
-      }
       contact_messages: {
         Row: {
           created_at: string | null
@@ -320,104 +113,101 @@ export type Database = {
         }
         Relationships: []
       }
-      crypto_projects: {
+      education: {
         Row: {
+          achievements: string[] | null
           created_at: string | null
-          description: string
-          github_url: string | null
-          icon: string
-          id: number
-          live_url: string | null
-          slug: string
-          status: string
-          tech: string[]
-          title: string
+          degree: string
+          description: string | null
+          display_order: number | null
+          end_date: string | null
+          field: string
+          gpa: number | null
+          id: string
+          institution: string
+          location: string | null
+          start_date: string
           updated_at: string | null
         }
         Insert: {
+          achievements?: string[] | null
           created_at?: string | null
-          description: string
-          github_url?: string | null
-          icon: string
-          id?: number
-          live_url?: string | null
-          slug: string
-          status: string
-          tech: string[]
-          title: string
+          degree: string
+          description?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          field: string
+          gpa?: number | null
+          id?: string
+          institution: string
+          location?: string | null
+          start_date: string
           updated_at?: string | null
         }
         Update: {
+          achievements?: string[] | null
+          created_at?: string | null
+          degree?: string
+          description?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          field?: string
+          gpa?: number | null
+          id?: string
+          institution?: string
+          location?: string | null
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      experience: {
+        Row: {
+          achievements: string[] | null
+          company: string
+          company_url: string | null
+          created_at: string | null
+          description: string
+          display_order: number | null
+          end_date: string | null
+          id: string
+          location: string | null
+          position: string
+          responsibilities: string[] | null
+          start_date: string
+          technologies: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          achievements?: string[] | null
+          company: string
+          company_url?: string | null
+          created_at?: string | null
+          description: string
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          position: string
+          responsibilities?: string[] | null
+          start_date: string
+          technologies?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          achievements?: string[] | null
+          company?: string
+          company_url?: string | null
           created_at?: string | null
           description?: string
-          github_url?: string | null
-          icon?: string
-          id?: number
-          live_url?: string | null
-          slug?: string
-          status?: string
-          tech?: string[]
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      newsletter_subscribers: {
-        Row: {
-          email: string
-          id: number
-          ip_address: string | null
-          is_active: boolean | null
-          subscribed_at: string | null
-          unsubscribed_at: string | null
-          verification_token: string | null
-          verified: boolean | null
-        }
-        Insert: {
-          email: string
-          id?: number
-          ip_address?: string | null
-          is_active?: boolean | null
-          subscribed_at?: string | null
-          unsubscribed_at?: string | null
-          verification_token?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          email?: string
-          id?: number
-          ip_address?: string | null
-          is_active?: boolean | null
-          subscribed_at?: string | null
-          unsubscribed_at?: string | null
-          verification_token?: string | null
-          verified?: boolean | null
-        }
-        Relationships: []
-      }
-      project_categories: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: number
-          name: string
-          slug: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: number
-          name: string
-          slug: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: number
-          name?: string
-          slug?: string
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          position?: string
+          responsibilities?: string[] | null
+          start_date?: string
+          technologies?: string[] | null
           updated_at?: string | null
         }
         Relationships: []
@@ -470,152 +260,35 @@ export type Database = {
         }
         Relationships: []
       }
-      projects_to_categories: {
-        Row: {
-          category_id: number
-          project_id: number
-        }
-        Insert: {
-          category_id: number
-          project_id: number
-        }
-        Update: {
-          category_id?: number
-          project_id?: number
-        }
-        Relationships: []
-      }
-      rate_limits: {
-        Row: {
-          action_type: string
-          attempt_count: number
-          created_at: string
-          first_attempt_at: string
-          id: number
-          identifier: string
-          is_locked: boolean
-          last_attempt_at: string
-          locked_until: string | null
-          updated_at: string
-        }
-        Insert: {
-          action_type: string
-          attempt_count?: number
-          created_at?: string
-          first_attempt_at?: string
-          id?: number
-          identifier: string
-          is_locked?: boolean
-          last_attempt_at?: string
-          locked_until?: string | null
-          updated_at?: string
-        }
-        Update: {
-          action_type?: string
-          attempt_count?: number
-          created_at?: string
-          first_attempt_at?: string
-          id?: number
-          identifier?: string
-          is_locked?: boolean
-          last_attempt_at?: string
-          locked_until?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       skills: {
         Row: {
-          category: string | null
+          category: string
           created_at: string | null
-          id: number
-          name: string
-          proficiency_level: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          id?: number
-          name: string
-          proficiency_level?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          id?: number
-          name?: string
-          proficiency_level?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      user_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          full_name: string | null
-          id: number
-          location: string | null
-          updated_at: string | null
-          user_id: string
-          website: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: number
-          location?: string | null
-          updated_at?: string | null
-          user_id: string
-          website?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: number
-          location?: string | null
-          updated_at?: string | null
-          user_id?: string
-          website?: string | null
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          created_at: string | null
-          email: string
+          display_order: number | null
+          icon: string | null
           id: string
-          role: string | null
-          two_factor_backup_codes: string | null
-          two_factor_enabled: boolean | null
-          two_factor_secret: string | null
+          name: string
+          proficiency: number | null
           updated_at: string | null
         }
         Insert: {
+          category: string
           created_at?: string | null
-          email: string
+          display_order?: number | null
+          icon?: string | null
           id?: string
-          role?: string | null
-          two_factor_backup_codes?: string | null
-          two_factor_enabled?: boolean | null
-          two_factor_secret?: string | null
+          name: string
+          proficiency?: number | null
           updated_at?: string | null
         }
         Update: {
+          category?: string
           created_at?: string | null
-          email?: string
+          display_order?: number | null
+          icon?: string | null
           id?: string
-          role?: string | null
-          two_factor_backup_codes?: string | null
-          two_factor_enabled?: boolean | null
-          two_factor_secret?: string | null
+          name?: string
+          proficiency?: number | null
           updated_at?: string | null
         }
         Relationships: []
