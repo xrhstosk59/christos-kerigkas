@@ -28,6 +28,7 @@
     "@types/jsdom": "^21.1.7",
     "@types/nodemailer": "^6.4.14",
     "@types/qrcode": "^1.5.5",
+    "@upstash/redis": "^1.34.8",
     "class-variance-authority": "^0.7.1",
     "client-only": "^0.0.1",
     "clsx": "^2.1.1",
