@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userId, userEmail } = validation.data!;
+    const { userId, userEmail } = validation.data;
 
     // Verify user can setup 2FA for this account
     if (user.id !== userId) {

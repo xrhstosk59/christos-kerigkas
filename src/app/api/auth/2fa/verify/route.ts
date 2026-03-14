@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userId, token } = validation.data!;
+    const { userId, token } = validation.data;
 
     // Verify the 2FA token
     const verificationResult = await verify2FAToken(userId, token);

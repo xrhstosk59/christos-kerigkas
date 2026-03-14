@@ -5,11 +5,15 @@ import { ValidationError } from './api-error';
 /**
  * Input validation types
  */
-export type ValidationResult<T> = {
-  success: boolean;
-  data?: T;
-  error?: ValidationError;
-};
+export type ValidationResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: ValidationError;
+    };
 
 /**
  * Validate request body against a Zod schema

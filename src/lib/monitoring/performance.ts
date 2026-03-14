@@ -22,6 +22,26 @@ export interface APIPerformanceMetrics {
   size?: number;
 }
 
+interface LargestContentfulPaintLike extends PerformanceEntry {
+  startTime: number;
+}
+
+interface FirstInputLike extends PerformanceEntry {
+  processingStart: number;
+  startTime: number;
+}
+
+interface LayoutShiftLike extends PerformanceEntry {
+  hadRecentInput: boolean;
+  value: number;
+}
+
+interface PerformanceMemoryLike {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
 /**
  * Measures and reports page performance metrics
  */
@@ -45,7 +65,7 @@ export function measurePagePerformance(pageName: string): void {
         if ('PerformanceObserver' in window) {
           const lcpObserver = new PerformanceObserver((list) => {
             const entries = list.getEntries();
-            const lastEntry = entries[entries.length - 1] as any;
+            const lastEntry = entries[entries.length - 1] as LargestContentfulPaintLike | undefined;
             if (lastEntry) {
               metrics.largestContentfulPaint = lastEntry.startTime;
               
@@ -69,17 +89,18 @@ export function measurePagePerformance(pageName: string): void {
           // FID (First Input Delay)
           const fidObserver = new PerformanceObserver((list) => {
             const entries = list.getEntries();
-            entries.forEach((entry: any) => {
-              metrics.firstInputDelay = entry.processingStart - entry.startTime;
+            entries.forEach((entry) => {
+              const firstInput = entry as FirstInputLike;
+              metrics.firstInputDelay = firstInput.processingStart - firstInput.startTime;
               
               // Report if FID is slow (> 100ms)
-              if (entry.processingStart - entry.startTime > 100) {
+              if (firstInput.processingStart - firstInput.startTime > 100) {
                 reportMessage(
                   `Slow FID detected: ${pageName}`,
                   {
                     feature: 'performance',
                     action: 'slow_fid',
-                    metadata: { page: pageName, fid: entry.processingStart - entry.startTime },
+                    metadata: { page: pageName, fid: firstInput.processingStart - firstInput.startTime },
                   },
                   'warning'
                 );
@@ -93,9 +114,10 @@ export function measurePagePerformance(pageName: string): void {
           let clsValue = 0;
           const clsObserver = new PerformanceObserver((list) => {
             const entries = list.getEntries();
-            entries.forEach((entry: any) => {
-              if (!entry.hadRecentInput) {
-                clsValue += entry.value;
+            entries.forEach((entry) => {
+              const layoutShift = entry as LayoutShiftLike;
+              if (!layoutShift.hadRecentInput) {
+                clsValue += layoutShift.value;
               }
             });
             
@@ -201,7 +223,7 @@ export function measureAPIPerformance(
 /**
  * Performance timing decorator for functions
  */
-export function withPerformanceTiming<T extends any[], R>(
+export function withPerformanceTiming<T extends unknown[], R>(
   name: string,
   fn: (...args: T) => Promise<R>
 ) {
@@ -254,7 +276,8 @@ export function withPerformanceTiming<T extends any[], R>(
 export function monitorMemoryUsage(): void {
   if (typeof window === 'undefined' || !('memory' in performance)) return;
 
-  const memory = (performance as any).memory;
+  const memory = (performance as Performance & { memory?: PerformanceMemoryLike }).memory;
+  if (!memory) return;
   const memoryInfo = {
     usedJSHeapSize: memory.usedJSHeapSize,
     totalJSHeapSize: memory.totalJSHeapSize,

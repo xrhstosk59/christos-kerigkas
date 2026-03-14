@@ -65,6 +65,57 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string | null
+          session_id: string | null
+          severity: string
+          source: string
+          status: string | null
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          session_id?: string | null
+          severity?: string
+          source?: string
+          status?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          session_id?: string | null
+          severity?: string
+          source?: string
+          status?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string | null
@@ -110,6 +161,48 @@ export type Database = {
           status?: string | null
           subject?: string | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      crypto_projects: {
+        Row: {
+          created_at: string | null
+          description: string
+          features: string[] | null
+          github: string | null
+          icon: string | null
+          id: number
+          slug: string
+          status: string | null
+          tech: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          features?: string[] | null
+          github?: string | null
+          icon?: string | null
+          id?: number
+          slug: string
+          status?: string | null
+          tech?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          features?: string[] | null
+          github?: string | null
+          icon?: string | null
+          id?: number
+          slug?: string
+          status?: string | null
+          tech?: string[] | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -214,6 +307,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          categories: string[] | null
           created_at: string | null
           description: string
           featured: boolean | null
@@ -222,6 +316,7 @@ export type Database = {
           image: string
           live_url: string | null
           order: number | null
+          short_description: string | null
           slug: string
           status: string | null
           tech: string[]
@@ -229,6 +324,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          categories?: string[] | null
           created_at?: string | null
           description: string
           featured?: boolean | null
@@ -237,6 +333,7 @@ export type Database = {
           image: string
           live_url?: string | null
           order?: number | null
+          short_description?: string | null
           slug: string
           status?: string | null
           tech: string[]
@@ -244,6 +341,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          categories?: string[] | null
           created_at?: string | null
           description?: string
           featured?: boolean | null
@@ -252,10 +350,50 @@ export type Database = {
           image?: string
           live_url?: string | null
           order?: number | null
+          short_description?: string | null
           slug?: string
           status?: string | null
           tech?: string[]
           title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          action_type: string
+          attempt_count: number
+          created_at: string | null
+          first_attempt_at: string | null
+          id: string
+          identifier: string
+          is_locked: boolean | null
+          last_attempt_at: string | null
+          locked_until: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action_type: string
+          attempt_count?: number
+          created_at?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          identifier: string
+          is_locked?: boolean | null
+          last_attempt_at?: string | null
+          locked_until?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string
+          attempt_count?: number
+          created_at?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          identifier?: string
+          is_locked?: boolean | null
+          last_attempt_at?: string | null
+          locked_until?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -289,6 +427,39 @@ export type Database = {
           id?: string
           name?: string
           proficiency?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          role: string | null
+          two_factor_backup_codes: string | null
+          two_factor_enabled: boolean | null
+          two_factor_secret: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          role?: string | null
+          two_factor_backup_codes?: string | null
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          role?: string | null
+          two_factor_backup_codes?: string | null
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
           updated_at?: string | null
         }
         Relationships: []

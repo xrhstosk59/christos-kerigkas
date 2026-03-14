@@ -1,6 +1,6 @@
 // src/lib/utils/sanitize.ts
 import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
+import { JSDOM, type DOMWindow } from 'jsdom';
 
 // Server-side DOMPurify initialization
 const createDOMPurify = () => {
@@ -10,7 +10,7 @@ const createDOMPurify = () => {
   } else {
     // Server-side
     const { window } = new JSDOM('');
-    const DOMPurifyServer = DOMPurify(window as any);
+    const DOMPurifyServer = DOMPurify(window as unknown as Window & DOMWindow);
     return DOMPurifyServer;
   }
 };

@@ -7,13 +7,15 @@
     "dev:turbo": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings=0",
     "analyze": "ANALYZE=true next build",
     "deps:check": "depcheck",
     "clean": "rm -rf .next out dist",
     "clean:install": "rm -rf node_modules package-lock.json && npm install",
     "type-check": "tsc --noEmit",
-    "build:prod": "npm run clean && npm run build"
+    "build:prod": "npm run clean && npm run build",
+    "bundle-size": "node ./scripts/check-bundle-size.mjs",
+    "db:health": "node ./scripts/check-db-health.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.3",

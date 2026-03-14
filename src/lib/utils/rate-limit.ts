@@ -4,7 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { env } from '@/lib/config/env';
 
 type RateLimitConfig = {
   maxRequests: number;

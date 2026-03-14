@@ -4,6 +4,32 @@ import { createClient } from '@/lib/supabase/server';
 import { handleApiError } from '@/lib/utils/errors/error-handler';
 import { env, features } from '@/lib/config/env';
 
+interface HealthSection {
+  status: string;
+  [key: string]: string | number | boolean | undefined | Record<string, string>;
+}
+
+interface HealthResponse {
+  status: 'ok' | 'degraded' | 'error';
+  timestamp: string;
+  environment: string;
+  version: string;
+  database?: HealthSection;
+  features?: Record<string, boolean>;
+  services?: Record<string, { status: string }>;
+  responseTime?: number;
+  diagnostics?: {
+    memory: NodeJS.MemoryUsage;
+    uptime: number;
+    platform: NodeJS.Platform;
+    nodeVersion: string;
+    environment: {
+      databaseUrl: string;
+      supabaseUrl: string;
+    };
+  };
+}
+
 /**
  * Health Check API Endpoint
  * Provides system health status including database and services
@@ -11,7 +37,7 @@ import { env, features } from '@/lib/config/env';
 export async function GET(request: NextRequest) {
   try {
     const startTime = Date.now();
-    const healthData: any = {
+    const healthData: HealthResponse = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       environment: env.NODE_ENV,
@@ -102,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     // Run the basic health check
     const basicHealth = await GET(request);
-    const healthData = await basicHealth.json();
+    const healthData = (await basicHealth.json()) as HealthResponse;
 
     // Add detailed diagnostics
     healthData.diagnostics = {

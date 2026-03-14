@@ -10,8 +10,8 @@ type DBSkill = Database['public']['Tables']['skills']['Row'];
 function mapDBSkillToSkill(dbSkill: DBSkill): Skill {
   return {
     name: dbSkill.name,
-    level: dbSkill.proficiency * 20, // Convert 1-5 scale to 1-100 scale
-    category: dbSkill.category as any, // Use the category from database
+    level: (dbSkill.proficiency ?? 0) * 20, // Convert 1-5 scale to 1-100 scale
+    category: dbSkill.category,
     icon: dbSkill.icon || undefined
   };
 }

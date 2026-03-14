@@ -11,14 +11,25 @@ export interface ErrorContext {
   sessionId?: string;
   feature?: string;
   action?: string;
-  metadata?: Record<string, any>;
+  metadata?: object;
 }
 
 export interface PerformanceContext {
   operation: string;
   category?: string;
   userId?: string;
-  metadata?: Record<string, any>;
+  metadata?: object;
+}
+
+interface TransactionHandle {
+  setStatus: (status: string) => void;
+  finish: () => void;
+}
+
+function toSentryContext(value: object): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>),
+  );
 }
 
 /**
@@ -52,7 +63,7 @@ export function reportError(
     
     // Add metadata as extra context
     if (context.metadata) {
-      scope.setContext('metadata', context.metadata);
+      scope.setContext('metadata', toSentryContext(context.metadata));
     }
     
     // Set severity level
@@ -84,7 +95,7 @@ export function reportMessage(
     }
     
     if (context.metadata) {
-      scope.setContext('metadata', context.metadata);
+      scope.setContext('metadata', toSentryContext(context.metadata));
     }
     
     scope.setLevel(level);
@@ -99,7 +110,7 @@ export function reportMessage(
 export function startTransaction(
   name: string,
   context: PerformanceContext
-) {
+): TransactionHandle {
   return Sentry.withScope((scope) => {
     scope.setTag('operation', context.operation);
     scope.setTag('category', context.category || 'general');
@@ -107,7 +118,7 @@ export function startTransaction(
       scope.setTag('userId', context.userId);
     }
     if (context.metadata) {
-      scope.setContext('metadata', context.metadata);
+      scope.setContext('metadata', toSentryContext(context.metadata));
     }
     
     return Sentry.startSpan({
@@ -126,7 +137,7 @@ export function startTransaction(
 /**
  * Wraps an async function with performance monitoring
  */
-export function withPerformanceMonitoring<T extends any[], R>(
+export function withPerformanceMonitoring<T extends unknown[], R>(
   name: string,
   operation: string,
   fn: (...args: T) => Promise<R>
@@ -177,13 +188,13 @@ export function addBreadcrumb(
   message: string,
   category: string = 'custom',
   level: Sentry.SeverityLevel = 'info',
-  data?: Record<string, any>
+  data?: object
 ): void {
   Sentry.addBreadcrumb({
     message,
     category,
     level,
-    data,
+    data: data ? toSentryContext(data) : undefined,
     timestamp: Date.now() / 1000,
   });
 }
@@ -197,7 +208,7 @@ export function reportSecurityEvent(
     userId?: string;
     ipAddress?: string;
     userAgent?: string;
-    details?: Record<string, any>;
+    details?: object;
   }
 ): string {
   return Sentry.withScope((scope) => {
@@ -217,7 +228,7 @@ export function reportSecurityEvent(
     }
     
     if (context.details) {
-      scope.setContext('securityDetails', context.details);
+      scope.setContext('securityDetails', toSentryContext(context.details));
     }
     
     return Sentry.captureMessage(`Security Event: ${event}`);
@@ -230,7 +241,7 @@ export function reportSecurityEvent(
 export function reportDatabaseError(
   error: Error,
   query?: string,
-  params?: any[],
+  params?: unknown[],
   context: ErrorContext = {}
 ): string {
   return Sentry.withScope((scope) => {
@@ -251,7 +262,7 @@ export function reportDatabaseError(
     }
     
     if (context.metadata) {
-      scope.setContext('metadata', context.metadata);
+      scope.setContext('metadata', toSentryContext(context.metadata));
     }
     
     return Sentry.captureException(error);
@@ -261,7 +272,7 @@ export function reportDatabaseError(
 /**
  * API route error wrapper
  */
-export function withSentryErrorHandling<T extends any[], R>(
+export function withSentryErrorHandling<T extends unknown[], R>(
   handler: (...args: T) => Promise<R>,
   context: ErrorContext = {}
 ) {
@@ -286,7 +297,7 @@ export const SentryErrorBoundary = Sentry.ErrorBoundary;
  */
 export const SentryFeatures = {
   auth: {
-    reportLogin: (userId: string, success: boolean, details?: Record<string, any>) => {
+    reportLogin: (userId: string, success: boolean, details?: object) => {
       addBreadcrumb(
         `User login ${success ? 'successful' : 'failed'}`,
         'auth',
@@ -317,7 +328,7 @@ export const SentryFeatures = {
   },
   
   performance: {
-    reportSlowQuery: (query: string, duration: number, context?: Record<string, any>) => {
+    reportSlowQuery: (query: string, duration: number, context?: object) => {
       reportMessage(
         `Slow database query detected: ${duration}ms`,
         {
@@ -343,7 +354,7 @@ export const SentryFeatures = {
   },
   
   business: {
-    reportContactForm: (success: boolean, details?: Record<string, any>) => {
+    reportContactForm: (success: boolean, details?: object) => {
       addBreadcrumb(
         `Contact form ${success ? 'submitted' : 'failed'}`,
         'business',

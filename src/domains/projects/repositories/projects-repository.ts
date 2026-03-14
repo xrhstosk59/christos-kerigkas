@@ -6,7 +6,11 @@ import {
   ConflictError
 } from '@/lib/utils/errors/app-error';
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/lib/db/database.types';
 import type { Project, NewProject } from '@/domains/projects/models/project.model';
+
+type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
+type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
 
 /**
  * Repository for accessing and managing projects in the database.
@@ -149,7 +153,7 @@ export class ProjectsRepository {
 
       const { data: result, error } = await supabase
         .from('projects')
-        .insert(project as any)
+        .insert(project as ProjectInsert)
         .select()
         .single();
 
@@ -195,7 +199,7 @@ export class ProjectsRepository {
         .update({
           ...project,
           updated_at: new Date().toISOString()
-        } as any)
+        } as ProjectUpdate)
         .eq('slug', slug)
         .select()
         .single();

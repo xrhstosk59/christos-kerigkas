@@ -1,7 +1,7 @@
 // src/hooks/useOffline.ts
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface OfflineState {
   isOnline: boolean;
@@ -19,6 +19,19 @@ export interface OfflineHookOptions {
   checkInterval?: number;
   pingUrl?: string;
   pingTimeout?: number;
+}
+
+interface NetworkInformationLike extends EventTarget {
+  type?: string;
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformationLike;
+  mozConnection?: NetworkInformationLike;
+  webkitConnection?: NetworkInformationLike;
 }
 
 /**
@@ -43,9 +56,8 @@ export function useOffline(options: OfflineHookOptions = {}): OfflineState {
   const getConnectionInfo = useCallback(() => {
     if (typeof navigator === 'undefined') return {};
 
-    const connection = (navigator as any).connection || 
-                      (navigator as any).mozConnection || 
-                      (navigator as any).webkitConnection;
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
 
     if (!connection) return {};
 
@@ -123,9 +135,8 @@ export function useOffline(options: OfflineHookOptions = {}): OfflineState {
     window.addEventListener('offline', handleOffline);
 
     // Connection change listener
-    const connection = (navigator as any).connection || 
-                       (navigator as any).mozConnection || 
-                       (navigator as any).webkitConnection;
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
 
     if (connection) {
       connection.addEventListener('change', () => {
@@ -171,7 +182,7 @@ export function useOnlineStatus(): boolean {
 /**
  * Hook for managing offline queue functionality
  */
-export function useOfflineQueue<T = any>() {
+export function useOfflineQueue<T = unknown>() {
   const [queue, setQueue] = useState<T[]>([]);
   const { isOnline } = useOffline();
 
@@ -226,6 +237,7 @@ export function useOfflineCache<T>(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { isOnline } = useOffline();
+  const loadingRef = useRef(false);
 
   // Get cached data from localStorage
   const getCachedData = useCallback((): { data: T; timestamp: number } | null => {
@@ -251,8 +263,9 @@ export function useOfflineCache<T>(
 
   // Fetch fresh data
   const fetchData = useCallback(async (force = false) => {
-    if (loading && !force) return;
+    if (loadingRef.current && !force) return;
 
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -282,9 +295,10 @@ export function useOfflineCache<T>(
         console.warn('Using cached data due to fetch error:', error.message);
       }
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [isOnline, fetcher, getCachedData, setCachedData, loading]);
+  }, [isOnline, fetcher, getCachedData, setCachedData]);
 
   // Validate cached data age
   const isCacheValid = useCallback(() => {
@@ -307,7 +321,7 @@ export function useOfflineCache<T>(
     } else {
       fetchData();
     }
-  }, [key]); // Only depend on key to avoid infinite loops
+  }, [key, fetchData, getCachedData, isCacheValid, isOnline]);
 
   // Revalidate when coming online
   useEffect(() => {

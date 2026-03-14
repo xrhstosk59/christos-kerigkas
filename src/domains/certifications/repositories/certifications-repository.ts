@@ -5,11 +5,15 @@ import {
   NotFoundError
 } from '@/lib/utils/errors/app-error';
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/lib/db/database.types';
 import type {
   Certification,
   NewCertification,
   CertificationType
 } from '@/domains/certifications/models/certification.model';
+
+type CertificationInsert = Database['public']['Tables']['certifications']['Insert'];
+type CertificationUpdate = Database['public']['Tables']['certifications']['Update'];
 
 /**
  * Repository for accessing and managing certifications in the database.
@@ -168,7 +172,7 @@ export class CertificationsRepository {
 
       const { data: result, error } = await supabase
         .from('certifications')
-        .insert(certification as any)
+        .insert(certification as CertificationInsert)
         .select()
         .single();
 
@@ -210,7 +214,7 @@ export class CertificationsRepository {
         .update({
           ...data,
           updated_at: new Date().toISOString()
-        } as any)
+        } as CertificationUpdate)
         .eq('id', id)
         .select()
         .single();

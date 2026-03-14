@@ -5,6 +5,8 @@
 /* ✅ MINIMAL CSS VARIABLES - Only for Tailwind integration */
 @layer base {
   :root {
+    --font-sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
     --background: 255 255 255;
     --foreground: 23 23 23;
     --muted: 243 244 246;

@@ -1,26 +1,8 @@
 // src/app/layout.tsx - OPTIMIZED & WORKING
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { defaultMetadata, generatePersonJsonLd, generateWebsiteJsonLd } from "@/lib/utils/seo";
 import "./globals.css";
-
-// ✅ OPTIMIZED FONT LOADING
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist",
-  display: "swap",
-  preload: true,
-  fallback: ["system-ui", "sans-serif"],
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-  display: "swap",
-  preload: false, // Not critical
-  fallback: ["monospace"],
-});
 
 // ✅ METADATA
 export const metadata: Metadata = {
@@ -84,7 +66,7 @@ export default function RootLayout({
           <link rel="preconnect" href="https://www.googletagmanager.com" />
         )}
       </head>
-      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased min-h-screen text-crisp custom-scrollbar transition-theme`}>
+      <body className="font-sans antialiased min-h-screen text-crisp custom-scrollbar transition-theme">
         {/* ✅ ACCESSIBILITY SKIP LINK */}
         <a 
           href="#main-content" 

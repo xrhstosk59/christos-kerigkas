@@ -5,6 +5,8 @@
 // Use repository pattern or direct Supabase queries instead
 
 // Placeholder exports to prevent import errors
+export type BlogPostRecord = Record<string, unknown>;
+
 export interface PaginationInfo {
   totalPosts: number;
   totalPages: number;
@@ -15,7 +17,7 @@ export interface PaginationInfo {
 }
 
 export interface BlogResponse {
-  posts: any[];
+  posts: BlogPostRecord[];
   pagination: PaginationInfo;
 }
 
@@ -38,7 +40,7 @@ export async function getBlogPosts(
   };
 }
 
-export async function getBlogPostBySlug(_slug: string): Promise<any | null> {
+export async function getBlogPostBySlug(_slug: string): Promise<BlogPostRecord | null> {
   console.warn('getBlogPostBySlug is disabled - use blog repository instead');
   return null;
 }
@@ -62,11 +64,11 @@ export async function searchBlogPosts(
   };
 }
 
-export async function createBlogPost(_postData: any, _categoryIds: number[]): Promise<any> {
+export async function createBlogPost(_postData: BlogPostRecord, _categoryIds: number[]): Promise<BlogPostRecord> {
   throw new Error('createBlogPost is disabled - use blog repository instead');
 }
 
-export async function updateBlogPost(_id: number, _postData: any, _categoryIds?: number[]): Promise<any> {
+export async function updateBlogPost(_id: number, _postData: BlogPostRecord, _categoryIds?: number[]): Promise<BlogPostRecord> {
   throw new Error('updateBlogPost is disabled - use blog repository instead');
 }
 

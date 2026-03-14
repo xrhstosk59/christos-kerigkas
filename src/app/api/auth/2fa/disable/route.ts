@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userId, token } = validation.data!;
+    const { userId, token } = validation.data;
 
     // Verify user can disable 2FA for this account
     if (user.id !== userId) {

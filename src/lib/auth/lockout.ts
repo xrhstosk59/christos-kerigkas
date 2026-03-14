@@ -50,7 +50,7 @@ function getClientIP(request: NextRequest): string {
 export async function recordFailedLoginAttempt(
   identifier: string, // email or IP
   request?: NextRequest,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   const clientIP = request ? getClientIP(request) : 'unknown';
   const supabase = await createClient();

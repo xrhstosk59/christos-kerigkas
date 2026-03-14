@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { useTheme } from 'next-themes'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Filter, Eye, X } from 'lucide-react'
@@ -25,8 +24,6 @@ interface InteractiveCVProps {
 }
 
 export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
   const [cvData, setCVData] = useState<CVData | null>(initialCVData || null)
   const [loading, setLoading] = useState(!initialCVData)
   const [error, setError] = useState<string | null>(null)
@@ -37,11 +34,6 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
     categories: [] as string[],
     years: { min: 2000, max: new Date().getFullYear() + 1 }
   })
-
-  // Handle client-side mounting to prevent hydration errors
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   // Φόρτωση δεδομένων μόνο αν δεν έχουν δοθεί ως prop
   useEffect(() => {

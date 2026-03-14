@@ -42,7 +42,7 @@ interface RadarTooltipProps {
 
 // Convert category to friendly name
 const getCategoryLabel = (category: SkillCategory): string => {
-  const categoryMap: Record<SkillCategory, string> = {
+  const categoryMap: Partial<Record<SkillCategory, string>> = {
     'frontend': 'Frontend',
     'backend': 'Backend',
     'database': 'Databases',
@@ -61,7 +61,7 @@ const getCategoryLabel = (category: SkillCategory): string => {
 
 // Colors for different skill categories
 const getCategoryColor = (category: SkillCategory, isDark: boolean): string => {
-  const categoryColors: Record<SkillCategory, { light: string, dark: string }> = {
+  const categoryColors: Partial<Record<SkillCategory, { light: string, dark: string }>> = {
     'frontend': { light: '#4F46E5', dark: '#818CF8' },
     'backend': { light: '#16A34A', dark: '#4ADE80' },
     'database': { light: '#9333EA', dark: '#C084FC' },
@@ -74,8 +74,11 @@ const getCategoryColor = (category: SkillCategory, isDark: boolean): string => {
     'soft-skills': { light: '#9D174D', dark: '#F472B6' },
     'other': { light: '#374151', dark: '#9CA3AF' }
   }
-  
-  return isDark ? categoryColors[category]?.dark : categoryColors[category]?.light
+
+  const fallback = { light: '#374151', dark: '#9CA3AF' }
+  const palette = categoryColors[category] ?? fallback
+
+  return isDark ? palette.dark : palette.light
 }
 
 export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsChartProps) {
@@ -86,14 +89,16 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
   
   // Group skills by category
   const skillsByCategory = useMemo(() => {
-    return skills.reduce<Record<SkillCategory, Skill[]>>((acc, skill) => {
-      if (!acc[skill.category]) {
-        acc[skill.category] = []
+    return skills.reduce<Partial<Record<SkillCategory, Skill[]>>>((acc, skill) => {
+      const category = skill.category as SkillCategory
+
+      if (!acc[category]) {
+        acc[category] = []
       }
-      
-      acc[skill.category].push(skill)
+
+      acc[category]?.push(skill)
       return acc
-    }, {} as Record<SkillCategory, Skill[]>)
+    }, {})
   }, [skills])
   
   // Unique categories
@@ -134,8 +139,8 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
         name: skill.name,
         level: skill.level,
         yearsOfExperience: skill.yearsOfExperience,
-        category: skill.category,
-        color: getCategoryColor(skill.category, isDark)
+        category: skill.category as SkillCategory,
+        color: getCategoryColor(skill.category as SkillCategory, isDark)
       }))
   }, [filteredSkills, isDark])
   
@@ -329,7 +334,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
               selectedCategory === 'all' || category === selectedCategory
             )
             .map(category => {
-              const categorySkills = skillsByCategory[category]
+              const categorySkills = (skillsByCategory[category] ?? [])
                 .filter(skill => 
                   filters.skills.length === 0 || 
                   filters.skills.includes(skill.name)

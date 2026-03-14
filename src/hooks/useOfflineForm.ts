@@ -25,7 +25,7 @@ export interface OfflineFormState<T> {
 /**
  * Hook for handling forms that work offline with auto-save and queue functionality
  */
-export function useOfflineForm<T = Record<string, any>>(
+export function useOfflineForm<T = Record<string, unknown>>(
   initialData: T,
   config: OfflineFormConfig<T>
 ) {
@@ -46,6 +46,34 @@ export function useOfflineForm<T = Record<string, any>>(
   });
 
   const { addToQueue, processQueue, queueLength, isOnline } = useOfflineQueue<T>();
+
+  const saveToStorage = useCallback((data: T) => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({
+        data,
+        lastSaved: new Date().toISOString(),
+      }));
+      setState(prev => ({
+        ...prev,
+        lastSaved: new Date(),
+      }));
+    } catch (error) {
+      console.warn('Failed to save form data:', error);
+    }
+  }, [storageKey]);
+
+  const clearSavedData = useCallback(() => {
+    try {
+      localStorage.removeItem(storageKey);
+      setState(prev => ({
+        ...prev,
+        isDirty: false,
+        lastSaved: undefined,
+      }));
+    } catch (error) {
+      console.warn('Failed to clear saved data:', error);
+    }
+  }, [storageKey]);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -75,7 +103,7 @@ export function useOfflineForm<T = Record<string, any>>(
     }, autosaveDelay);
 
     return () => clearTimeout(timeoutId);
-  }, [state.data, state.isDirty, autosave, autosaveDelay]);
+  }, [state.data, state.isDirty, autosave, autosaveDelay, saveToStorage]);
 
   // Process queue when coming online
   useEffect(() => {
@@ -89,35 +117,7 @@ export function useOfflineForm<T = Record<string, any>>(
           console.error('Failed to process offline queue:', error);
         });
     }
-  }, [isOnline, queueLength, processQueue, submitHandler]);
-
-  const saveToStorage = useCallback((data: T) => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify({
-        data,
-        lastSaved: new Date().toISOString(),
-      }));
-      setState(prev => ({
-        ...prev,
-        lastSaved: new Date(),
-      }));
-    } catch (error) {
-      console.warn('Failed to save form data:', error);
-    }
-  }, [storageKey]);
-
-  const clearSavedData = useCallback(() => {
-    try {
-      localStorage.removeItem(storageKey);
-      setState(prev => ({
-        ...prev,
-        isDirty: false,
-        lastSaved: undefined,
-      }));
-    } catch (error) {
-      console.warn('Failed to clear saved data:', error);
-    }
-  }, [storageKey]);
+  }, [isOnline, queueLength, processQueue, submitHandler, clearSavedData]);
 
   const updateData = useCallback((updates: Partial<T> | ((prev: T) => T)) => {
     setState(prev => {

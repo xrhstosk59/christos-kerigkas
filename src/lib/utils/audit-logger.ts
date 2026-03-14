@@ -1,6 +1,7 @@
 // src/lib/utils/audit-logger.ts
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/lib/db/database.types';
+import type { Json } from '@/lib/db/database.types';
 import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
 
@@ -12,6 +13,10 @@ type ResourceTypeType = string | null;
 type SeverityType = string;
 type SourceType = string;
 
+function toAuditJson(details: Record<string, unknown>): Json {
+  return JSON.parse(JSON.stringify(details)) as Json;
+}
+
 /**
  * Comprehensive audit logging system
  */
@@ -21,7 +26,7 @@ export interface AuditLogData {
   action: AuditActionType;
   resourceType?: ResourceTypeType;
   resourceId?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   sessionId?: string;
@@ -95,7 +100,7 @@ export async function createAuditLog(data: AuditLogData): Promise<boolean> {
       action: data.action,
       resource_type: data.resourceType || null,
       resource_id: data.resourceId || null,
-      details: data.details || null,
+      details: data.details ? toAuditJson(data.details) : null,
       ip_address: data.ipAddress || null,
       user_agent: data.userAgent ? data.userAgent.substring(0, 1000) : null, // Limit length
       severity: data.severity || 'INFO',
@@ -176,7 +181,7 @@ export class AuditLogger {
    */
   async logAuth(
     action: 'LOGIN_SUCCESS' | 'LOGIN_FAILED' | 'LOGOUT' | '2FA_VERIFY_SUCCESS' | '2FA_VERIFY_FAILED',
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -193,7 +198,7 @@ export class AuditLogger {
   async logUserAction(
     action: 'USER_CREATE' | 'USER_UPDATE' | 'USER_DELETE' | 'USER_ROLE_CHANGE',
     targetUserId: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -211,7 +216,7 @@ export class AuditLogger {
   async logContentAction(
     action: 'PROJECT_CREATE' | 'PROJECT_UPDATE' | 'PROJECT_DELETE',
     resourceId: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -228,7 +233,7 @@ export class AuditLogger {
    */
   async logSecurity(
     action: 'SUSPICIOUS_ACTIVITY' | 'RATE_LIMIT_EXCEEDED' | 'UNAUTHORIZED_ACCESS_ATTEMPT' | 'ACCOUNT_LOCKED',
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -244,7 +249,7 @@ export class AuditLogger {
    */
   async logCriticalSecurity(
     action: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -261,7 +266,7 @@ export class AuditLogger {
   async logAdmin(
     action: 'ADMIN_ACCESS' | 'ADMIN_SETTINGS_CHANGE' | 'ADMIN_USER_IMPERSONATE' | 'EMERGENCY_ACCOUNT_UNLOCK',
     resourceId?: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -279,7 +284,7 @@ export class AuditLogger {
   async logFile(
     action: 'FILE_UPLOAD' | 'FILE_DELETE' | 'FILE_ACCESS',
     filename: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -296,7 +301,7 @@ export class AuditLogger {
    */
   async logError(
     error: Error,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): Promise<void> {
     await createAuditLog({
       ...this.context,
@@ -318,7 +323,7 @@ export class AuditLogger {
     action: AuditActionType,
     resourceType?: ResourceTypeType,
     resourceId?: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     severity?: SeverityType
   ): Promise<void> {
     await createAuditLog({
@@ -340,7 +345,7 @@ export async function auditLogin(
   userId: string,
   success: boolean,
   request?: NextRequest,
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ): Promise<void> {
   const logger = await createAuditLogger(request);
   await logger.setUser(userId).logAuth(
@@ -360,7 +365,7 @@ export async function auditLogout(
 export async function auditSecurityEvent(
   action: 'SUSPICIOUS_ACTIVITY' | 'RATE_LIMIT_EXCEEDED' | 'UNAUTHORIZED_ACCESS_ATTEMPT',
   request?: NextRequest,
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ): Promise<void> {
   const logger = await createAuditLogger(request);
   await logger.logSecurity(action, details);
@@ -371,7 +376,7 @@ export async function auditAdminAction(
   action: string,
   resourceId?: string,
   request?: NextRequest,
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ): Promise<void> {
   const logger = await createAuditLogger(request);
   await logger.setUser(userId).logAdmin(

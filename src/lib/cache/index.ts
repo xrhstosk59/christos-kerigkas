@@ -34,7 +34,7 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
-const memoryCache = new Map<string, CacheEntry<any>>();
+const memoryCache = new Map<string, CacheEntry<unknown>>();
 
 /**
  * Simple in-memory caching system
@@ -80,7 +80,7 @@ export const cache = {
     const opts = { ...DEFAULT_CACHE_OPTIONS, ...options };
     const fullKey = this.generateKey(key, opts.prefix);
 
-    const expiresAt = Date.now() + (opts.expireInSeconds! * 1000);
+    const expiresAt = Date.now() + ((opts.expireInSeconds ?? DEFAULT_CACHE_OPTIONS.expireInSeconds ?? 0) * 1000);
 
     memoryCache.set(fullKey, {
       value,

@@ -19,6 +19,17 @@ interface State {
   errorId?: string;
 }
 
+interface ErrorFallbackProps {
+  error: unknown;
+  resetError: () => void;
+  componentStack?: string;
+  eventId?: string;
+}
+
+interface ErrorInfoLike {
+  componentStack?: string;
+}
+
 /**
  * Enhanced Error Boundary with Sentry integration
  */
@@ -163,18 +174,24 @@ export function SentryBasedErrorBoundary({
   showDialog = false,
 }: {
   children: ReactNode;
-  fallback?: (props: any) => ReactElement;
+  fallback?: (props: ErrorFallbackProps) => ReactElement;
   showDialog?: boolean;
 }) {
   return (
     <SentryErrorBoundary
-      fallback={fallback || ((props: any) => <ErrorFallback error={props.error} resetError={props.resetError} />)}
+      fallback={
+        fallback ||
+        ((props: ErrorFallbackProps) => (
+          <ErrorFallback error={props.error} resetError={props.resetError} />
+        ))
+      }
       showDialog={showDialog}
       beforeCapture={(scope, _error, errorInfo) => {
         scope.setTag('errorBoundary', 'sentry');
         if (typeof errorInfo === 'object' && errorInfo !== null) {
+          const info = errorInfo as ErrorInfoLike;
           scope.setContext('errorInfo', {
-            componentStack: (errorInfo as any).componentStack,
+            componentStack: info.componentStack,
           });
         }
       }}
@@ -187,7 +204,11 @@ export function SentryBasedErrorBoundary({
 /**
  * Default error fallback component
  */
-function ErrorFallback({ error, resetError }: { error: Error; resetError: () => void }) {
+function ErrorFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
+  const message = error instanceof Error
+    ? error.message
+    : 'An unexpected error occurred. Please try again.';
+
   return (
     <div className="min-h-[400px] flex items-center justify-center">
       <div className="text-center">
@@ -196,7 +217,7 @@ function ErrorFallback({ error, resetError }: { error: Error; resetError: () => 
           Something went wrong
         </h2>
         <p className="text-gray-600 mb-4 max-w-md">
-          {error.message || 'An unexpected error occurred. Please try again.'}
+          {message}
         </p>
         <button
           onClick={resetError}

@@ -1,7 +1,7 @@
 // src/middleware.ts - Minimal version for stability
 import { NextRequest, NextResponse } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   // Simple pass-through - no processing
   return NextResponse.next()
 }

@@ -3,6 +3,9 @@ import { certificationsRepository } from '../../../lib/db/repositories/certifica
 import { cache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
 import type { Certification, CertificationType } from '@/types/certifications';
+import type { Database } from '@/lib/db/database.types';
+
+type DatabaseCertification = Database['public']['Tables']['certifications']['Row'];
 
 /**
  * Cache keys για τα certifications
@@ -18,10 +21,10 @@ const CACHE_KEYS = {
 /**
  * Helper function to map database certification to app certification type
  */
-function mapCertification(cert: any): Certification {
+function mapCertification(cert: DatabaseCertification): Certification {
   return {
     id: cert.id.toString(),
-    title: cert.title || cert.name,
+    title: cert.title,
     issuer: cert.issuer,
     issueDate: cert.issue_date,
     expirationDate: cert.expiry_date || undefined,
@@ -30,7 +33,7 @@ function mapCertification(cert: any): Certification {
     description: cert.description || undefined,
     skills: cert.skills || [],
     type: cert.type as CertificationType,
-    filename: cert.filename,
+    filename: cert.filename ?? '',
     featured: cert.featured || false
   };
 }
