@@ -14,13 +14,13 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_VERSION: z.string().optional(),
   
   // Database
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  DATABASE_URL: z.string().min(1).optional(),
   DATABASE_ADMIN_URL: z.string().optional(),
   
   // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'Supabase service role key is required'),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL').optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 
   // Security
   ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters').optional(),
@@ -86,7 +86,7 @@ try {
   if (error instanceof z.ZodError) {
     console.error('❌ Environment validation failed:');
     console.error(error.errors.map(err => `  - ${err.path.join('.')}: ${err.message}`).join('\n'));
-    process.exit(1);
+    throw new Error('Environment validation failed');
   }
   throw error;
 }
