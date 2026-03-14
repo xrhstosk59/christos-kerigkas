@@ -4,48 +4,56 @@ import { z } from 'zod';
 /**
  * Environment variable validation schema
  */
+const optionalEnv = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => {
+    if (typeof value !== 'string') return value;
+
+    const normalized = value.trim();
+    return normalized === '' ? undefined : normalized;
+  }, schema.optional());
+
 const envSchema = z.object({
   // Node Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
   // Application
-  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_APP_URL: optionalEnv(z.string().url()),
   NEXT_PUBLIC_APP_NAME: z.string().default('Christos Kerigkas'),
-  NEXT_PUBLIC_APP_VERSION: z.string().optional(),
+  NEXT_PUBLIC_APP_VERSION: optionalEnv(z.string()),
   
   // Database
-  DATABASE_URL: z.string().min(1).optional(),
-  DATABASE_ADMIN_URL: z.string().optional(),
+  DATABASE_URL: optionalEnv(z.string().min(1)),
+  DATABASE_ADMIN_URL: optionalEnv(z.string()),
   
   // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL').optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_SUPABASE_URL: optionalEnv(z.string().url('Invalid Supabase URL')),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalEnv(z.string().min(1)),
+  SUPABASE_SERVICE_ROLE_KEY: optionalEnv(z.string().min(1)),
 
   // Security
-  ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters').optional(),
-  CSRF_SECRET: z.string().min(32, 'CSRF_SECRET must be at least 32 characters').optional(),
+  ENCRYPTION_KEY: optionalEnv(z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters')),
+  CSRF_SECRET: optionalEnv(z.string().min(32, 'CSRF_SECRET must be at least 32 characters')),
   
   // Email (Optional)
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.string().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
-  FROM_EMAIL: z.string().email().optional(),
+  SMTP_HOST: optionalEnv(z.string()),
+  SMTP_PORT: optionalEnv(z.string()),
+  SMTP_USER: optionalEnv(z.string()),
+  SMTP_PASS: optionalEnv(z.string()),
+  FROM_EMAIL: optionalEnv(z.string().email()),
   
   // Rate Limiting
   RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).pipe(z.number().positive()).default('100'),
   RATE_LIMIT_WINDOW_MS: z.string().transform(Number).pipe(z.number().positive()).default('900000'),
   
   // Analytics (Optional)
-  NEXT_PUBLIC_GA_TRACKING_ID: z.string().optional(),
-  NEXT_PUBLIC_GOOGLE_ANALYTICS: z.string().optional(),
+  NEXT_PUBLIC_GA_TRACKING_ID: optionalEnv(z.string()),
+  NEXT_PUBLIC_GOOGLE_ANALYTICS: optionalEnv(z.string()),
   
   // Sentry (Optional)
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
-  SENTRY_ORG: z.string().optional(),
-  SENTRY_PROJECT: z.string().optional(),
-  SENTRY_AUTH_TOKEN: z.string().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: optionalEnv(z.string().url()),
+  SENTRY_ORG: optionalEnv(z.string()),
+  SENTRY_PROJECT: optionalEnv(z.string()),
+  SENTRY_AUTH_TOKEN: optionalEnv(z.string()),
   
   // File Upload (Optional)
   MAX_FILE_SIZE: z.string().transform(Number).pipe(z.number().positive()).default('5242880'),
@@ -62,17 +70,17 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   
   // Social Media (Optional)
-  NEXT_PUBLIC_TWITTER_HANDLE: z.string().optional(),
-  NEXT_PUBLIC_LINKEDIN_URL: z.string().url().optional(),
-  NEXT_PUBLIC_GITHUB_URL: z.string().url().optional(),
+  NEXT_PUBLIC_TWITTER_HANDLE: optionalEnv(z.string()),
+  NEXT_PUBLIC_LINKEDIN_URL: optionalEnv(z.string().url()),
+  NEXT_PUBLIC_GITHUB_URL: optionalEnv(z.string().url()),
   
   // Contact
-  CONTACT_FORM_TO_EMAIL: z.string().email().optional(),
-  NOTIFICATION_EMAIL: z.string().email().optional(),
+  CONTACT_FORM_TO_EMAIL: optionalEnv(z.string().email()),
+  NOTIFICATION_EMAIL: optionalEnv(z.string().email()),
   
   // Deployment (Optional)
-  VERCEL_URL: z.string().optional(),
-  DEPLOYMENT_WEBHOOK_SECRET: z.string().optional(),
+  VERCEL_URL: optionalEnv(z.string()),
+  DEPLOYMENT_WEBHOOK_SECRET: optionalEnv(z.string()),
 });
 
 /**
