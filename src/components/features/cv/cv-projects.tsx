@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTheme } from "next-themes"
-import { Project, ProjectCategory } from '@/types/projects'
+import { Project, ProjectCategory, ProjectStatus } from '@/types/projects'
 import { ExternalLink, Github, ChevronLeft, ChevronRight } from 'lucide-react'
 // Διόρθωση του μονοπατιού εισαγωγής
 import { OptimizedImage } from '@/components/common/optimized-image'
@@ -19,10 +19,27 @@ interface CVProjectsProps {
   }
 }
 
+type StatusFilter = 'all' | ProjectStatus
+
+const STATUS_PRIORITY: Record<ProjectStatus, number> = {
+  Completed: 0,
+  'In Progress': 1,
+  'In Development': 2,
+  Maintenance: 3,
+}
+
+const STATUS_LABELS: Record<ProjectStatus, string> = {
+  Completed: 'Completed',
+  'In Progress': 'In Progress',
+  'In Development': 'In Development',
+  Maintenance: 'Maintenance',
+}
+
 export default function CVProjects({ projects, viewMode, filters }: CVProjectsProps) {
   useTheme()
   const [currentProject, setCurrentProject] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   
   // Collect all unique categories from projects
   const allCategories = useMemo(() => {
@@ -36,10 +53,28 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
     
     return Array.from(categories).sort()
   }, [projects])
+
+  const availableStatuses = useMemo(() => {
+    const statuses = new Set<ProjectStatus>()
+
+    projects.forEach((project) => {
+      if (project.status) {
+        statuses.add(project.status)
+      }
+    })
+
+    return Array.from(statuses).sort(
+      (a, b) => STATUS_PRIORITY[a] - STATUS_PRIORITY[b]
+    )
+  }, [projects])
   
   // Filter projects based on selected filters
   const filteredProjects = useMemo(() => {
-    return projects.filter(project => {
+    const visibleProjects = projects.filter(project => {
+      if (statusFilter !== 'all' && project.status !== statusFilter) {
+        return false
+      }
+
       // Filter by category
       if (selectedCategory && !project.categories.some(cat => (cat as unknown as string) === selectedCategory)) {
         return false
@@ -52,7 +87,18 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
       
       return true
     })
-  }, [projects, selectedCategory, filters])
+
+    return visibleProjects.sort((a, b) => {
+      const left = a.status ? STATUS_PRIORITY[a.status] : Number.MAX_SAFE_INTEGER
+      const right = b.status ? STATUS_PRIORITY[b.status] : Number.MAX_SAFE_INTEGER
+
+      return left - right
+    })
+  }, [projects, selectedCategory, statusFilter, filters])
+
+  useEffect(() => {
+    setCurrentProject(0)
+  }, [selectedCategory, statusFilter, filters.skills, filters.years.min, filters.years.max])
   
   // Convert ProjectCategory to user-friendly name
   const getCategoryLabel = (category: ProjectCategory): string => {
@@ -104,26 +150,64 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
   
   return (
     <div className="space-y-6">
-      {/* Category filters */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Button 
-          variant={selectedCategory === null ? 'default' : 'outline'} 
-          onClick={() => setSelectedCategory(null)}
-          className={selectedCategory === null ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
-        >
-          All
-        </Button>
-        
-        {allCategories.map(category => (
-          <Button 
-            key={category}
-            variant={selectedCategory === category ? 'default' : 'outline'} 
-            onClick={() => setSelectedCategory(category)}
-            className={selectedCategory === category ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
-          >
-            {getCategoryLabel(category as unknown as ProjectCategory)}
-          </Button>
-        ))}
+      <div className="rounded-2xl border border-gray-200 bg-gray-50/90 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/70">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+              Category
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant={selectedCategory === null ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(null)}
+                className={selectedCategory === null ? 'rounded-full bg-indigo-600 px-4 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : 'rounded-full border-gray-300 bg-white/80 px-4 dark:border-gray-600 dark:bg-gray-900/40'}
+              >
+                All
+              </Button>
+              
+              {allCategories.map(category => (
+                <Button 
+                  key={category}
+                  variant={selectedCategory === category ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className={selectedCategory === category ? 'rounded-full bg-indigo-600 px-4 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : 'rounded-full border-gray-300 bg-white/80 px-4 dark:border-gray-600 dark:bg-gray-900/40'}
+                >
+                  {getCategoryLabel(category as unknown as ProjectCategory)}
+                </Button>
+                ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+              Status
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={statusFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('all')}
+                className={statusFilter === 'all' ? 'rounded-full bg-indigo-600 px-4 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : 'rounded-full border-gray-300 bg-white/80 px-4 dark:border-gray-600 dark:bg-gray-900/40'}
+              >
+                All statuses
+              </Button>
+
+              {availableStatuses.map((status) => (
+                <Button
+                  key={status}
+                  variant={statusFilter === status ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter(status)}
+                  className={statusFilter === status ? 'rounded-full bg-indigo-600 px-4 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : 'rounded-full border-gray-300 bg-white/80 px-4 dark:border-gray-600 dark:bg-gray-900/40'}
+                >
+                  {STATUS_LABELS[status]}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
       
       {viewMode === 'compact' ? (

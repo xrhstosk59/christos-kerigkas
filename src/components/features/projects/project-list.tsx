@@ -125,24 +125,60 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
   
   return (
     <div className="space-y-10">
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Button
-          variant={statusFilter === 'all' ? 'default' : 'outline'}
-          onClick={() => setStatusFilter('all')}
-          className={statusFilter === 'all' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
-        >
-          All
-        </Button>
-        {availableStatuses.map((status) => (
-          <Button
-            key={status}
-            variant={statusFilter === status ? 'default' : 'outline'}
-            onClick={() => setStatusFilter(status)}
-            className={statusFilter === status ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
-          >
-            {STATUS_LABELS[status]}
-          </Button>
-        ))}
+      <div className={cn(
+        "rounded-2xl border px-4 py-4 shadow-sm",
+        theme === 'dark'
+          ? 'border-gray-800 bg-gray-900/70'
+          : 'border-gray-200 bg-gray-50/90'
+      )}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className={cn(
+              "text-sm font-semibold",
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+              Filter by project status
+            </p>
+            <p className={cn(
+              "text-xs",
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            )}>
+              Completed projects appear first by default.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={statusFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('all')}
+              className={cn(
+                "rounded-full px-4",
+                statusFilter === 'all'
+                  ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
+                  : 'border-border bg-background/80'
+              )}
+            >
+              All
+            </Button>
+            {availableStatuses.map((status) => (
+              <Button
+                key={status}
+                variant={statusFilter === status ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter(status)}
+                className={cn(
+                  "rounded-full px-4",
+                  statusFilter === status
+                    ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
+                    : 'border-border bg-background/80'
+                )}
+              >
+                {STATUS_LABELS[status]}
+              </Button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-16">
