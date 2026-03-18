@@ -64,11 +64,6 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
     return true
   })
   
-  // Sort certifications (most recent first)
-  const sortedCertifications = [...filteredCertifications].sort((a, b) => 
-    new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
-  )
-  
   // Certification type label
   const getCertificationTypeLabel = (type: string): string => {
     const typeMap: Record<string, string> = {
@@ -117,9 +112,9 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
       </div>
       
       {/* Certifications */}
-      {sortedCertifications.length > 0 ? (
+      {filteredCertifications.length > 0 ? (
         <div className={`grid grid-cols-1 ${viewMode === 'compact' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1'} gap-4`}>
-          {sortedCertifications.map(cert => (
+          {filteredCertifications.map(cert => (
             <motion.div 
               key={cert.id}
               initial={{ opacity: 0, y: 20 }}

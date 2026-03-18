@@ -11,6 +11,8 @@ import { CVData } from '@/types/cv'
 import { getCVData } from '@/lib/data/cv-data'
 import Image from 'next/image'
 
+const CV_DOWNLOAD_PATH = '/cv/Christos_Kerigkas_CV.pdf'
+
 // Dynamic imports for code splitting
 const CVTimeline = dynamic(() => import('./cv-timeline'))
 const CVSkillsChart = dynamic(() => import('./cv-skills-chart'))
@@ -55,10 +57,15 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
     loadCVData()
   }, [initialCVData])
 
-  // Handle CV download from Supabase Storage
+  // Handle CV download from a local asset so the file always matches the repo version.
   const handleDownloadCV = () => {
-    const cvUrl = 'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/cv/Christos_Kerigkas_CV.pdf'
-    window.open(cvUrl, '_blank')
+    const link = document.createElement('a')
+    link.href = CV_DOWNLOAD_PATH
+    link.download = 'Christos_Kerigkas_CV.pdf'
+    link.rel = 'noopener'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   // If loading, show spinner
@@ -181,6 +188,14 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
                     {cvData.personalInfo.email}
                   </a>
                 )}
+                {cvData.personalInfo.phone && (
+                  <a
+                    href={`tel:${cvData.personalInfo.phone.replace(/\s+/g, '')}`}
+                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  >
+                    {cvData.personalInfo.phone}
+                  </a>
+                )}
                 {cvData.personalInfo.website && (
                   <a 
                     href={cvData.personalInfo.website}
@@ -236,6 +251,21 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
                   </a>
                 )}
               </div>
+              {cvData.languages && cvData.languages.length > 0 && (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Languages:
+                  </span>
+                  {cvData.languages.map(({ language, proficiency }) => (
+                    <span
+                      key={language}
+                      className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                    >
+                      {language} • {proficiency}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

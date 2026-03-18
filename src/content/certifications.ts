@@ -3,6 +3,17 @@ import { Certification } from '@/types/certifications';
 
 export const certifications: Certification[] = [
   {
+    id: 'azure-ai-essentials-workloads-ml',
+    title: 'Microsoft Azure AI Essentials: Workloads and Machine Learning on Azure',
+    issuer: 'LinkedIn Learning',
+    issueDate: '2025-11-22',
+    description: 'LinkedIn Learning course on Azure AI workloads, machine learning foundations, and practical AI concepts in Microsoft Azure.',
+    skills: ['Machine Learning', 'Azure AI Foundry', 'Artificial Intelligence (AI)'],
+    type: 'course',
+    filename: 'Microsoft_Azure_AI_Essentials_Workloads_and_Machine_Learning_on_Azure.pdf',
+    featured: true
+  },
+  {
     id: 'oracle-ai-foundations',
     title: 'Oracle Cloud Infrastructure 2025 Certified AI Foundations Associate',
     issuer: 'Oracle',
