@@ -188,8 +188,8 @@ export default function Hero() {
                 Full Stack Developer
               </p>
               <p className="mt-6 text-base sm:text-lg max-w-2xl mx-auto text-gray-600">
-                Building modern web applications and crypto trading solutions.
-                Specialized in Next.js, React, and TypeScript development.
+                Building websites and mobile applications while exploring how AI can improve modern products.
+                Open to new opportunities and collaborations.
               </p>
             </div>
           </div>
@@ -311,8 +311,8 @@ export default function Hero() {
               "mt-6 text-base sm:text-lg max-w-2xl mx-auto",
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             )}>
-              Building modern web applications and crypto trading solutions.
-              Specialized in Next.js, React, and TypeScript development.
+              Building websites and mobile applications while exploring how AI can improve modern products.
+              Open to new opportunities and collaborations.
             </p>
           </motion.div>
 

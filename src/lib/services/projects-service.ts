@@ -4,6 +4,7 @@ import { cache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/lib/db/database.types';
 import { Permission, UserWithRole, checkPermission } from '@/lib/auth/access-control';
+import { applyProjectCopyOverrides } from '@/lib/data/project-copy';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type NewProject = Database['public']['Tables']['projects']['Insert'];
@@ -27,6 +28,10 @@ export interface ProjectsSearchParams {
 export interface ProjectsResult {
   projects: Project[];
   total: number;
+}
+
+function normalizeProject(project: Project): Project {
+  return applyProjectCopyOverrides(project);
 }
 
 /**
@@ -84,7 +89,7 @@ export const projectsService = {
           }
           
           return {
-            projects,
+            projects: projects.map(normalizeProject),
             total: projects.length
           };
         },
@@ -113,7 +118,7 @@ export const projectsService = {
         cacheKey,
         async () => {
           const project = await projectsRepository.findBySlug(slug);
-          return project || null;
+          return project ? normalizeProject(project) : null;
         },
         { expireInSeconds: 60 * 30 } // 30 λεπτά
       );

@@ -10,22 +10,22 @@ const details = [
   {
     icon: Code2,
     title: 'Full Stack Developer',
-    description: 'Specialized in web application development with Next.js, React, and TypeScript'
+    description: 'Building web and mobile applications with React, Next.js, React Native, and TypeScript'
   },
   {
     icon: GraduationCap,
-    title: 'Computer Science Student',
-    description: 'Studying Computer Science at Democritus University of Thrace (4th Year)'
+    title: 'Undergraduate CS Student',
+    description: 'Studying Computer Science at Democritus University of Thrace'
   },
   {
     icon: Briefcase,
     title: 'Internship',
-    description: '3-month Technical Support Intern at Municipality of Nea Propontida (Summer 2025)'
+    description: 'Technical Support Intern at the ICT Department of the Municipality of Nea Propontida'
   },
   {
     icon: MapPin,
     title: 'Location',
-    description: 'Based in Kavala, Greece with roots in Chalkidiki'
+    description: 'Based in Greece and open to new opportunities and collaborations'
   }
 ]
 
@@ -76,9 +76,8 @@ export function About() {
             </div>
 
             <p className="mt-12 text-lg leading-8 text-center text-gray-600">
-              21 years old, passionate about technology and developing innovative solutions. 
-              Combining computer science studies with hands-on experience in modern web development 
-              and blockchain technologies.
+              Undergraduate Computer Science student at Democritus University of Thrace,
+              focused on building websites and mobile applications while exploring the use of AI in development.
             </p>
           </div>
         </div>
@@ -166,9 +165,9 @@ export function About() {
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             )}
           >
-            Fourth-year Computer Science student passionate about technology and developing innovative solutions.
-            Currently working on various web development projects including my Bachelor's Thesis on an AI-powered travel platform.
-            Focused on learning modern web technologies and building practical applications that solve real-world problems.
+            Undergraduate Computer Science student at Democritus University of Thrace, passionate about building
+            websites and mobile applications and continuously improving through hands-on projects.
+            Focused on practical product development and exploring how artificial intelligence can strengthen modern applications.
           </motion.p>
         </motion.div>
       </div>

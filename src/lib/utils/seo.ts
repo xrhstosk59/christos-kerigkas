@@ -10,15 +10,14 @@ export const siteConfig = {
     name: 'Christos Kerigkas',
     image: getProfileImageUrl(),
     jobTitle: 'Full Stack Developer',
-    email: 'contact@christoskerigkas.com',
-    location: 'Kavala, Greece',
+    email: 'xrhstosk59@gmail.com',
+    location: 'Halkidiki, Greece',
     sameAs: [
-      'https://github.com/christoskerigkas',
+      'https://github.com/xrhstosk59',
       'https://linkedin.com/in/christoskerigkas',
-      // Συμπλήρωσε με τα πραγματικά social profiles
     ]
   },
-  description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js. Portfolio and professional experience.',
+  description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
   logo: {
     url: '/logo.png',
     width: 192,
@@ -38,8 +37,8 @@ export const defaultMetadata: Metadata = {
     default: 'Christos Kerigkas | Full Stack Developer',
     template: '%s | Christos Kerigkas'
   },
-  description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js. Portfolio and professional experience.',
-  keywords: ['Christos Kerigkas', 'Full Stack Developer', 'Next.js', 'React', 'TypeScript', 'Portfolio', 'Web Development'],
+  description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
+  keywords: ['Christos Kerigkas', 'Full Stack Developer', 'Computer Science Student', 'Next.js', 'React', 'TypeScript', 'Mobile Development', 'AI'],
   authors: [{ name: 'Christos Kerigkas', url: 'https://christoskerigkas.com' }],
   creator: 'Christos Kerigkas',
   publisher: 'Christos Kerigkas',
@@ -54,7 +53,7 @@ export const defaultMetadata: Metadata = {
     url: 'https://christoskerigkas.com',
     siteName: 'Christos Kerigkas',
     title: 'Christos Kerigkas | Full Stack Developer',
-    description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js. Portfolio and professional experience.',
+    description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
     images: [
       {
         url: 'https://christoskerigkas.com/og-image.jpg',
@@ -67,9 +66,9 @@ export const defaultMetadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Christos Kerigkas | Full Stack Developer',
-    description: 'Full Stack Developer specializing in Next.js, React, TypeScript, and Node.js.',
+    description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
     images: ['https://christoskerigkas.com/og-image.jpg'],
-    creator: '@christoskerigkas', // Συμπλήρωσε με το πραγματικό Twitter handle
+    creator: '@_xrhstos_k59_',
   },
   robots: {
     index: true,

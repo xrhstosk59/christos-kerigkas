@@ -1,21 +1,68 @@
 'use client'
 
 // /src/components/features/projects/project-list.tsx
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Github, ExternalLink } from 'lucide-react'
 // Διόρθωση μονοπατιού εισαγωγής
 import { OptimizedImage } from '@/components/common/optimized-image'
-import { Project } from '@/types/projects'
+import { Project, ProjectStatus } from '@/types/projects'
 import { cn } from '@/lib/utils/utils'
 import ProjectCard from './project-card'
+import { Button } from '@/components/ui/button'
 
 interface ProjectListProps {
   projects: Project[]
   theme: 'light' | 'dark'
 }
 
+type StatusFilter = 'all' | ProjectStatus
+
+const STATUS_PRIORITY: Record<ProjectStatus, number> = {
+  Completed: 0,
+  'In Progress': 1,
+  'In Development': 2,
+  Maintenance: 3,
+}
+
+const STATUS_LABELS: Record<ProjectStatus, string> = {
+  Completed: 'Completed',
+  'In Progress': 'In Progress',
+  'In Development': 'In Development',
+  Maintenance: 'Maintenance',
+}
+
 // Client Component για τη λίστα των projects με animations και interactivity
 export default function ProjectList({ projects, theme }: ProjectListProps) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+
+  const availableStatuses = useMemo(() => {
+    const statuses = new Set<ProjectStatus>()
+
+    projects.forEach((project) => {
+      if (project.status) {
+        statuses.add(project.status)
+      }
+    })
+
+    return Array.from(statuses).sort(
+      (a, b) => STATUS_PRIORITY[a] - STATUS_PRIORITY[b]
+    )
+  }, [projects])
+
+  const filteredProjects = useMemo(() => {
+    const visibleProjects = statusFilter === 'all'
+      ? projects
+      : projects.filter((project) => project.status === statusFilter)
+
+    return [...visibleProjects].sort((a, b) => {
+      const left = a.status ? STATUS_PRIORITY[a.status] : Number.MAX_SAFE_INTEGER
+      const right = b.status ? STATUS_PRIORITY[b.status] : Number.MAX_SAFE_INTEGER
+
+      return left - right
+    })
+  }, [projects, statusFilter])
+
   // Συνάρτηση για rendering της εικόνας
   const renderImage = (src: string, alt: string) => (
     <OptimizedImage
@@ -77,8 +124,29 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
   )
   
   return (
-    <div className="space-y-16">
-      {projects.map((project, index) => (
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button
+          variant={statusFilter === 'all' ? 'default' : 'outline'}
+          onClick={() => setStatusFilter('all')}
+          className={statusFilter === 'all' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
+        >
+          All
+        </Button>
+        {availableStatuses.map((status) => (
+          <Button
+            key={status}
+            variant={statusFilter === status ? 'default' : 'outline'}
+            onClick={() => setStatusFilter(status)}
+            className={statusFilter === status ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
+          >
+            {STATUS_LABELS[status]}
+          </Button>
+        ))}
+      </div>
+
+      <div className="space-y-16">
+      {filteredProjects.map((project, index) => (
         <motion.div
           key={project.title}
           initial={{ opacity: 0, y: 20 }}
@@ -96,6 +164,7 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
           />
         </motion.div>
       ))}
+      </div>
     </div>
   )
 }
