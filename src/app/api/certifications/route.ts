@@ -1,10 +1,70 @@
 // src/app/api/certifications/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbClient } from '@/lib/db/server-db';
+import { certifications as fallbackCertifications } from '@/content/certifications';
+import type { Certification, CertificationType } from '@/types/certifications';
+import { getFilenameFromUrl } from '@/lib/utils/storage';
 
 // ✅ FORCE DYNAMIC RENDERING - Prevents caching issues
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+type CertificationRow = {
+  id: string | number;
+  title?: string | null;
+  name?: string | null;
+  issuer?: string | null;
+  issue_date?: string | null;
+  issueDate?: string | null;
+  expiry_date?: string | null;
+  expirationDate?: string | null;
+  credential_id?: string | null;
+  credentialId?: string | null;
+  credential_url?: string | null;
+  credentialUrl?: string | null;
+  description?: string | null;
+  skills?: string[] | null;
+  type?: string | null;
+  filename?: string | null;
+  featured?: boolean | null;
+};
+
+const VALID_CERTIFICATION_TYPES: CertificationType[] = [
+  'course',
+  'badge',
+  'seminar',
+  'conference',
+  'certification',
+];
+
+function normalizeCertificationType(type: string | null | undefined): CertificationType {
+  if (type && VALID_CERTIFICATION_TYPES.includes(type as CertificationType)) {
+    return type as CertificationType;
+  }
+
+  return 'certification';
+}
+
+function normalizeCertification(row: CertificationRow): Certification {
+  const normalizedFilename = row.filename
+    ? getFilenameFromUrl(row.filename) ?? row.filename
+    : '';
+
+  return {
+    id: String(row.id),
+    title: row.title ?? row.name ?? 'Untitled certification',
+    issuer: row.issuer ?? 'Unknown issuer',
+    issueDate: row.issueDate ?? row.issue_date ?? new Date().toISOString().slice(0, 10),
+    expirationDate: row.expirationDate ?? row.expiry_date ?? undefined,
+    credentialId: row.credentialId ?? row.credential_id ?? undefined,
+    credentialUrl: row.credentialUrl ?? row.credential_url ?? undefined,
+    description: row.description ?? undefined,
+    skills: Array.isArray(row.skills) ? row.skills : [],
+    type: normalizeCertificationType(row.type),
+    filename: normalizedFilename,
+    featured: row.featured ?? false,
+  };
+}
 
 export async function GET(_request: NextRequest) {
   try {
@@ -37,9 +97,11 @@ export async function GET(_request: NextRequest) {
         throw new Error('Invalid data format from database');
       }
 
-      console.log(`Successfully fetched ${result.length} certifications`);
+      const normalizedResult = result.map((row) => normalizeCertification(row as CertificationRow));
 
-      return NextResponse.json(result, {
+      console.log(`Successfully fetched ${normalizedResult.length} certifications`);
+
+      return NextResponse.json(normalizedResult, {
         status: 200,
         headers: corsHeaders,
       });
@@ -47,53 +109,7 @@ export async function GET(_request: NextRequest) {
     } catch (dbError) {
       console.warn('Database unavailable, returning mock data:', dbError);
 
-      // ✅ MOCK DATA FALLBACK
-      const mockCertifications = [
-        {
-          id: 1,
-          name: 'AWS Certified Cloud Practitioner',
-          issuer: 'Amazon Web Services',
-          issue_date: '2024-01-15',
-          expiry_date: '2027-01-15',
-          credential_id: 'ABC123DEF456',
-          credential_url: 'https://aws.amazon.com/verification',
-          type: 'cloud',
-          skills: ['AWS', 'Cloud Computing', 'Infrastructure'],
-          filename: 'aws-cloud-practitioner.pdf',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          name: 'Google Analytics Individual Qualification',
-          issuer: 'Google',
-          issue_date: '2023-12-10',
-          expiry_date: '2024-12-10',
-          credential_id: 'GA456789',
-          credential_url: 'https://skillshop.exceedlms.com/student/award/123',
-          type: 'marketing',
-          skills: ['Google Analytics', 'Digital Marketing', 'Data Analysis'],
-          filename: 'google-analytics-cert.pdf',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          name: 'React Developer Certificate',
-          issuer: 'Meta',
-          issue_date: '2023-11-20',
-          expiry_date: null,
-          credential_id: 'REACT789XYZ',
-          credential_url: 'https://developers.facebook.com/certification',
-          type: 'development',
-          skills: ['React', 'JavaScript', 'Frontend Development'],
-          filename: 'react-developer-cert.pdf',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-      ];
-
-      return NextResponse.json(mockCertifications, {
+      return NextResponse.json(fallbackCertifications, {
         status: 200,
         headers: corsHeaders,
       });

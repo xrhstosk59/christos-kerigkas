@@ -86,17 +86,17 @@ export async function deleteProfileImage(filepath: string): Promise<void> {
  */
 export function getFilenameFromUrl(url: string): string | null {
   try {
-    // Handle full Supabase URLs
-    if (url.includes(BUCKET_NAME)) {
-      const filename = url.split('/').pop() || null;
-      return filename;
+    if (typeof url !== 'string' || !url.trim()) {
+      return null;
     }
-    // Handle relative paths
-    if (url.startsWith('/')) {
-      const filename = url.split('/').pop() || null;
-      return filename;
+
+    const normalizedUrl = url.trim();
+
+    if (/^https?:\/\//i.test(normalizedUrl) || normalizedUrl.startsWith('/')) {
+      return normalizedUrl.split('/').pop() || null;
     }
-    return null;
+
+    return normalizedUrl.includes('/') ? normalizedUrl.split('/').pop() || null : normalizedUrl;
   } catch (error) {
     console.error('Error extracting filename:', error)
     return null
@@ -124,6 +124,18 @@ export const PROFILE_IMAGE_URL = `${SUPABASE_URL}/storage/v1/object/public/profi
  * Επιστρέφει το πλήρες Supabase Storage URL για ένα αρχείο πιστοποιητικού
  */
 export function getCertificateUrl(filename: string): string {
+  if (!filename) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(filename)) {
+    return filename;
+  }
+
+  if (filename.startsWith('/storage/')) {
+    return `${SUPABASE_URL}${filename}`;
+  }
+
   return `${SUPABASE_URL}/storage/v1/object/public/certificates/${filename}`;
 }
 

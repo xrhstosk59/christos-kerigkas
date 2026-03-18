@@ -6,6 +6,8 @@ import { Calendar, Award, ExternalLink, X, Eye, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Certification } from '@/types/certifications'
+import { getCertificateUrl } from '@/lib/utils/storage'
+import { PdfPreview } from '@/components/common/pdf-preview'
 
 interface CVCertificationsProps {
   certifications: Certification[]
@@ -233,10 +235,10 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
           
           <div className="flex-1 overflow-hidden">
             {selectedCertification && (
-              <iframe 
-                src={`/uploads/certificates/${selectedCertification.filename}`}
-                className="w-full h-full border-0"
+              <PdfPreview
+                fileUrl={getCertificateUrl(selectedCertification.filename)}
                 title={selectedCertification.title}
+                className="h-full w-full border-0"
               />
             )}
           </div>
@@ -249,7 +251,7 @@ export default function CVCertifications({ certifications, viewMode, filters }: 
                 asChild
               >
                 <a 
-                  href={`/uploads/certificates/${selectedCertification.filename}`} 
+                  href={getCertificateUrl(selectedCertification.filename)}
                   target="_blank" 
                   rel="noopener noreferrer"
                 >

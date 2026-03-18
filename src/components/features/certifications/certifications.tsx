@@ -1,202 +1,153 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useTheme } from 'next-themes'
+import { CalendarDays, Download, ExternalLink, Eye } from 'lucide-react'
+import type { Certification } from '@/types/certifications'
+import { getCertificateUrl } from '@/lib/utils/storage'
+import { PdfPreview } from '@/components/common/pdf-preview'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
-// ✅ CERTIFICATION TYPE
-interface Certification {
-  id: string
-  title: string
-  issuer: string
-  issueDate?: string
-  filename?: string
-  credentialUrl?: string
-  description?: string
-  skills?: string[]
-  type?: string
-  featured?: boolean
-}
-
-// ✅ LOADING SKELETON - Pure Tailwind
 function CertificationsSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bg-card border border-border rounded-lg p-6 animate-pulse">
-          <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
-          <div className="h-4 bg-muted rounded w-1/2 mb-3"></div>
-          <div className="h-4 bg-muted rounded w-full mb-2"></div>
-          <div className="h-4 bg-muted rounded w-2/3"></div>
+        <div key={i} className="rounded-2xl border border-border bg-card p-6 animate-pulse">
+          <div className="mb-4 h-6 w-3/4 rounded bg-muted" />
+          <div className="mb-3 h-4 w-1/2 rounded bg-muted" />
+          <div className="mb-2 h-4 w-full rounded bg-muted" />
+          <div className="h-4 w-2/3 rounded bg-muted" />
         </div>
       ))}
     </div>
   )
 }
 
-// ✅ CERTIFICATION CARD - FIXED for hydration
-function CertificationCard({ cert }: { cert: Certification }) {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+interface CertificationCardProps {
+  cert: Certification
+  onPreview: (certification: Certification) => void
+}
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+function CertificationCard({ cert, onPreview }: CertificationCardProps) {
+  const hasPreview = Boolean(cert.filename)
 
-  // Static version until mounted
-  if (!mounted) {
-    return (
-      <div className="border border-border rounded-lg p-6 transition-all duration-200 hover:scale-105 hover:shadow-lg bg-card hover:bg-card/90">
-        <h3 className="text-lg font-semibold text-card-foreground mb-2">
-          {cert.title}
-        </h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          {cert.issuer}
-        </p>
+  return (
+    <article className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+      <button
+        type="button"
+        onClick={() => hasPreview && onPreview(cert)}
+        className="flex flex-1 flex-col text-left"
+        disabled={!hasPreview}
+      >
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-card-foreground">{cert.title}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{cert.issuer}</p>
+          </div>
+          {hasPreview && (
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Eye className="h-5 w-5" />
+            </span>
+          )}
+        </div>
+
         {cert.issueDate && (
-          <p className="text-xs text-muted-foreground mb-3">
-            {new Date(cert.issueDate).toLocaleDateString()}
-          </p>
+          <div className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground">
+            <CalendarDays className="h-4 w-4" />
+            <span>
+              {new Date(cert.issueDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+              })}
+            </span>
+          </div>
         )}
+
         {cert.description && (
-          <p className="text-sm text-card-foreground mb-4">
+          <p className="mb-4 line-clamp-3 text-sm leading-6 text-card-foreground/80">
             {cert.description}
           </p>
         )}
+
         {cert.skills && cert.skills.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {cert.skills.map((skill, index) => (
-              <span 
-                key={index}
-                className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary"
+          <div className="mb-5 flex flex-wrap gap-2">
+            {cert.skills.map((skill) => (
+              <span
+                key={skill}
+                className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
               >
                 {skill}
               </span>
             ))}
           </div>
         )}
-        <div className="flex items-center gap-2">
-          {cert.filename && (
-            <a
-              href={`/uploads/certificates/${cert.filename}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
-            >
-              View Certificate
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </a>
-          )}
-          {cert.credentialUrl && (
-            <a
-              href={cert.credentialUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
-            >
-              Verify Online
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          )}
-        </div>
-      </div>
-    )
-  }
 
-  // Theme-dependent version after mounted
-  return (
-    <div className={`
-      border border-border rounded-lg p-6 transition-all duration-200 hover:scale-105 hover:shadow-lg
-      ${theme === 'dark' ? 'bg-card hover:bg-card/80' : 'bg-card hover:bg-card/90'}
-    `}>
-      <h3 className="text-lg font-semibold text-card-foreground mb-2">
-        {cert.title}
-      </h3>
-      <p className="text-sm text-muted-foreground mb-3">
-        {cert.issuer}
-      </p>
-      {cert.issueDate && (
-        <p className="text-xs text-muted-foreground mb-3">
-          {new Date(cert.issueDate).toLocaleDateString()}
-        </p>
-      )}
-      {cert.description && (
-        <p className="text-sm text-card-foreground mb-4">
-          {cert.description}
-        </p>
-      )}
-      {cert.skills && cert.skills.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {cert.skills.map((skill, index) => (
-            <span 
-              key={index}
-              className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary"
-            >
-              {skill}
-            </span>
-          ))}
+        <div className="mt-auto text-sm text-primary">
+          {hasPreview ? 'Click to preview certificate' : 'Certificate file is not available'}
         </div>
-      )}
-      <div className="flex items-center gap-2">
-        {cert.filename && (
-          <a
-            href={`/uploads/certificates/${cert.filename}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
-          >
-            View Certificate
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-          </a>
+      </button>
+
+      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-border pt-4">
+        {hasPreview && (
+          <>
+            <button
+              type="button"
+              onClick={() => onPreview(cert)}
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+            >
+              <Eye className="h-4 w-4" />
+              Preview
+            </button>
+            <a
+              href={getCertificateUrl(cert.filename)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+            >
+              <Download className="h-4 w-4" />
+              Open File
+            </a>
+          </>
         )}
+
         {cert.credentialUrl && (
           <a
             href={cert.credentialUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
           >
+            <ExternalLink className="h-4 w-4" />
             Verify Online
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
           </a>
         )}
       </div>
-    </div>
+    </article>
   )
 }
 
-// ✅ MAIN CERTIFICATIONS COMPONENT - FIXED for hydration
 export function Certifications() {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
   const [certifications, setCertifications] = useState<Certification[]>([])
+  const [selectedCertification, setSelectedCertification] = useState<Certification | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     const fetchCertifications = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/certifications', {
-          cache: 'no-store', // Prevent caching issues
-        })
-        
+        const response = await fetch('/api/certifications', { cache: 'no-store' })
+
         if (!response.ok) {
           throw new Error('Failed to fetch certifications')
         }
-        
-        const data = await response.json()
+
+        const data: Certification[] = await response.json()
         setCertifications(data)
       } catch (err) {
         console.error('Error fetching certifications:', err)
@@ -209,71 +160,10 @@ export function Certifications() {
     fetchCertifications()
   }, [])
 
-  // Static version until mounted
-  if (!mounted) {
-    return (
-      <section 
-        id="certifications" 
-        className="py-24 transition-colors duration-200 bg-muted/30"
-      >
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          {/* ✅ SECTION HEADER */}
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Certifications
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Professional certifications and achievements
-            </p>
-          </div>
-
-          {/* ✅ CONTENT */}
-          {loading && <CertificationsSkeleton />}
-          
-          {error && (
-            <div className="text-center py-12">
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 max-w-md mx-auto">
-                <p className="text-destructive font-medium mb-4">Error loading certifications</p>
-                <p className="text-sm text-muted-foreground mb-4">{error}</p>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
-          )}
-
-          {!loading && !error && certifications.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No certifications found.</p>
-            </div>
-          )}
-
-          {!loading && !error && certifications.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {certifications.map((cert) => (
-                <CertificationCard key={cert.id} cert={cert} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-    )
-  }
-
-  // Theme-dependent version after mounted
   return (
-    <section 
-      id="certifications" 
-      className={`py-24 transition-colors duration-200 ${
-        theme === 'dark' ? 'bg-background' : 'bg-muted/30'
-      }`}
-    >
+    <section id="certifications" className="bg-muted/30 py-24 transition-colors duration-200">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        {/* ✅ SECTION HEADER */}
-        <div className="text-center mb-16">
+        <div className="mb-16 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Certifications
           </h2>
@@ -282,17 +172,17 @@ export function Certifications() {
           </p>
         </div>
 
-        {/* ✅ CONTENT */}
         {loading && <CertificationsSkeleton />}
-        
+
         {error && (
-          <div className="text-center py-12">
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 max-w-md mx-auto">
-              <p className="text-destructive font-medium mb-4">Error loading certifications</p>
-              <p className="text-sm text-muted-foreground mb-4">{error}</p>
-              <button 
-                onClick={() => window.location.reload()} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          <div className="py-12 text-center">
+            <div className="mx-auto max-w-md rounded-lg border border-destructive/20 bg-destructive/10 p-6">
+              <p className="mb-4 font-medium text-destructive">Error loading certifications</p>
+              <p className="mb-4 text-sm text-muted-foreground">{error}</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="rounded-md bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Retry
               </button>
@@ -301,19 +191,86 @@ export function Certifications() {
         )}
 
         {!loading && !error && certifications.length === 0 && (
-          <div className="text-center py-12">
+          <div className="py-12 text-center">
             <p className="text-muted-foreground">No certifications found.</p>
           </div>
         )}
 
         {!loading && !error && certifications.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {certifications.map((cert) => (
-              <CertificationCard key={cert.id} cert={cert} />
+              <CertificationCard
+                key={cert.id}
+                cert={cert}
+                onPreview={setSelectedCertification}
+              />
             ))}
           </div>
         )}
       </div>
+
+      <Dialog
+        open={Boolean(selectedCertification)}
+        onOpenChange={(open) => !open && setSelectedCertification(null)}
+      >
+        <DialogContent className="max-w-5xl border-border bg-background p-0 sm:max-h-[90vh] sm:rounded-2xl">
+          {selectedCertification && (
+            <>
+              <DialogHeader className="border-b border-border px-6 py-5 text-left">
+                <DialogTitle className="pr-10 text-xl text-foreground">
+                  {selectedCertification.title}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedCertification.issuer}
+                  {selectedCertification.issueDate && (
+                    <>
+                      {' '}
+                      •{' '}
+                      {new Date(selectedCertification.issueDate).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="h-[70vh] bg-muted/30 p-4">
+                <PdfPreview
+                  fileUrl={getCertificateUrl(selectedCertification.filename)}
+                  title={selectedCertification.title}
+                  className="h-full w-full rounded-xl border border-border bg-background"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border px-6 py-4">
+                {selectedCertification.credentialUrl && (
+                  <a
+                    href={selectedCertification.credentialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Verify Online
+                  </a>
+                )}
+
+                <a
+                  href={getCertificateUrl(selectedCertification.filename)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  <Download className="h-4 w-4" />
+                  Open in New Tab
+                </a>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

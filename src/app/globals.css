@@ -7,48 +7,48 @@
   :root {
     --font-sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    --background: 255 255 255;
-    --foreground: 23 23 23;
-    --muted: 243 244 246;
-    --muted-foreground: 107 114 128;
-    --card: 255 255 255;
-    --card-foreground: 23 23 23;
-    --popover: 255 255 255;
-    --popover-foreground: 23 23 23;
-    --primary: 79 70 229;
-    --primary-foreground: 255 255 255;
-    --secondary: 243 244 246;
-    --secondary-foreground: 23 23 23;
-    --accent: 243 244 246;
-    --accent-foreground: 23 23 23;
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
-    --border: 229 231 235;
-    --input: 229 231 235;
-    --ring: 79 70 229;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --accent: 214 32% 91%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 9 9 11;
-    --foreground: 250 250 250;
-    --muted: 39 39 42;
-    --muted-foreground: 161 161 170;
-    --card: 9 9 11;
-    --card-foreground: 250 250 250;
-    --popover: 9 9 11;
-    --popover-foreground: 250 250 250;
-    --primary: 99 102 241;
-    --primary-foreground: 250 250 250;
-    --secondary: 39 39 42;
-    --secondary-foreground: 250 250 250;
-    --accent: 39 39 42;
-    --accent-foreground: 250 250 250;
-    --destructive: 239 68 68;
-    --destructive-foreground: 250 250 250;
-    --border: 39 39 42;
-    --input: 39 39 42;
-    --ring: 99 102 241;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 217 33% 20%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 217 91% 60%;
   }
 
   /* ✅ BASE STYLES - Pure Tailwind approach */
@@ -159,12 +159,12 @@
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .dark {
-    --border: 255 255 255;
-    --ring: 255 255 255;
+    --border: 0 0% 100%;
+    --ring: 0 0% 100%;
   }
   
   :root {
-    --border: 0 0 0;
-    --ring: 0 0 0;
+    --border: 0 0% 0%;
+    --ring: 0 0% 0%;
   }
 }
