@@ -62,7 +62,7 @@
     "depcheck": "^1.4.7",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
-    "framer-motion": "^11.18.2",
+    "framer-motion": "^12.38.0",
     "next-themes": "^0.2.1",
     "postcss": "^8",
     "recharts": "^2.12.1",
