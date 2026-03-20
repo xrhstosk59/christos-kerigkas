@@ -23,6 +23,7 @@ export interface Skill {
   name: string;
   level: number; // Σε κλίμακα 1-10 ή 1-100
   category: string; // Can be any category string like "Languages & Frameworks", "Technologies & Tools", etc.
+  order?: number;
   yearsOfExperience?: number;
   description?: string;
   icon?: string;

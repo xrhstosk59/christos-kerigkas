@@ -52,7 +52,7 @@ export default function Projects({ theme }: ProjectsProps) {
       <p className={cn("text-center mb-16",
         theme === 'dark' ? 'text-gray-400' : 'text-gray-600')}
       >
-        A showcase of my academic and personal projects across various technologies
+        Selected web, mobile, AI, and desktop projects built primarily with TypeScript/JavaScript, plus Java, PHP, and Python where the product called for it.
       </p>
 
       {loading && (

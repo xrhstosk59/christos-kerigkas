@@ -86,6 +86,21 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
   const isDark = theme === 'dark'
   const [chartType, setChartType] = useState<'bar' | 'radar'>('bar')
   const [selectedCategory, setSelectedCategory] = useState<SkillCategory | 'all'>('all')
+
+  const compareSkills = (left: Skill, right: Skill) => {
+    if (left.level !== right.level) {
+      return right.level - left.level
+    }
+
+    const leftOrder = left.order ?? Number.MAX_SAFE_INTEGER
+    const rightOrder = right.order ?? Number.MAX_SAFE_INTEGER
+
+    if (leftOrder !== rightOrder) {
+      return leftOrder - rightOrder
+    }
+
+    return left.name.localeCompare(right.name)
+  }
   
   // Group skills by category
   const skillsByCategory = useMemo(() => {
@@ -133,7 +148,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
   // Sorted skills for bar chart
   const sortedSkillsForBarChart = useMemo(() => {
     return [...filteredSkills]
-      .sort((a, b) => b.level - a.level)
+      .sort(compareSkills)
       .slice(0, 15) // Limit for better readability
       .map(skill => ({
         name: skill.name,
@@ -339,7 +354,7 @@ export default function CVSkillsChart({ skills, viewMode, filters }: CVSkillsCha
                   filters.skills.length === 0 || 
                   filters.skills.includes(skill.name)
                 )
-                .sort((a, b) => b.level - a.level)
+                .sort(compareSkills)
               
               if (categorySkills.length === 0) return null
               

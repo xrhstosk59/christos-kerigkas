@@ -10,7 +10,7 @@ const details = [
   {
     icon: Code2,
     title: 'Full Stack Developer',
-    description: 'Building web and mobile applications with React, Next.js, React Native, and TypeScript'
+    description: 'Primarily building with TypeScript and JavaScript across React, Next.js, Node.js, and React Native, with selected desktop apps in JavaFX'
   },
   {
     icon: GraduationCap,
@@ -77,7 +77,8 @@ export function About() {
 
             <p className="mt-12 text-lg leading-8 text-center text-gray-600">
               Undergraduate Computer Science student at Democritus University of Thrace,
-              focused on building websites and mobile applications while exploring the use of AI in development.
+              focused mainly on TypeScript and JavaScript across modern web and mobile products,
+              while also building desktop work in JavaFX and project-based systems in PHP and Python when the problem calls for them.
             </p>
           </div>
         </div>
@@ -165,9 +166,9 @@ export function About() {
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             )}
           >
-            Undergraduate Computer Science student at Democritus University of Thrace, passionate about building
-            websites and mobile applications and continuously improving through hands-on projects.
-            Focused on practical product development and exploring how artificial intelligence can strengthen modern applications.
+            Undergraduate Computer Science student at Democritus University of Thrace, building mostly with
+            TypeScript and JavaScript across modern web and mobile products, while also shipping desktop work in JavaFX
+            and project-based systems in PHP and Python when the problem calls for them.
           </motion.p>
         </motion.div>
       </div>

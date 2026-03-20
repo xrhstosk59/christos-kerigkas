@@ -4,7 +4,11 @@ import { cache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/lib/db/database.types';
 import { Permission, UserWithRole, checkPermission } from '@/lib/auth/access-control';
-import { applyProjectCopyOverrides } from '@/lib/data/project-copy';
+import {
+  applyProjectCopyOverrides,
+  getSupplementalProjectBySlug,
+  mergePortfolioProjects,
+} from '@/lib/data/project-copy';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type NewProject = Database['public']['Tables']['projects']['Insert'];
@@ -64,32 +68,24 @@ export const projectsService = {
       return await cache.getOrSet<ProjectsResult>(
         cacheKey,
         async () => {
-          let projects: Project[] = [];
-          
+          let projects = mergePortfolioProjects(
+            (await projectsRepository.findAll()).map(normalizeProject)
+          );
+
           if (featured !== undefined) {
-            // Αν έχει οριστεί το featured, ανακτούμε τα featured projects
-            if (featured) {
-              projects = await projectsRepository.findFeatured();
-            } else {
-              // Αν featured=false, ανακτούμε όλα και φιλτράρουμε τα μη featured
-              const allProjects = await projectsRepository.findAll(limit);
-              projects = allProjects.filter(p => !p.featured);
-            }
-          } else if (category) {
-            // Αν έχει οριστεί κατηγορία, φιλτράρουμε με βάση αυτή
-            projects = await projectsRepository.findByCategory(category);
-            
-            // Αν υπάρχει limit, περιορίζουμε τα αποτελέσματα
-            if (limit && projects.length > limit) {
-              projects = projects.slice(0, limit);
-            }
-          } else {
-            // Διαφορετικά, επιστρέφουμε όλα τα projects
-            projects = await projectsRepository.findAll(limit);
+            projects = projects.filter(project => Boolean(project.featured) === featured);
+          }
+
+          if (category) {
+            projects = projects.filter(project => project.categories?.includes(category));
+          }
+
+          if (limit && projects.length > limit) {
+            projects = projects.slice(0, limit);
           }
           
           return {
-            projects: projects.map(normalizeProject),
+            projects,
             total: projects.length
           };
         },
@@ -118,7 +114,13 @@ export const projectsService = {
         cacheKey,
         async () => {
           const project = await projectsRepository.findBySlug(slug);
-          return project ? normalizeProject(project) : null;
+
+          if (project) {
+            return normalizeProject(project);
+          }
+
+          const supplementalProject = getSupplementalProjectBySlug(slug);
+          return supplementalProject ? normalizeProject(supplementalProject) : null;
         },
         { expireInSeconds: 60 * 30 } // 30 λεπτά
       );

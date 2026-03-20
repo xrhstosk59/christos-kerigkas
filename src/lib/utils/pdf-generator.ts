@@ -306,7 +306,20 @@ const addSkills = (
     
     // Add category skills
     const skillsText = skills
-      .sort((a, b) => b.level - a.level)
+      .sort((a, b) => {
+        if (a.level !== b.level) {
+          return b.level - a.level;
+        }
+
+        const leftOrder = a.order ?? Number.MAX_SAFE_INTEGER;
+        const rightOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+
+        if (leftOrder !== rightOrder) {
+          return leftOrder - rightOrder;
+        }
+
+        return a.name.localeCompare(b.name);
+      })
       .map(skill => `${skill.name}${skill.yearsOfExperience ? ` (${skill.yearsOfExperience} years)` : ''}`)
       .join(', ');
     

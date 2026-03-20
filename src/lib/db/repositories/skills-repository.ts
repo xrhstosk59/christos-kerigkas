@@ -12,6 +12,7 @@ function mapDBSkillToSkill(dbSkill: DBSkill): Skill {
     name: dbSkill.name,
     level: (dbSkill.proficiency ?? 0) * 20, // Convert 1-5 scale to 1-100 scale
     category: dbSkill.category,
+    order: dbSkill.display_order ?? undefined,
     icon: dbSkill.icon || undefined
   };
 }

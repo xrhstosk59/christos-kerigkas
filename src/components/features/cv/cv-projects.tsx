@@ -40,6 +40,10 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
   const [currentProject, setCurrentProject] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const projectOrder = useMemo(
+    () => new Map(projects.map((project, index) => [project.slug, index])),
+    [projects]
+  )
   
   // Collect all unique categories from projects
   const allCategories = useMemo(() => {
@@ -89,12 +93,12 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
     })
 
     return visibleProjects.sort((a, b) => {
-      const left = a.status ? STATUS_PRIORITY[a.status] : Number.MAX_SAFE_INTEGER
-      const right = b.status ? STATUS_PRIORITY[b.status] : Number.MAX_SAFE_INTEGER
+      const left = projectOrder.get(a.slug) ?? Number.MAX_SAFE_INTEGER
+      const right = projectOrder.get(b.slug) ?? Number.MAX_SAFE_INTEGER
 
       return left - right
     })
-  }, [projects, selectedCategory, statusFilter, filters])
+  }, [projects, selectedCategory, statusFilter, filters, projectOrder])
 
   useEffect(() => {
     setCurrentProject(0)

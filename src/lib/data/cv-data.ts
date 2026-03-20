@@ -11,13 +11,13 @@ import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
 import { Certification } from '@/types/certifications';
 import type { Database } from '../db/database.types';
 import { getProfileImageUrl } from '../utils/storage';
-import { applyProjectCopyOverrides } from './project-copy';
+import { mergePortfolioProjects } from './project-copy';
 
 type DbProject = Database['public']['Tables']['projects']['Row'];
 type CVSkillDefinition = {
   name: string;
   category: Skill['category'];
-  fallbackLevel?: number;
+  minimumLevel?: number;
 };
 
 const CV_PROJECT_ORDER = [
@@ -25,6 +25,10 @@ const CV_PROJECT_ORDER = [
   'bluewave-properties',
   'wait-less',
   'grade-calc',
+  'sqlatch',
+  'saas-dashboard-template',
+  'car-station',
+  'zoo',
 ] as const;
 
 const CV_CERTIFICATION_ORDER = [
@@ -43,27 +47,30 @@ const CV_CERTIFICATION_ORDER = [
 ] as const;
 
 const CV_SKILL_DEFINITIONS: CVSkillDefinition[] = [
-  { name: 'HTML5', category: 'Languages & Frameworks' },
-  { name: 'CSS3', category: 'Languages & Frameworks' },
-  { name: 'JavaScript', category: 'Languages & Frameworks' },
-  { name: 'TypeScript', category: 'Languages & Frameworks' },
-  { name: 'React', category: 'Languages & Frameworks' },
-  { name: 'React Native', category: 'Languages & Frameworks' },
-  { name: 'Next.js', category: 'Languages & Frameworks' },
-  { name: 'TailwindCSS', category: 'Languages & Frameworks' },
-  { name: 'PostgreSQL', category: 'Languages & Frameworks' },
-  { name: 'Python', category: 'Languages & Frameworks' },
-  { name: 'PHP', category: 'Languages & Frameworks' },
-  { name: 'R', category: 'Languages & Frameworks', fallbackLevel: 60 },
-  { name: 'C++', category: 'Languages & Frameworks' },
-  { name: 'JavaFX', category: 'Languages & Frameworks' },
-  { name: 'Node.js', category: 'Technologies & Tools' },
-  { name: 'Drizzle', category: 'Technologies & Tools' },
-  { name: 'Sentry', category: 'Technologies & Tools' },
-  { name: 'Supabase', category: 'Technologies & Tools' },
-  { name: 'Docker', category: 'Technologies & Tools' },
-  { name: 'Three.js', category: 'Technologies & Tools' },
-  { name: 'Git', category: 'Technologies & Tools' },
+  { name: 'TypeScript', category: 'Languages & Frameworks', minimumLevel: 100 },
+  { name: 'JavaScript', category: 'Languages & Frameworks', minimumLevel: 100 },
+  { name: 'React', category: 'Languages & Frameworks', minimumLevel: 100 },
+  { name: 'Next.js', category: 'Languages & Frameworks', minimumLevel: 100 },
+  { name: 'TailwindCSS', category: 'Languages & Frameworks', minimumLevel: 100 },
+  { name: 'HTML5', category: 'Languages & Frameworks', minimumLevel: 100 },
+  { name: 'CSS3', category: 'Languages & Frameworks', minimumLevel: 100 },
+  { name: 'React Native', category: 'Languages & Frameworks', minimumLevel: 80 },
+  { name: 'Java', category: 'Languages & Frameworks', minimumLevel: 80 },
+  { name: 'JavaFX', category: 'Languages & Frameworks', minimumLevel: 80 },
+  { name: 'PHP', category: 'Languages & Frameworks', minimumLevel: 60 },
+  { name: 'Python', category: 'Languages & Frameworks', minimumLevel: 60 },
+  { name: 'Node.js', category: 'Technologies & Tools', minimumLevel: 100 },
+  { name: 'Supabase', category: 'Technologies & Tools', minimumLevel: 100 },
+  { name: 'PostgreSQL', category: 'Technologies & Tools', minimumLevel: 100 },
+  { name: 'Prisma', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'NextAuth.js', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'Firebase', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'Sentry', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'SQLite', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'MySQL', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'Recharts', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'Blockly', category: 'Technologies & Tools', minimumLevel: 60 },
+  { name: 'Git', category: 'Technologies & Tools', minimumLevel: 100 },
 ];
 
 const CV_LANGUAGES: NonNullable<CVData['languages']> = [
@@ -80,7 +87,7 @@ function getPersonalInfo() {
     phone: "+30 6982031371",
     location: "Halkidiki, Greece",
     website: "https://christoskerigkas.com",
-    bio: "Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development. Open to new projects and collaborations.",
+    bio: "Undergraduate CS student at Democritus University of Thrace, focused primarily on TypeScript and JavaScript across web and mobile products, with additional desktop work in JavaFX and practical experience across PHP, Python, and SQL-backed systems.",
     profileImage: getProfileImageUrl(),
     socialLinks: {
       linkedin: "https://linkedin.com/in/christoskerigkas",
@@ -92,7 +99,7 @@ function getPersonalInfo() {
 
 // Convert projects from database schema to Project type
 function mapProjectsFromDb(projects: DbProject[]): Project[] {
-  return projects.map(project => ({
+  return mergePortfolioProjects(projects).map(project => ({
     title: project.title,
     slug: project.slug,
     description: project.description,
@@ -102,14 +109,14 @@ function mapProjectsFromDb(projects: DbProject[]): Project[] {
     demo: project.live_url === null ? undefined : project.live_url,
     image: project.image,
     featured: project.featured,
+    id: project.id,
     status: (project.status || 'Active') as ProjectStatus
-  })).map(applyProjectCopyOverrides);
+  }));
 }
 
 function getCuratedCVProjects(projects: Project[]): Project[] {
   const projectMap = new Map(projects.map(project => [project.slug, project]));
-
-  return CV_PROJECT_ORDER
+  const curatedProjects = CV_PROJECT_ORDER
     .map(slug => {
       const project = projectMap.get(slug);
 
@@ -122,6 +129,11 @@ function getCuratedCVProjects(projects: Project[]): Project[] {
       };
     })
     .filter((project): project is Project => project !== null);
+
+  const curatedSlugs = new Set(curatedProjects.map(project => project.slug));
+  const remainingProjects = projects.filter(project => !curatedSlugs.has(project.slug));
+
+  return [...curatedProjects, ...remainingProjects];
 }
 
 function getCuratedCVCertifications(certifications: Certification[]): Certification[] {
@@ -136,23 +148,50 @@ function getCuratedCVCertifications(certifications: Certification[]): Certificat
 
 function getCuratedCVSkills(skills: Skill[]): Skill[] {
   const skillMap = new Map(skills.map(skill => [skill.name, skill]));
+  const curatedNames = new Set(CV_SKILL_DEFINITIONS.map(skill => skill.name));
 
-  return CV_SKILL_DEFINITIONS.map(({ name, category, fallbackLevel }) => {
+  const curatedSkills = CV_SKILL_DEFINITIONS.map(({ name, category, minimumLevel }, index) => {
     const existingSkill = skillMap.get(name);
 
     if (existingSkill) {
       return {
         ...existingSkill,
         category,
+        level: Math.max(existingSkill.level, minimumLevel ?? existingSkill.level),
+        order: index + 1,
       };
     }
 
     return {
       name,
       category,
-      level: fallbackLevel ?? 60,
+      level: minimumLevel ?? 60,
+      order: index + 1,
     };
   });
+
+  const extraSkills = skills
+    .filter(skill => !curatedNames.has(skill.name))
+    .sort((left, right) => {
+      const leftOrder = left.order ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = right.order ?? Number.MAX_SAFE_INTEGER;
+
+      if (leftOrder !== rightOrder) {
+        return leftOrder - rightOrder;
+      }
+
+      if (left.level !== right.level) {
+        return right.level - left.level;
+      }
+
+      return left.name.localeCompare(right.name);
+    })
+    .map((skill, index) => ({
+      ...skill,
+      order: CV_SKILL_DEFINITIONS.length + index + 1,
+    }));
+
+  return [...curatedSkills, ...extraSkills];
 }
 
 /**
