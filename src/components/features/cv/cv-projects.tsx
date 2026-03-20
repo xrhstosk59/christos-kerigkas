@@ -242,14 +242,6 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
                     ))}
                   </div>
                   
-                  {/* Featured badge (if applicable) */}
-                  {filteredProjects[currentProject].featured && (
-                    <div className="absolute top-4 right-4">
-                      <span className="inline-flex items-center rounded-md bg-blue-500/90 px-2 py-1 text-xs font-medium text-white">
-                        Featured
-                      </span>
-                    </div>
-                  )}
                 </div>
                 
                 {/* Project details */}
@@ -395,14 +387,6 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
                   )}
                 </div>
                 
-                {/* Featured badge (if applicable) */}
-                {project.featured && (
-                  <div className="absolute top-2 right-2">
-                    <span className="inline-flex items-center rounded-md bg-blue-500/90 px-2 py-1 text-xs font-medium text-white">
-                      Featured
-                    </span>
-                  </div>
-                )}
               </div>
               
               {/* Project details */}
