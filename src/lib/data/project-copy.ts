@@ -15,6 +15,10 @@ function createPlaceholderImage(label: string, background: string, foreground = 
 
 const DEFAULT_PROJECT_IMAGE =
   'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/placeholder.svg';
+const ZOO_PROJECT_IMAGE =
+  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/zoo-cover.jpg';
+const CAR_STATION_PROJECT_IMAGE =
+  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/car-station-cover.jpg';
 
 const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
 
@@ -48,6 +52,7 @@ const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
     description:
       'University semester web project with CRUD workflows for animals, staff, tickets, events, and suppliers, built with PHP, MySQL, and vanilla JavaScript.',
     tech: ['PHP', 'MySQL', 'JavaScript', 'HTML5', 'CSS3'],
+    image: ZOO_PROJECT_IMAGE,
   },
   'warrior-vs-aliens': {
     title: 'Warrior vs Aliens - Java Semester Project',
@@ -93,7 +98,7 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     tech: ['Java', 'JavaFX', 'SQLite', 'Maven', 'JUnit 5'],
     github: 'https://github.com/xrhstosk59/car-station',
     live_url: null,
-    image: createPlaceholderImage('Car Station', '0f172a'),
+    image: CAR_STATION_PROJECT_IMAGE,
     featured: false,
     status: 'Completed',
     order: 10,
