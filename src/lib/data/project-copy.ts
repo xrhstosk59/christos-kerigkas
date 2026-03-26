@@ -13,9 +13,15 @@ function createPlaceholderImage(label: string, background: string, foreground = 
   return `https://placehold.co/1200x675/${background}/${foreground}?text=${encodeURIComponent(label)}`;
 }
 
+const DEFAULT_PROJECT_IMAGE =
+  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/placeholder.svg';
+
 const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
 
 const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
+  'christos-kerigkas': {
+    image: DEFAULT_PROJECT_IMAGE,
+  },
   'travel-planner': {
     title: 'Travel Planner - Diploma Thesis Project',
     description:
@@ -72,7 +78,7 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     tech: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Supabase', 'Sentry'],
     github: 'https://github.com/xrhstosk59/christos-kerigkas',
     live_url: 'https://christoskerigkas.com',
-    image: createPlaceholderImage('Portfolio', '4338ca'),
+    image: DEFAULT_PROJECT_IMAGE,
     featured: true,
     status: 'Completed',
     order: 0,
