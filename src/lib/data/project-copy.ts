@@ -13,71 +13,79 @@ function createPlaceholderImage(label: string, background: string, foreground = 
   return `https://placehold.co/1200x675/${background}/${foreground}?text=${encodeURIComponent(label)}`;
 }
 
+const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
+
 const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
   'travel-planner': {
-    title: 'Travel Planner - Community-Driven Travel Platform',
+    title: 'Travel Planner',
     description:
-      'Full-stack travel platform where locals share authentic recommendations and travelers generate AI-powered itineraries with Gemini, Supabase, and an interactive Mapbox globe.',
+      'Practice full-stack travel app exploring local recommendations, itinerary workflows, AI-assisted planning features, and Mapbox-based interfaces.',
     tech: ['Next.js', 'TypeScript', 'Supabase', 'Google Gemini AI', 'Mapbox', 'Tailwind CSS'],
   },
   'bluewave-properties': {
-    title: 'Bluewave Properties - Real Estate Platform',
+    title: 'Bluewave Properties',
     description:
-      'Modern real estate platform for listings, discovery, and property workflows, built with Next.js 15, TypeScript, Supabase, NextAuth.js, and a production-focused frontend architecture.',
+      'Practice real estate platform for listings, discovery, and property workflows, developed mainly with an AI-assisted workflow plus manual customization, cleanup, and testing.',
     tech: ['Next.js', 'TypeScript', 'Supabase', 'NextAuth.js', 'Tailwind CSS', 'Sentry'],
   },
   'wait-less': {
     title: 'Wait-Less - Queue Management Platform',
     description:
-      'Queue management system for restaurants with a React Native customer app, React admin dashboard, and Node.js backend on Supabase for realtime waiting-list operations.',
+      'Queue management concept for restaurants with a React Native customer app, React admin dashboard, and Node.js backend on Supabase for realtime waiting-list operations.',
     tech: ['React Native', 'React', 'Node.js', 'Supabase', 'Firebase', 'Material UI'],
   },
   'grade-calc': {
-    title: 'Vathmos - AI-Powered Grade Management System',
+    title: 'Vathmos - Grade Management Project',
     description:
-      'Greek university grade management platform with analytics, GPA tracking, DUTH-focused workflows, offline-friendly UX, and AI-assisted academic insights.',
+      'Greek university grade management project with GPA tracking, analytics, export flows, and DUTH-focused workflows for student productivity.',
     tech: ['Next.js', 'TypeScript', 'Supabase', 'Recharts', 'Tailwind CSS', 'PWA'],
   },
   'zoo': {
     title: 'Zoo Management System',
     description:
-      'Web-based zoo management system with CRUD workflows for animals, staff, tickets, events, and suppliers, built with PHP, MySQL, and vanilla JavaScript.',
+      'University semester web project with CRUD workflows for animals, staff, tickets, events, and suppliers, built with PHP, MySQL, and vanilla JavaScript.',
     tech: ['PHP', 'MySQL', 'JavaScript', 'HTML5', 'CSS3'],
   },
   'warrior-vs-aliens': {
-    title: 'Warrior vs Aliens',
+    title: 'Warrior vs Aliens - Java Semester Project',
     description:
-      'Java console game implementing Strategy and Observer patterns, focused on turn-based combat logic, object-oriented design, and gameplay flow.',
+      'University Java console game focused on turn-based combat logic, object-oriented design, and the Strategy / Observer design patterns.',
     tech: ['Java', 'OOP', 'Strategy Pattern', 'Observer Pattern'],
   },
   'sqlatch': {
-    title: 'SQLatch - Visual SQL Learning Platform',
+    title: 'SQLatch - University SQL Learning Project',
     description:
-      'Browser-based educational platform that teaches SQL through Blockly drag-and-drop blocks, instant feedback, and in-browser SQLite WASM execution.',
+      'University SQL learning project that I later improved with maintenance, UI refinements, documentation updates, and AI-assisted tooling.',
     tech: ['Next.js', 'TypeScript', 'Blockly', 'SQLite WASM', 'React'],
-  },
-  'smart-trader-bot': {
-    title: 'Smart Trader Bot',
-    description:
-      'Cryptocurrency trading dashboard and bot with configurable strategies, risk management, backtesting, and realtime market monitoring through the Bybit API.',
-    tech: ['Next.js', 'TypeScript', 'Bybit API', 'WebSocket', 'Chart.js', 'Recharts'],
-  },
-  'sniper4crypto': {
-    title: 'Sniper4Crypto',
-    description:
-      'Python-based crypto monitoring tool that organizes token, DEX, and social-signal integrations for automated market tracking workflows.',
-    tech: ['Python', 'Telegram API', 'Twitter API', 'DEX APIs'],
   },
 };
 
 const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
   {
     id: -1,
-    slug: 'car-station',
-    title: 'Car Station - JavaFX Service Management App',
+    slug: 'christos-kerigkas',
+    title: 'Christos Kerigkas Portfolio',
     description:
-      'JavaFX desktop application for a car service station with customer, staff, and admin workflows backed by a local SQLite database and Maven-based structure.',
-    short_description: 'JavaFX desktop app for service station workflows.',
+      'Personal portfolio and CV website built with Next.js, TypeScript, Tailwind CSS, and Supabase to present projects, certifications, and contact information.',
+    short_description: 'Personal portfolio and CV website.',
+    categories: ['portfolio', 'web-development'],
+    tech: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Supabase', 'Sentry'],
+    github: 'https://github.com/xrhstosk59/christos-kerigkas',
+    live_url: 'https://christoskerigkas.com',
+    image: createPlaceholderImage('Portfolio', '4338ca'),
+    featured: true,
+    status: 'Completed',
+    order: 0,
+    created_at: null,
+    updated_at: null,
+  },
+  {
+    id: -2,
+    slug: 'car-station',
+    title: 'Car Station - University JavaFX Semester Project',
+    description:
+      'University JavaFX semester project for a car service station that I later improved with a Maven-based structure, SQLite-backed workflows, and repository cleanup.',
+    short_description: 'University JavaFX desktop project later refined after coursework.',
     categories: ['education', 'portfolio'],
     tech: ['Java', 'JavaFX', 'SQLite', 'Maven', 'JUnit 5'],
     github: 'https://github.com/xrhstosk59/car-station',
@@ -90,11 +98,11 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     updated_at: null,
   },
   {
-    id: -2,
+    id: -3,
     slug: 'quiz-master',
     title: 'Quiz Master - JavaFX Quiz Application',
     description:
-      'Small JavaFX quiz application migrated from a legacy NetBeans/Ant setup into a portable Maven build with FXML views and bundled media assets.',
+      'Small JavaFX learning project migrated from a legacy NetBeans/Ant setup into a portable Maven build with FXML views and bundled media assets.',
     short_description: 'JavaFX quiz app modernized into a Maven project.',
     categories: ['education'],
     tech: ['Java', 'JavaFX', 'FXML', 'Maven'],
@@ -108,12 +116,12 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     updated_at: null,
   },
   {
-    id: -3,
+    id: -4,
     slug: 'saas-dashboard-template',
     title: 'SaaS Dashboard Template',
     description:
-      'Production-ready SaaS dashboard template with authentication, analytics, file uploads, realtime notifications, and Prisma-powered data flows for rapid business app delivery.',
-    short_description: 'Reusable SaaS dashboard starter with auth and realtime features.',
+      'Learning-focused SaaS dashboard template developed with a heavily AI-assisted workflow plus manual customization, cleanup, and local testing.',
+    short_description: 'Learning-focused dashboard template with auth and realtime features.',
     categories: ['web-development', 'portfolio'],
     tech: ['Next.js', 'TypeScript', 'Prisma', 'PostgreSQL', 'NextAuth.js', 'Socket.IO'],
     github: 'https://github.com/xrhstosk59/saas-dashboard-template',
@@ -159,6 +167,10 @@ export function mergePortfolioProjects(projects: ProjectRow[]): ProjectRow[] {
   const mergedProjects = new Map<string, ProjectRow>();
 
   for (const project of projects) {
+    if (EXCLUDED_PUBLIC_PROJECT_SLUGS.has(project.slug)) {
+      continue;
+    }
+
     mergedProjects.set(project.slug, applyProjectCopyOverrides(project));
   }
 
@@ -168,5 +180,7 @@ export function mergePortfolioProjects(projects: ProjectRow[]): ProjectRow[] {
     }
   }
 
-  return Array.from(mergedProjects.values()).sort(compareProjects);
+  return Array.from(mergedProjects.values())
+    .filter(project => !EXCLUDED_PUBLIC_PROJECT_SLUGS.has(project.slug))
+    .sort(compareProjects);
 }

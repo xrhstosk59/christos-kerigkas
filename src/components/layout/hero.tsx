@@ -185,11 +185,11 @@ export default function Hero() {
                 Christos Kerigkas
               </h1>
               <p className="mt-4 text-lg lg:text-xl font-semibold text-gray-600">
-                Full Stack Developer
+                Web Developer
               </p>
               <p className="mt-6 text-base sm:text-lg max-w-2xl mx-auto text-gray-600">
-                Building websites and mobile applications while exploring how AI can improve modern products.
-                Open to new opportunities and collaborations.
+                Computer Science student building responsive websites and web applications while using AI-assisted workflows
+                to iterate faster and improve project quality.
               </p>
             </div>
           </div>
@@ -304,15 +304,15 @@ export default function Hero() {
               "mt-4 text-lg lg:text-xl font-semibold",
               theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
             )}>
-              Full Stack Developer
+              Web Developer
             </p>
 
             <p className={cn(
               "mt-6 text-base sm:text-lg max-w-2xl mx-auto",
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             )}>
-              Building websites and mobile applications while exploring how AI can improve modern products.
-              Open to new opportunities and collaborations.
+              Computer Science student building responsive websites and web applications while using AI-assisted workflows
+              to iterate faster and improve project quality.
             </p>
           </motion.div>
 

@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils/utils'
 const details = [
   {
     icon: Code2,
-    title: 'Full Stack Developer',
-    description: 'Primarily building with TypeScript and JavaScript across React, Next.js, Node.js, and React Native, with selected desktop apps in JavaFX'
+    title: 'Web Developer',
+    description: 'Building mainly with TypeScript and JavaScript across React, Next.js, Supabase, and selected Java/JavaFX coursework projects'
   },
   {
     icon: GraduationCap,
@@ -20,7 +20,7 @@ const details = [
   {
     icon: Briefcase,
     title: 'Internship',
-    description: 'Technical Support Intern at the ICT Department of the Municipality of Nea Propontida'
+    description: 'Technical Support internship focused on hardware, printers, networking, and day-to-day ICT support for the Municipality of Nea Propontida'
   },
   {
     icon: MapPin,
@@ -76,9 +76,9 @@ export function About() {
             </div>
 
             <p className="mt-12 text-lg leading-8 text-center text-gray-600">
-              Undergraduate Computer Science student at Democritus University of Thrace,
-              focused mainly on TypeScript and JavaScript across modern web and mobile products,
-              while also building desktop work in JavaFX and project-based systems in PHP and Python when the problem calls for them.
+              Computer Science student at Democritus University of Thrace, focused on responsive websites and web applications with
+              TypeScript and JavaScript. My work so far comes mainly from university projects, personal projects, and experimentation,
+              often using AI-assisted workflows for faster iteration, debugging, and cleanup.
             </p>
           </div>
         </div>
@@ -166,9 +166,9 @@ export function About() {
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             )}
           >
-            Undergraduate Computer Science student at Democritus University of Thrace, building mostly with
-            TypeScript and JavaScript across modern web and mobile products, while also shipping desktop work in JavaFX
-            and project-based systems in PHP and Python when the problem calls for them.
+            Computer Science student at Democritus University of Thrace, focused on responsive websites and web applications with
+            TypeScript and JavaScript. My work so far comes mainly from university projects, personal projects, and experimentation,
+            often using AI-assisted workflows for faster iteration, debugging, and cleanup.
           </motion.p>
         </motion.div>
       </div>

@@ -6,7 +6,7 @@ import { getCertifications } from '../db/repositories/certifications-repository'
 import { getExperience } from '../db/repositories/experience-repository';
 import { getEducation } from '../db/repositories/education-repository';
 import { getSkills } from '../db/repositories/skills-repository';
-import { CVData, Skill } from '@/types/cv';
+import { CVData, Experience, Skill } from '@/types/cv';
 import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
 import { Certification } from '@/types/certifications';
 import type { Database } from '../db/database.types';
@@ -21,14 +21,17 @@ type CVSkillDefinition = {
 };
 
 const CV_PROJECT_ORDER = [
-  'travel-planner',
-  'bluewave-properties',
-  'wait-less',
-  'grade-calc',
+  'christos-kerigkas',
   'sqlatch',
-  'saas-dashboard-template',
+  'warrior-vs-aliens',
   'car-station',
   'zoo',
+  'travel-planner',
+  'wait-less',
+  'grade-calc',
+  'bluewave-properties',
+  'saas-dashboard-template',
+  'quiz-master',
 ] as const;
 
 const CV_CERTIFICATION_ORDER = [
@@ -78,23 +81,82 @@ const CV_LANGUAGES: NonNullable<CVData['languages']> = [
   { language: 'English', proficiency: 'Intermediate (B1-B2)' },
 ];
 
+const DEFAULT_EXPERIENCE: Experience[] = [
+  {
+    id: 'municipality-of-nea-propontida-internship',
+    company: 'Municipality of Nea Propontida',
+    position: 'Technical Support Intern',
+    startDate: '2025-05-01',
+    endDate: '2025-07-31',
+    description:
+      'Provided remote and on-site IT support across municipal offices, assisting with hardware, software, printers, networking, and routine website maintenance tasks.',
+    location: 'Halkidiki, Greece',
+    responsibilities: [
+      'Resolved workstation, printer, and network-related issues across municipal offices.',
+      'Performed hardware replacement, formatting, operating system installation, and software setup.',
+      'Helped prepare network cables and support routine technical maintenance tasks.',
+      'Assisted with basic WordPress website checks and general ICT support tasks.',
+    ],
+    technologies: ['Windows', 'WordPress', 'Networking', 'Hardware Support', 'Printer Support'],
+    achievements: [],
+  },
+];
+
 // Only basic contact info that doesn't change
 function getPersonalInfo() {
   return {
     name: "Christos Kerigkas",
-    title: "Full Stack Web Developer",
-    email: "xrhstok59@gmail.com",
+    title: "Web Developer",
+    email: "xrhstosk59@gmail.com",
     phone: "+30 6982031371",
     location: "Halkidiki, Greece",
     website: "https://christoskerigkas.com",
-    bio: "Undergraduate CS student at Democritus University of Thrace, focused primarily on TypeScript and JavaScript across web and mobile products, with additional desktop work in JavaFX and practical experience across PHP, Python, and SQL-backed systems.",
+    bio: "Computer Science student at Democritus University of Thrace, focused on responsive websites and web applications with TypeScript and JavaScript, with additional coursework in Java/JavaFX and AI-assisted workflows for faster iteration and cleanup.",
     profileImage: getProfileImageUrl(),
     socialLinks: {
       linkedin: "https://linkedin.com/in/christoskerigkas",
-      github: "https://github.com/xrhstok59",
+      github: "https://github.com/xrhstosk59",
       credly: "https://www.credly.com/users/christos-kerigkas.cf8c18e5/badges",
     }
   };
+}
+
+function normalizeExperienceEntries(experience: Experience[]): Experience[] {
+  if (experience.length === 0) {
+    return DEFAULT_EXPERIENCE;
+  }
+
+  return experience.map((entry) => {
+    const companyText = `${entry.company} ${entry.position}`.toLowerCase();
+
+    if (
+      companyText.includes('nea propontida') ||
+      companyText.includes('municipality') ||
+      companyText.includes('δήμος')
+    ) {
+      return {
+        ...entry,
+        company: 'Municipality of Nea Propontida',
+        position: 'Technical Support Intern',
+        description:
+          'Provided remote and on-site IT support across municipal offices, assisting with hardware, software, printers, networking, and routine website maintenance tasks.',
+        location: entry.location || 'Halkidiki, Greece',
+        responsibilities: [
+          'Resolved workstation, printer, and network-related issues across municipal offices.',
+          'Performed hardware replacement, formatting, operating system installation, and software setup.',
+          'Helped prepare network cables and support routine technical maintenance tasks.',
+          'Assisted with basic WordPress website checks and general ICT support tasks.',
+        ],
+        technologies:
+          entry.technologies && entry.technologies.length > 0
+            ? entry.technologies
+            : ['Windows', 'WordPress', 'Networking', 'Hardware Support', 'Printer Support'],
+        achievements: entry.achievements ?? [],
+      };
+    }
+
+    return entry;
+  });
 }
 
 // Convert projects from database schema to Project type
@@ -214,7 +276,7 @@ export async function getCVData(): Promise<CVData> {
 
     return {
       personalInfo: getPersonalInfo(),
-      experience: experienceFromDb,
+      experience: normalizeExperienceEntries(experienceFromDb),
       education: educationFromDb,
       skills: getCuratedCVSkills(skillsFromDb),
       certifications: getCuratedCVCertifications(certificationsFromDb),

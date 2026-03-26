@@ -1,12 +1,14 @@
 # Christos Kerigkas Portfolio
 
-Personal portfolio built with Next.js 15, React 19, TypeScript, Tailwind CSS, and Supabase.
+Personal portfolio and CV website for a web developer focused on responsive websites and web applications, built with Next.js, React, TypeScript, Tailwind CSS, and Supabase.
 
-The active app surface today is:
+The current app surface includes:
 - Landing page with About, Projects, Certifications, and Contact sections
 - Interactive CV page at `/cv`
 - Supabase-backed APIs for projects, certifications, uploads, and contact
 - Theme switching, Sentry monitoring, security headers, and PDF export utilities
+
+The repository is intended to present projects, certifications, and contact details in a production-oriented format rather than as a generic starter template.
 
 ## Stack
 

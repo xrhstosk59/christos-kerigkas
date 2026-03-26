@@ -9,7 +9,7 @@ export const siteConfig = {
   author: {
     name: 'Christos Kerigkas',
     image: getProfileImageUrl(),
-    jobTitle: 'Full Stack Developer',
+    jobTitle: 'Web Developer',
     email: 'xrhstosk59@gmail.com',
     location: 'Halkidiki, Greece',
     sameAs: [
@@ -17,7 +17,7 @@ export const siteConfig = {
       'https://linkedin.com/in/christoskerigkas',
     ]
   },
-  description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
+  description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
   logo: {
     url: '/logo.png',
     width: 192,
@@ -34,11 +34,11 @@ export const siteConfig = {
 // Βασικό configuration για SEO
 export const defaultMetadata: Metadata = {
   title: {
-    default: 'Christos Kerigkas | Full Stack Developer',
+    default: 'Christos Kerigkas | Web Developer',
     template: '%s | Christos Kerigkas'
   },
-  description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
-  keywords: ['Christos Kerigkas', 'Full Stack Developer', 'Computer Science Student', 'Next.js', 'React', 'TypeScript', 'Mobile Development', 'AI'],
+  description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
+  keywords: ['Christos Kerigkas', 'Web Developer', 'Computer Science Student', 'Next.js', 'React', 'TypeScript', 'Supabase', 'Portfolio'],
   authors: [{ name: 'Christos Kerigkas', url: 'https://christoskerigkas.com' }],
   creator: 'Christos Kerigkas',
   publisher: 'Christos Kerigkas',
@@ -52,21 +52,21 @@ export const defaultMetadata: Metadata = {
     locale: 'en_US',
     url: 'https://christoskerigkas.com',
     siteName: 'Christos Kerigkas',
-    title: 'Christos Kerigkas | Full Stack Developer',
-    description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
+    title: 'Christos Kerigkas | Web Developer',
+    description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
     images: [
       {
         url: 'https://christoskerigkas.com/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Christos Kerigkas - Full Stack Developer',
+        alt: 'Christos Kerigkas - Web Developer',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Christos Kerigkas | Full Stack Developer',
-    description: 'Undergraduate CS student at Democritus University of Thrace, building web and mobile apps and exploring AI in development.',
+    title: 'Christos Kerigkas | Web Developer',
+    description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
     images: ['https://christoskerigkas.com/og-image.jpg'],
     creator: '@_xrhstos_k59_',
   },
