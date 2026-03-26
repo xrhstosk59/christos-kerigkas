@@ -6,6 +6,28 @@ import { Certification, CertificationType } from '@/types/certifications';
 // Types based on Supabase schema
 type DBCertification = Database['public']['Tables']['certifications']['Row'];
 
+const VALID_CERTIFICATION_TYPES: CertificationType[] = [
+  'course',
+  'badge',
+  'seminar',
+  'conference',
+  'certification',
+];
+
+function normalizeCertificationType(type: string | null | undefined): CertificationType {
+  if (!type) {
+    return 'certification';
+  }
+
+  if (type === 'certificate') {
+    return 'certification';
+  }
+
+  return VALID_CERTIFICATION_TYPES.includes(type as CertificationType)
+    ? (type as CertificationType)
+    : 'certification';
+}
+
 // Function to map DBCertification to Certification
 function mapDBCertificationToCertification(dbCert: DBCertification): Certification {
   return {
@@ -18,7 +40,7 @@ function mapDBCertificationToCertification(dbCert: DBCertification): Certificati
     credentialUrl: dbCert.credential_url || undefined,
     description: dbCert.description || undefined,
     skills: dbCert.skills || [],
-    type: dbCert.type as CertificationType,
+    type: normalizeCertificationType(dbCert.type),
     filename: dbCert.filename || '',
     featured: dbCert.featured || false
   };
@@ -34,6 +56,7 @@ export const certificationsRepository = {
       const { data, error } = await supabase
         .from('certifications')
         .select('*')
+        .order('featured', { ascending: false })
         .order('issue_date', { ascending: false });
 
       if (error) {

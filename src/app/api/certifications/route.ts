@@ -85,6 +85,7 @@ export async function GET(_request: NextRequest) {
       const { data: result, error } = await supabase
         .from('certifications')
         .select('*')
+        .order('featured', { ascending: false })
         .order('issue_date', { ascending: false });
 
       if (error) {

@@ -19,9 +19,6 @@ const DEFAULT_PROJECT_IMAGE =
 const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
 
 const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
-  'christos-kerigkas': {
-    image: DEFAULT_PROJECT_IMAGE,
-  },
   'travel-planner': {
     title: 'Travel Planner - Diploma Thesis Project',
     description:

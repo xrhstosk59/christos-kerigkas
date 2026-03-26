@@ -35,18 +35,23 @@ const CV_PROJECT_ORDER = [
 ] as const;
 
 const CV_CERTIFICATION_ORDER = [
+  'Oracle Cloud Infrastructure 2025 Certified AI Foundations Associate',
   'Microsoft Azure AI Essentials: Workloads and Machine Learning on Azure',
   'ReactJS for Beginners',
   'TypeScript Basics',
   'Getting Started with NodeJS',
   'Univators Skilling Future Digital Innovators - Cloud Engineering',
   'Network Defense',
-  'Network Support and Security',
-  'Introduction to Cybersecurity',
   'Networking Basics',
+  'Network Support and Security',
   'Network Addressing and Basic Troubleshooting',
   'Networking Devices and Initial Configuration',
+  'Introduction to Cybersecurity',
   'Negotiation Mastery',
+  '13ο Πανελλήνιο και Διεθνές Συνέδριο «Οι ΤΠΕ στην Εκπαίδευση»',
+  'Εκπαίδευση Προσωπικού και Φοιτητών σε θέματα Διοίκησης Ποιότητας',
+  'LTLO-15 Certificate of Completion',
+  'LTLO-15 Certificate of Participation',
 ] as const;
 
 const CV_SKILL_DEFINITIONS: CVSkillDefinition[] = [
@@ -57,23 +62,24 @@ const CV_SKILL_DEFINITIONS: CVSkillDefinition[] = [
   { name: 'TailwindCSS', category: 'Languages & Frameworks', minimumLevel: 100 },
   { name: 'HTML5', category: 'Languages & Frameworks', minimumLevel: 100 },
   { name: 'CSS3', category: 'Languages & Frameworks', minimumLevel: 100 },
-  { name: 'React Native', category: 'Languages & Frameworks', minimumLevel: 80 },
   { name: 'Java', category: 'Languages & Frameworks', minimumLevel: 80 },
   { name: 'JavaFX', category: 'Languages & Frameworks', minimumLevel: 80 },
+  { name: 'React Native', category: 'Languages & Frameworks', minimumLevel: 80 },
   { name: 'PHP', category: 'Languages & Frameworks', minimumLevel: 60 },
   { name: 'Python', category: 'Languages & Frameworks', minimumLevel: 60 },
-  { name: 'Node.js', category: 'Technologies & Tools', minimumLevel: 100 },
   { name: 'Supabase', category: 'Technologies & Tools', minimumLevel: 100 },
   { name: 'PostgreSQL', category: 'Technologies & Tools', minimumLevel: 100 },
+  { name: 'Git', category: 'Technologies & Tools', minimumLevel: 100 },
+  { name: 'Node.js', category: 'Technologies & Tools', minimumLevel: 100 },
+  { name: 'Sentry', category: 'Technologies & Tools', minimumLevel: 80 },
+  { name: 'Firebase', category: 'Technologies & Tools', minimumLevel: 80 },
   { name: 'Prisma', category: 'Technologies & Tools', minimumLevel: 80 },
   { name: 'NextAuth.js', category: 'Technologies & Tools', minimumLevel: 80 },
-  { name: 'Firebase', category: 'Technologies & Tools', minimumLevel: 80 },
-  { name: 'Sentry', category: 'Technologies & Tools', minimumLevel: 80 },
   { name: 'SQLite', category: 'Technologies & Tools', minimumLevel: 80 },
   { name: 'MySQL', category: 'Technologies & Tools', minimumLevel: 80 },
   { name: 'Recharts', category: 'Technologies & Tools', minimumLevel: 80 },
   { name: 'Blockly', category: 'Technologies & Tools', minimumLevel: 60 },
-  { name: 'Git', category: 'Technologies & Tools', minimumLevel: 100 },
+  { name: 'Docker', category: 'Technologies & Tools', minimumLevel: 60 },
 ];
 
 const CV_LANGUAGES: NonNullable<CVData['languages']> = [
@@ -203,9 +209,16 @@ function getCuratedCVCertifications(certifications: Certification[]): Certificat
     certifications.map(certification => [certification.title, certification])
   );
 
-  return CV_CERTIFICATION_ORDER
+  const curatedCertifications = CV_CERTIFICATION_ORDER
     .map(title => certificationMap.get(title))
     .filter((certification): certification is Certification => certification !== undefined);
+
+  const curatedTitles = new Set(curatedCertifications.map(certification => certification.title));
+  const remainingCertifications = certifications.filter(
+    certification => !curatedTitles.has(certification.title)
+  );
+
+  return [...curatedCertifications, ...remainingCertifications];
 }
 
 function getCuratedCVSkills(skills: Skill[]): Skill[] {
