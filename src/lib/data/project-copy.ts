@@ -19,6 +19,10 @@ const ZOO_PROJECT_IMAGE =
   'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/zoo-cover.jpg';
 const CAR_STATION_PROJECT_IMAGE =
   'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/car-station-cover.jpg';
+const SQLATCH_PROJECT_IMAGE =
+  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/sqlatch-cover.jpg';
+const WARRIOR_PROJECT_IMAGE =
+  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/warrior-vs-aliens-cover.jpg';
 
 const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
 
@@ -59,12 +63,14 @@ const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
     description:
       'University Java console game focused on turn-based combat logic, object-oriented design, and the Strategy / Observer design patterns.',
     tech: ['Java', 'OOP', 'Strategy Pattern', 'Observer Pattern'],
+    image: WARRIOR_PROJECT_IMAGE,
   },
   'sqlatch': {
     title: 'SQLatch - University SQL Learning Project',
     description:
       'University SQL learning project that I later improved with maintenance, UI refinements, documentation updates, and AI-assisted tooling.',
     tech: ['Next.js', 'TypeScript', 'Blockly', 'SQLite WASM', 'React'],
+    image: SQLATCH_PROJECT_IMAGE,
   },
 };
 
