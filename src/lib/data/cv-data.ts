@@ -22,11 +22,11 @@ type CVSkillDefinition = {
 
 const CV_PROJECT_ORDER = [
   'christos-kerigkas',
+  'travel-planner',
   'sqlatch',
   'warrior-vs-aliens',
   'car-station',
   'zoo',
-  'travel-planner',
   'wait-less',
   'grade-calc',
   'bluewave-properties',

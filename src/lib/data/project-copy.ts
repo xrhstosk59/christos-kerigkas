@@ -17,9 +17,9 @@ const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypt
 
 const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
   'travel-planner': {
-    title: 'Travel Planner',
+    title: 'Travel Planner - Diploma Thesis Project',
     description:
-      'Practice full-stack travel app exploring local recommendations, itinerary workflows, AI-assisted planning features, and Mapbox-based interfaces.',
+      'Diploma thesis web application for trip planning, local recommendations, itinerary workflows, and AI-assisted planning features with Mapbox-based interfaces.',
     tech: ['Next.js', 'TypeScript', 'Supabase', 'Google Gemini AI', 'Mapbox', 'Tailwind CSS'],
   },
   'bluewave-properties': {

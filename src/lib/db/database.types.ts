@@ -164,48 +164,6 @@ export type Database = {
         }
         Relationships: []
       }
-      crypto_projects: {
-        Row: {
-          created_at: string | null
-          description: string
-          features: string[] | null
-          github: string | null
-          icon: string | null
-          id: number
-          slug: string
-          status: string | null
-          tech: string[] | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description: string
-          features?: string[] | null
-          github?: string | null
-          icon?: string | null
-          id?: number
-          slug: string
-          status?: string | null
-          tech?: string[] | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string
-          features?: string[] | null
-          github?: string | null
-          icon?: string | null
-          id?: number
-          slug?: string
-          status?: string | null
-          tech?: string[] | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       education: {
         Row: {
           achievements: string[] | null

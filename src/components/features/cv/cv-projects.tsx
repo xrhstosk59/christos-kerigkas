@@ -109,7 +109,6 @@ export default function CVProjects({ projects, viewMode, filters }: CVProjectsPr
     const categoryMap: Record<string, string> = {
       'web-development': 'Web Development',
       'mobile': 'Mobile',
-      'crypto': 'Crypto',
       'education': 'Education',
       'data-analysis': 'Data Analysis',
       'real-estate': 'Real Estate',

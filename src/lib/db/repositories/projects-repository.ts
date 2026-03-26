@@ -5,8 +5,6 @@ import type { Database } from '@/lib/db/database.types';
 // Types for projects based on Supabase schema
 type Project = Database['public']['Tables']['projects']['Row'];
 type NewProject = Database['public']['Tables']['projects']['Insert'];
-type CryptoProject = Database['public']['Tables']['crypto_projects']['Row'];
-type NewCryptoProject = Database['public']['Tables']['crypto_projects']['Insert'];
 
 /**
  * Repository for projects
@@ -159,109 +157,5 @@ export const projectsRepository = {
   }
 };
 
-/**
- * Repository for crypto projects
- */
-export const cryptoProjectsRepository = {
-  /**
-   * Find all crypto projects
-   */
-  async findAll(): Promise<CryptoProject[]> {
-    const supabase = await ensureDatabaseConnection();
-
-    const { data, error } = await supabase
-      .from('crypto_projects')
-      .select('*')
-      .order('id', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching crypto projects:', error);
-      return [];
-    }
-
-    return data || [];
-  },
-
-  /**
-   * Find crypto project by slug
-   */
-  async findBySlug(slug: string): Promise<CryptoProject | undefined> {
-    const supabase = await ensureDatabaseConnection();
-
-    const { data, error } = await supabase
-      .from('crypto_projects')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-
-    if (error) {
-      console.error('Error fetching crypto project by slug:', error);
-      return undefined;
-    }
-
-    return data || undefined;
-  },
-
-  /**
-   * Create new crypto project
-   */
-  async create(project: NewCryptoProject): Promise<CryptoProject | undefined> {
-    const supabase = await ensureDatabaseConnection();
-
-    const { data, error } = await supabase
-      .from('crypto_projects')
-      .insert(project)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating crypto project:', error);
-      return undefined;
-    }
-
-    return data || undefined;
-  },
-
-  /**
-   * Update existing crypto project
-   */
-  async update(slug: string, project: Partial<Omit<NewCryptoProject, 'created_at'>>): Promise<CryptoProject | undefined> {
-    const supabase = await ensureDatabaseConnection();
-
-    const { data, error } = await supabase
-      .from('crypto_projects')
-      .update({
-        ...project,
-        updated_at: new Date().toISOString()
-      })
-      .eq('slug', slug)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating crypto project:', error);
-      return undefined;
-    }
-
-    return data || undefined;
-  },
-
-  /**
-   * Delete crypto project
-   */
-  async delete(slug: string): Promise<void> {
-    const supabase = await ensureDatabaseConnection();
-
-    const { error } = await supabase
-      .from('crypto_projects')
-      .delete()
-      .eq('slug', slug);
-
-    if (error) {
-      console.error('Error deleting crypto project:', error);
-    }
-  }
-};
-
 // Export types for convenience
-export type { Project, NewProject, CryptoProject, NewCryptoProject };
+export type { Project, NewProject };

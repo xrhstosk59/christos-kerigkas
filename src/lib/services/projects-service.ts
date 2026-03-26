@@ -1,5 +1,5 @@
 // src/lib/services/projects-service.ts
-import { projectsRepository, cryptoProjectsRepository } from '@/lib/db/repositories/projects-repository';
+import { projectsRepository } from '@/lib/db/repositories/projects-repository';
 import { cache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/lib/db/database.types';
@@ -12,8 +12,6 @@ import {
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type NewProject = Database['public']['Tables']['projects']['Insert'];
-type CryptoProject = Database['public']['Tables']['crypto_projects']['Row'];
-type NewCryptoProject = Database['public']['Tables']['crypto_projects']['Insert'];
 
 /**
  * Παράμετροι αναζήτησης για projects.
@@ -247,132 +245,5 @@ export const projectsService = {
    */
   async invalidateProjectsCache(): Promise<void> {
     await cache.invalidatePattern('projects:*');
-  },
-
-  /**
-   * Ανάκτηση όλων των crypto projects.
-   * 
-   * @returns Promise με τα crypto projects
-   */
-  async getCryptoProjects(): Promise<CryptoProject[]> {
-    const cacheKey = 'crypto-projects:all';
-    
-    try {
-      return await cache.getOrSet<CryptoProject[]>(
-        cacheKey,
-        () => cryptoProjectsRepository.findAll(),
-        { expireInSeconds: 60 * 15 } // 15 λεπτά
-      );
-    } catch (error) {
-      logger.error('Σφάλμα κατά την ανάκτηση των crypto projects:', error, 'project-service');
-      return [];
-    }
-  },
-  
-  /**
-   * Ανάκτηση ενός συγκεκριμένου crypto project με βάση το slug.
-   * 
-   * @param slug Το slug του crypto project
-   * @returns Promise με το crypto project ή null αν δεν βρεθεί
-   */
-  async getCryptoProjectBySlug(slug: string): Promise<CryptoProject | null> {
-    const cacheKey = `crypto-project:slug:${slug}`;
-    
-    try {
-      return await cache.getOrSet<CryptoProject | null>(
-        cacheKey,
-        async () => {
-          const project = await cryptoProjectsRepository.findBySlug(slug);
-          return project || null;
-        },
-        { expireInSeconds: 60 * 30 } // 30 λεπτά
-      );
-    } catch (error) {
-      logger.error(`Σφάλμα κατά την ανάκτηση του crypto project με slug ${slug}:`, error, 'project-service');
-      return null;
-    }
-  },
-  
-  /**
-   * Δημιουργία νέου crypto project.
-   * 
-   * @param project Τα δεδομένα του νέου crypto project
-   * @param user Ο χρήστης που επιχειρεί τη δημιουργία
-   * @returns Promise με το νέο crypto project
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα
-   */
-  async createCryptoProject(project: NewCryptoProject, user: UserWithRole): Promise<CryptoProject> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.WRITE_PROJECTS)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για τη δημιουργία crypto project');
-    }
-    
-    try {
-      // Δημιουργία του crypto project
-      const newProject = await cryptoProjectsRepository.create(project);
-
-      if (!newProject) {
-        throw new Error('Αποτυχία δημιουργίας crypto project - δεν επιστράφηκε αποτέλεσμα');
-      }
-
-      // Εκκαθάριση του cache
-      await cache.delete('crypto-projects:all');
-
-      logger.info(`Δημιουργία νέου crypto project με id: ${newProject.id}`, null, 'project-service');
-
-      return newProject;
-    } catch (error) {
-      logger.error('Σφάλμα κατά τη δημιουργία crypto project:', error, 'project-service');
-      throw new Error('Παρουσιάστηκε σφάλμα κατά τη δημιουργία του crypto project');
-    }
-  },
-  
-  /**
-   * Ενημέρωση ενός υπάρχοντος crypto project.
-   *
-   * @param id Το id του crypto project προς ενημέρωση
-   * @param projectData Τα νέα δεδομένα του crypto project
-   * @param user Ο χρήστης που επιχειρεί την ενημέρωση
-   * @returns Promise με το ενημερωμένο crypto project
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα ή αν το project δεν βρεθεί
-   */
-  async updateCryptoProject(_id: number, _projectData: Partial<Omit<NewCryptoProject, "createdAt">>, user: UserWithRole): Promise<CryptoProject | null> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.WRITE_PROJECTS)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για την ενημέρωση crypto project');
-    }
-
-    // TODO: Implement findById and update methods in cryptoProjectsRepository
-    // For now, this function is not used in production
-    throw new Error('updateCryptoProject is not implemented - crypto projects repository needs findById and update methods');
-  },
-  
-  /**
-   * Διαγραφή ενός crypto project.
-   * 
-   * @param slug Το slug του crypto project προς διαγραφή
-   * @param user Ο χρήστης που επιχειρεί τη διαγραφή
-   * @returns Promise που ολοκληρώνεται μετά τη διαγραφή
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα
-   */
-  async deleteCryptoProject(slug: string, user: UserWithRole): Promise<void> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.DELETE_PROJECTS)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για τη διαγραφή crypto project');
-    }
-    
-    try {
-      // Διαγραφή του crypto project
-      await cryptoProjectsRepository.delete(slug);
-      
-      // Εκκαθάριση του cache
-      await cache.delete(`crypto-project:slug:${slug}`);
-      await cache.delete('crypto-projects:all');
-      
-      logger.info(`Διαγραφή crypto project με slug: ${slug}`, null, 'project-service');
-    } catch (error) {
-      logger.error(`Σφάλμα κατά τη διαγραφή crypto project με slug ${slug}:`, error, 'project-service');
-      throw new Error('Παρουσιάστηκε σφάλμα κατά τη διαγραφή του crypto project');
-    }
   }
 };
