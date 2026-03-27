@@ -9,10 +9,6 @@ type ProjectCopyOverride = Partial<
   >
 >;
 
-function createPlaceholderImage(label: string, background: string, foreground = 'f8fafc') {
-  return `https://placehold.co/1200x675/${background}/${foreground}?text=${encodeURIComponent(label)}`;
-}
-
 const DEFAULT_PROJECT_IMAGE =
   'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/placeholder.svg';
 const ZOO_PROJECT_IMAGE =
@@ -23,6 +19,10 @@ const SQLATCH_PROJECT_IMAGE =
   'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/sqlatch-cover.jpg';
 const WARRIOR_PROJECT_IMAGE =
   'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/warrior-vs-aliens-cover.jpg';
+const QUIZ_MASTER_PROJECT_IMAGE =
+  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/quiz-master-cover.jpg';
+const SAAS_DASHBOARD_PROJECT_IMAGE =
+  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/saas-dashboard-template-cover.jpg';
 
 const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
 
@@ -122,7 +122,7 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     tech: ['Java', 'JavaFX', 'FXML', 'Maven'],
     github: 'https://github.com/xrhstosk59/java-fx',
     live_url: null,
-    image: createPlaceholderImage('Quiz Master', '1d4ed8'),
+    image: QUIZ_MASTER_PROJECT_IMAGE,
     featured: false,
     status: 'Completed',
     order: 11,
@@ -140,7 +140,7 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     tech: ['Next.js', 'TypeScript', 'Prisma', 'PostgreSQL', 'NextAuth.js', 'Socket.IO'],
     github: 'https://github.com/xrhstosk59/saas-dashboard-template',
     live_url: null,
-    image: createPlaceholderImage('SaaS Dashboard', '0f766e'),
+    image: SAAS_DASHBOARD_PROJECT_IMAGE,
     featured: false,
     status: 'Completed',
     order: 12,
