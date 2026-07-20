@@ -6,7 +6,7 @@ The current app surface includes:
 - Landing page with About, Projects, Certifications, and Contact sections
 - Interactive CV page at `/cv`
 - Static portfolio content compiled into the app — no database dependency
-- Theme switching, Sentry monitoring, security headers, and PDF export utilities
+- Theme switching, security headers, and PDF export utilities
 
 The repository is intended to present projects, certifications, and contact details in a production-oriented format rather than as a generic starter template.
 
@@ -18,7 +18,6 @@ The repository is intended to present projects, certifications, and contact deta
 - Tailwind CSS
 - Framer Motion
 - Recharts
-- Sentry
 
 ## Content model
 

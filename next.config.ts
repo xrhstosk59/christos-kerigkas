@@ -1,7 +1,6 @@
 // next.config.ts - OPTIMIZED FOR MAXIMUM PERFORMANCE
 import { type NextConfig } from "next"
 import BundleAnalyzer from "@next/bundle-analyzer"
-import { withSentryConfig } from "@sentry/nextjs"
 
 // ✅ COMPREHENSIVE SECURITY HEADERS
 const isDev = process.env.NODE_ENV === 'development';
@@ -26,8 +25,8 @@ const essentialHeaders = [
   {
     key: 'Content-Security-Policy',
     value: isDev
-      ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io ws: wss:;"
-      : "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io; upgrade-insecure-requests;"
+      ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://www.google-analytics.com ws: wss:;"
+      : "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://www.google-analytics.com; upgrade-insecure-requests;"
   },
   {
     key: 'Strict-Transport-Security',
@@ -190,21 +189,5 @@ const nextConfig: NextConfig = {
   },
 }
 
-// ✅ SENTRY CONFIG
-const sentryWebpackPluginOptions = {
-  // Additional config options for the Sentry webpack plugin
-  silent: true, // Suppresses all logs
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  widenClientFileUpload: true,
-  hideSourceMaps: true,
-  disableLogger: true,
-  automaticVercelMonitors: true,
-};
-
-// ✅ EXPORT WITH CONDITIONAL BUNDLE ANALYZER AND SENTRY
-const configWithAnalyzer = process.env.ANALYZE === 'true' ? withBundleAnalyzer(nextConfig) : nextConfig;
-
-export default process.env.NEXT_PUBLIC_SENTRY_DSN 
-  ? withSentryConfig(configWithAnalyzer, sentryWebpackPluginOptions)
-  : configWithAnalyzer;
+// ✅ EXPORT WITH CONDITIONAL BUNDLE ANALYZER
+export default process.env.ANALYZE === 'true' ? withBundleAnalyzer(nextConfig) : nextConfig;

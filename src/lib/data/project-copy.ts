@@ -82,7 +82,7 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
       'Personal portfolio and CV website built with Next.js, TypeScript, and Tailwind CSS, serving fully static content to present projects, certifications, and contact information.',
     short_description: 'Personal portfolio and CV website.',
     categories: ['portfolio', 'web-development'],
-    tech: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Sentry'],
+    tech: ['Next.js', 'TypeScript', 'Tailwind CSS'],
     github: 'https://github.com/xrhstosk59/christos-kerigkas',
     live_url: 'https://christoskerigkas.com',
     image: PORTFOLIO_PROJECT_IMAGE,

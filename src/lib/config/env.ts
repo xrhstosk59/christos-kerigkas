@@ -36,12 +36,6 @@ const envSchema = z.object({
   NEXT_PUBLIC_GA_TRACKING_ID: optionalEnv(z.string()),
   NEXT_PUBLIC_GOOGLE_ANALYTICS: optionalEnv(z.string()),
   
-  // Sentry (Optional)
-  NEXT_PUBLIC_SENTRY_DSN: optionalEnv(z.string().url()),
-  SENTRY_ORG: optionalEnv(z.string()),
-  SENTRY_PROJECT: optionalEnv(z.string()),
-  SENTRY_AUTH_TOKEN: optionalEnv(z.string()),
-  
   // Feature Flags
   ENABLE_RATE_LIMITING: z.string().transform(val => val === 'true').default('true'),
   ENABLE_OFFLINE_SUPPORT: z.string().transform(val => val === 'true').default('true'),
@@ -140,16 +134,6 @@ export const analyticsConfig = {
 } as const;
 
 /**
- * Sentry configuration
- */
-export const sentryConfig = {
-  dsn: env.NEXT_PUBLIC_SENTRY_DSN,
-  org: env.SENTRY_ORG,
-  project: env.SENTRY_PROJECT,
-  authToken: env.SENTRY_AUTH_TOKEN,
-} as const;
-
-/**
  * Social media configuration
  */
 export const socialConfig = {
@@ -168,7 +152,6 @@ export function logEnvConfig(): void {
   console.log(`  - NODE_ENV: ${env.NODE_ENV}`);
   console.log(`  - App Name: ${appConfig.name}`);
   console.log(`  - App URL: ${appConfig.url || 'not set'}`);
-  console.log(`  - Sentry: ${sentryConfig.dsn ? '✅ configured' : '⚠️  not configured'}`);
   console.log(`  - Analytics: ${analyticsConfig.googleAnalytics ? '✅ configured' : '⚠️  not configured'}`);
   console.log('🚀 Feature Flags:');
   console.log(`  - Rate Limiting: ${features.enableRateLimiting ? '✅' : '❌'}`);

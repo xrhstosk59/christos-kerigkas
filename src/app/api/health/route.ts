@@ -41,9 +41,6 @@ export async function GET(request: NextRequest) {
       email: {
         status: env.SMTP_HOST ? 'configured' : 'not-configured',
       },
-      sentry: {
-        status: env.NEXT_PUBLIC_SENTRY_DSN ? 'configured' : 'not-configured',
-      },
       analytics: {
         status: env.NEXT_PUBLIC_GOOGLE_ANALYTICS ? 'configured' : 'not-configured',
       },

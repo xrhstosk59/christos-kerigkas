@@ -1,7 +1,6 @@
 // src/lib/utils/errors/error-handler.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import { reportError } from '@/lib/monitoring/sentry';
 
 export interface ApiError extends Error {
   statusCode?: number;
@@ -35,19 +34,7 @@ export function handleApiError(
   error: unknown,
   request?: NextRequest
 ): NextResponse {
-  console.error('API Error:', error);
-
-  // Report error to Sentry
-  if (error instanceof Error) {
-    reportError(error, {
-      feature: 'api_error',
-      action: 'unhandled_error',
-      metadata: {
-        url: request?.url,
-        method: request?.method,
-      },
-    });
-  }
+  console.error('API Error:', error, request ? `${request.method} ${request.url}` : '');
 
   // Handle different types of errors
   if (error instanceof ApiErrorClass) {
