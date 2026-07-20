@@ -140,24 +140,24 @@ export function Contact() {
   // του component για να αποφύγουμε hydration issues
   if (!mounted) {
     return (
-      <section id="contact" className="py-24 bg-gray-50 dark:bg-gray-950">
+      <section id="contact" className="py-24 bg-muted/30">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:max-w-4xl">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-gray-900 dark:text-white">
+            <h2 className="font-display text-4xl sm:text-5xl font-medium tracking-tight text-foreground">
               Contact
             </h2>
             <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
               <div className="space-y-4 animate-pulse">
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/5"></div>
+                <div className="h-6 bg-muted rounded w-3/4"></div>
+                <div className="h-6 bg-muted rounded w-2/3"></div>
+                <div className="h-6 bg-muted rounded w-1/2"></div>
+                <div className="h-6 bg-muted rounded w-3/5"></div>
               </div>
               <div className="space-y-6 animate-pulse">
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-10 bg-muted rounded"></div>
+                <div className="h-10 bg-muted rounded"></div>
+                <div className="h-32 bg-muted rounded"></div>
+                <div className="h-10 bg-muted rounded"></div>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@ export function Contact() {
   }
 
   return (
-    <section id="contact" className="py-24 bg-gray-50 dark:bg-gray-950">
+    <section id="contact" className="py-24 bg-muted/30">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -175,9 +175,15 @@ export function Contact() {
           viewport={{ once: true }}
           className="mx-auto max-w-2xl lg:max-w-4xl"
         >
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-gray-900 dark:text-white">
-            Contact
-          </h2>
+          <div>
+            <p className="text-[0.7rem] sm:text-xs font-semibold uppercase tracking-[0.35em] text-primary">
+              Get in touch
+            </p>
+            <h2 className="mt-4 font-display text-4xl sm:text-5xl font-medium tracking-tight text-foreground">
+              Contact
+            </h2>
+            <div aria-hidden="true" className="mt-6 h-px w-16 bg-primary/60" />
+          </div>
 
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Contact Info */}
@@ -195,7 +201,7 @@ export function Contact() {
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ x: 5 }}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200"
+                    className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-200"
                   >
                     <item.icon className="h-5 w-5" />
                     {item.text}
@@ -224,7 +230,7 @@ export function Contact() {
 
               {/* Name field */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="name" className="block text-sm font-medium text-foreground">
                   Name
                 </label>
                 <input
@@ -232,7 +238,7 @@ export function Contact() {
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 ${
+                  className={`mt-1 block w-full rounded-md shadow-sm border-input bg-card text-foreground focus:ring-primary focus:border-primary ${
                     getFieldError('name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
                   required
@@ -245,7 +251,7 @@ export function Contact() {
               
               {/* Email field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="email" className="block text-sm font-medium text-foreground">
                   Email
                 </label>
                 <input
@@ -253,7 +259,7 @@ export function Contact() {
                   id="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 ${
+                  className={`mt-1 block w-full rounded-md shadow-sm border-input bg-card text-foreground focus:ring-primary focus:border-primary ${
                     getFieldError('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
                   required
@@ -266,7 +272,7 @@ export function Contact() {
 
               {/* Message field */}
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="message" className="block text-sm font-medium text-foreground">
                   Message
                 </label>
                 <textarea
@@ -274,7 +280,7 @@ export function Contact() {
                   rows={4}
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className={`mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 ${
+                  className={`mt-1 block w-full rounded-md shadow-sm border-input bg-card text-foreground focus:ring-primary focus:border-primary ${
                     getFieldError('message') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
                   required
@@ -292,8 +298,8 @@ export function Contact() {
                 type="submit"
                 disabled={status === 'loading'}
                 className={`relative w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 ${status === 'loading'
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-500'
+                  ? 'bg-primary/50 cursor-not-allowed'
+                  : 'bg-primary hover:opacity-90'
                 }`}
               >
                 {status === 'loading' ? (

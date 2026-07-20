@@ -17,7 +17,7 @@ export const siteConfig = {
       'https://linkedin.com/in/christoskerigkas',
     ]
   },
-  description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
+  description: 'Computer Science student building responsive websites and web applications with TypeScript, React, and Next.js.',
   logo: {
     url: '/logo.png',
     width: 192,
@@ -37,8 +37,8 @@ export const defaultMetadata: Metadata = {
     default: 'Christos Kerigkas | Web Developer',
     template: '%s | Christos Kerigkas'
   },
-  description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
-  keywords: ['Christos Kerigkas', 'Web Developer', 'Computer Science Student', 'Next.js', 'React', 'TypeScript', 'Supabase', 'Portfolio'],
+  description: 'Computer Science student building responsive websites and web applications with TypeScript, React, and Next.js.',
+  keywords: ['Christos Kerigkas', 'Web Developer', 'Computer Science Student', 'Next.js', 'React', 'TypeScript', 'Portfolio'],
   authors: [{ name: 'Christos Kerigkas', url: 'https://christoskerigkas.com' }],
   creator: 'Christos Kerigkas',
   publisher: 'Christos Kerigkas',
@@ -53,7 +53,7 @@ export const defaultMetadata: Metadata = {
     url: 'https://christoskerigkas.com',
     siteName: 'Christos Kerigkas',
     title: 'Christos Kerigkas | Web Developer',
-    description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
+    description: 'Computer Science student building responsive websites and web applications with TypeScript, React, and Next.js.',
     images: [
       {
         url: 'https://christoskerigkas.com/og-image.jpg',
@@ -66,7 +66,7 @@ export const defaultMetadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Christos Kerigkas | Web Developer',
-    description: 'Computer Science student building responsive websites and web applications with TypeScript, React, Next.js, and Supabase.',
+    description: 'Computer Science student building responsive websites and web applications with TypeScript, React, and Next.js.',
     images: ['https://christoskerigkas.com/og-image.jpg'],
     creator: '@_xrhstos_k59_',
   },

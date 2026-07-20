@@ -75,12 +75,10 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
   )
 
   // Συνάρτηση για rendering των tech badges
-  const renderTechBadge = (tech: string, currentTheme: 'light' | 'dark') => (
+  const renderTechBadge = (tech: string, _currentTheme: 'light' | 'dark') => (
     <motion.span
       key={tech}
-      className={cn("inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
-        currentTheme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-blue-50 text-blue-700'
-      )}
+      className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-primary/10 text-primary"
       whileHover={{ scale: 1.05 }}
       transition={{ duration: 0.2 }}
     >
@@ -89,15 +87,13 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
   )
 
   // Συνάρτηση για rendering των project links
-  const renderProjectLinks = (project: Pick<Project, 'github' | 'demo'>, currentTheme: 'light' | 'dark') => (
+  const renderProjectLinks = (project: Pick<Project, 'github' | 'demo'>, _currentTheme: 'light' | 'dark') => (
     <>
       <motion.a
         href={project.github ?? undefined}
         target="_blank"
         rel="noopener noreferrer"
-        className={cn("inline-flex items-center gap-1 transition-colors duration-200",
-          currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-        )}
+        className="inline-flex items-center gap-1 transition-colors duration-200 text-muted-foreground hover:text-primary"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -110,9 +106,7 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
           href={project.demo}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn("inline-flex items-center gap-1 transition-colors duration-200",
-            currentTheme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-          )}
+          className="inline-flex items-center gap-1 transition-colors duration-200 text-muted-foreground hover:text-primary"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -125,24 +119,13 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
   
   return (
     <div className="space-y-10">
-      <div className={cn(
-        "rounded-2xl border px-4 py-4 shadow-sm",
-        theme === 'dark'
-          ? 'border-gray-800 bg-gray-900/70'
-          : 'border-gray-200 bg-gray-50/90'
-      )}>
+      <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className={cn(
-              "text-sm font-semibold",
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            )}>
+            <p className="text-sm font-semibold text-foreground">
               Filter by project status
             </p>
-            <p className={cn(
-              "text-xs",
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            )}>
+            <p className="text-xs text-muted-foreground">
               Completed projects appear first by default.
             </p>
           </div>
@@ -155,8 +138,8 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
               className={cn(
                 "rounded-full px-4",
                 statusFilter === 'all'
-                  ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
-                  : 'border-border bg-background/80'
+                  ? 'bg-primary text-primary-foreground hover:opacity-90'
+                  : 'border-border bg-card'
               )}
             >
               All
@@ -170,8 +153,8 @@ export default function ProjectList({ projects, theme }: ProjectListProps) {
                 className={cn(
                   "rounded-full px-4",
                   statusFilter === status
-                    ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
-                    : 'border-border bg-background/80'
+                    ? 'bg-primary text-primary-foreground hover:opacity-90'
+                    : 'border-border bg-card'
                 )}
               >
                 {STATUS_LABELS[status]}

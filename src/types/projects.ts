@@ -29,7 +29,7 @@ export interface Project {
   description: string;
   categories: ProjectCategory[];
   tech: string[];
-  github: string | null; // Προσθήκη null για Supabase compatibility
+  github: string | null;
   demo?: string | null; // Προσθήκη null για exactOptionalPropertyTypes
   image: string;
   featured?: boolean | null; // Προσθήκη null για exactOptionalPropertyTypes

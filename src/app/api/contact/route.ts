@@ -3,7 +3,6 @@ import { NextResponse, NextRequest } from 'next/server'
 import { createTransport, SentMessageInfo } from 'nodemailer'
 import { z } from 'zod'
 import { contactFormRateLimit } from '@/lib/utils/rate-limit'
-import { getDbClient } from '@/lib/db/server-db'
 
 // Form validation schema
 const contactSchema = z.object({
@@ -69,67 +68,17 @@ export async function POST(req: NextRequest) {
     }
     
     const { name, email, message } = validationResult.data;
-    // Αποθήκευση πλήρους IP μόνο στη βάση δεδομένων
-    const ipAddress = typeof ip === 'string' ? ip : ip?.[0] || 'unknown';
-    
-    // Variable to track if we stored in database
-    let databaseSuccess = false;
-    let messageId = null;
 
     try {
-      // Attempt to store in database
-      console.log('Saving contact message to database');
-
-      const supabase = await getDbClient();
-      const { data, error } = await supabase
-        .from('contact_messages')
-        .insert({
-          name,
-          email,
-          message,
-          ip_address: ipAddress,
-          status: 'new',
-        })
-        .select('id')
-        .single();
-
-      if (!error && data) {
-        messageId = data.id;
-        databaseSuccess = true;
-        console.log('Message saved to database with ID:', messageId);
-      } else if (error) {
-        console.error('Database error:', error.message);
-      }
-    } catch (dbError) {
-      // Ασφαλές logging του σφάλματος χωρίς να εμφανίζει ευαίσθητα δεδομένα
-      console.error('Database error:', dbError instanceof Error ? dbError.message : 'Unknown error');
-      // We continue with email sending even if database failed
-    }
-
-    try {
-      // Check if SMTP settings are configured
-      if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || 
+      // Check if SMTP settings are configured — email is the only delivery
+      // channel for contact messages.
+      if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER ||
           !process.env.SMTP_PASS || !process.env.SMTP_FROM || !process.env.CONTACT_EMAIL) {
-        console.warn('SMTP settings not fully configured, skipping email sending');
-        
-        // If we successfully stored in database, we still return success
-        if (databaseSuccess) {
-          const headers = {
-            'X-RateLimit-Limit': String(rateLimitResult.limit),
-            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-            'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000))
-          };
-          
-          return NextResponse.json(
-            { message: 'Message saved successfully but email notification was not sent', databaseSuccess, emailSent: false },
-            { status: 200, headers }
-          );
-        } else {
-          return NextResponse.json(
-            { message: 'Failed to process your message. Email configuration is missing.' },
-            { status: 500 }
-          );
-        }
+        console.error('SMTP settings not fully configured, cannot deliver contact message');
+        return NextResponse.json(
+          { message: 'Failed to process your message. Email configuration is missing.' },
+          { status: 500 }
+        );
       }
 
       // Ασφαλές logging των SMTP ρυθμίσεων χωρίς να εμφανίζει ευαίσθητα δεδομένα
@@ -163,7 +112,6 @@ export async function POST(req: NextRequest) {
           Name: ${name}
           Email: ${email}
           Message: ${message}
-          ${messageId ? `Message ID: ${messageId}` : ''}
           IP: ${maskedIp}
         `,
         html: `
@@ -172,7 +120,6 @@ export async function POST(req: NextRequest) {
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Message:</strong></p>
           <p>${message.replace(/\n/g, '<br>')}</p>
-          ${messageId ? `<p><strong>Message ID:</strong> ${messageId}</p>` : ''}
           <p><strong>Origin:</strong> ${maskedIp}</p>
         `,
       };
@@ -206,37 +153,17 @@ export async function POST(req: NextRequest) {
       };
       
       return NextResponse.json(
-        { 
-          message: databaseSuccess 
-            ? 'Message sent successfully and saved to database' 
-            : 'Message sent successfully but failed to save to database',
-          databaseSuccess,
-          emailSent: true 
-        },
+        { message: 'Message sent successfully', emailSent: true },
         { status: 200, headers }
       );
     } catch (emailError) {
-      console.error('Failed to send email notification:', 
+      console.error('Failed to send email notification:',
         emailError instanceof Error ? emailError.message : 'Unknown error');
-      
-      // If we at least stored in database, that's a partial success
-      if (databaseSuccess) {
-        const headers = {
-          'X-RateLimit-Limit': String(rateLimitResult.limit),
-          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-          'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000))
-        };
-        
-        return NextResponse.json(
-          { message: 'Message saved but email notification failed to send', databaseSuccess, emailSent: false },
-          { status: 200, headers }
-        );
-      } else {
-        return NextResponse.json(
-          { message: 'Failed to process your message completely.' },
-          { status: 500 }
-        );
-      }
+
+      return NextResponse.json(
+        { message: 'Failed to process your message completely.' },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error('Unhandled contact form error:', 

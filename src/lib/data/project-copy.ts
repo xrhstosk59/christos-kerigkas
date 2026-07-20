@@ -1,6 +1,4 @@
-import type { Database } from '@/lib/db/database.types';
-
-type ProjectRow = Database['public']['Tables']['projects']['Row'];
+import type { ProjectRow } from '@/lib/content';
 
 type ProjectCopyOverride = Partial<
   Pick<
@@ -9,20 +7,18 @@ type ProjectCopyOverride = Partial<
   >
 >;
 
-const DEFAULT_PROJECT_IMAGE =
-  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/placeholder.svg';
-const ZOO_PROJECT_IMAGE =
-  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/zoo-cover.jpg';
-const CAR_STATION_PROJECT_IMAGE =
-  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/car-station-cover.jpg';
-const SQLATCH_PROJECT_IMAGE =
-  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/sqlatch-cover.jpg';
-const WARRIOR_PROJECT_IMAGE =
-  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/warrior-vs-aliens-cover.jpg';
-const QUIZ_MASTER_PROJECT_IMAGE =
-  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/quiz-master-cover.jpg';
-const SAAS_DASHBOARD_PROJECT_IMAGE =
-  'https://glxsayutlvqyajerownj.supabase.co/storage/v1/object/public/project-images/project-covers/saas-dashboard-template-cover.jpg';
+// Projects without a dedicated cover fall back to the image in their content
+// row (src/lib/content), which is /images/projects/placeholder.svg.
+const PORTFOLIO_PROJECT_IMAGE = '/images/projects/portfolio-cover.jpg';
+const TRAVEL_PLANNER_PROJECT_IMAGE = '/images/projects/travel-planner-cover.jpg';
+const BLUEWAVE_PROJECT_IMAGE = '/images/projects/bluewave-properties-cover.jpg';
+const GRADE_CALC_PROJECT_IMAGE = '/images/projects/grade-calc-cover.jpg';
+const ZOO_PROJECT_IMAGE = '/images/projects/zoo-cover.jpg';
+const CAR_STATION_PROJECT_IMAGE = '/images/projects/car-station-cover.jpg';
+const SQLATCH_PROJECT_IMAGE = '/images/projects/sqlatch-cover.jpg';
+const WARRIOR_PROJECT_IMAGE = '/images/projects/warrior-vs-aliens-cover.jpg';
+const QUIZ_MASTER_PROJECT_IMAGE = '/images/projects/quiz-master-cover.jpg';
+const SAAS_DASHBOARD_PROJECT_IMAGE = '/images/projects/saas-dashboard-template-cover.jpg';
 
 const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
 
@@ -32,12 +28,14 @@ const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
     description:
       'Diploma thesis web application for trip planning, local recommendations, itinerary workflows, and AI-assisted planning features with Mapbox-based interfaces.',
     tech: ['Next.js', 'TypeScript', 'Supabase', 'Google Gemini AI', 'Mapbox', 'Tailwind CSS'],
+    image: TRAVEL_PLANNER_PROJECT_IMAGE,
   },
   'bluewave-properties': {
     title: 'Bluewave Properties',
     description:
       'Practice real estate platform for listings, discovery, and property workflows, developed mainly with an AI-assisted workflow plus manual customization, cleanup, and testing.',
     tech: ['Next.js', 'TypeScript', 'Supabase', 'NextAuth.js', 'Tailwind CSS', 'Sentry'],
+    image: BLUEWAVE_PROJECT_IMAGE,
   },
   'wait-less': {
     title: 'Wait-Less - Queue Management Platform',
@@ -50,6 +48,7 @@ const PROJECT_COPY_OVERRIDES: Record<string, ProjectCopyOverride> = {
     description:
       'Greek university grade management project with GPA tracking, analytics, export flows, and DUTH-focused workflows for student productivity.',
     tech: ['Next.js', 'TypeScript', 'Supabase', 'Recharts', 'Tailwind CSS', 'PWA'],
+    image: GRADE_CALC_PROJECT_IMAGE,
   },
   'zoo': {
     title: 'Zoo Management System',
@@ -80,13 +79,13 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     slug: 'christos-kerigkas',
     title: 'Christos Kerigkas Portfolio',
     description:
-      'Personal portfolio and CV website built with Next.js, TypeScript, Tailwind CSS, and Supabase to present projects, certifications, and contact information.',
+      'Personal portfolio and CV website built with Next.js, TypeScript, and Tailwind CSS, serving fully static content to present projects, certifications, and contact information.',
     short_description: 'Personal portfolio and CV website.',
     categories: ['portfolio', 'web-development'],
-    tech: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Supabase', 'Sentry'],
+    tech: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Sentry'],
     github: 'https://github.com/xrhstosk59/christos-kerigkas',
     live_url: 'https://christoskerigkas.com',
-    image: DEFAULT_PROJECT_IMAGE,
+    image: PORTFOLIO_PROJECT_IMAGE,
     featured: true,
     status: 'Completed',
     order: 0,

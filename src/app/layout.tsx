@@ -1,8 +1,17 @@
 // src/app/layout.tsx - OPTIMIZED & WORKING
 import type { Metadata, Viewport } from "next";
+import { Fraunces } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { defaultMetadata, generatePersonJsonLd, generateWebsiteJsonLd } from "@/lib/utils/seo";
 import "./globals.css";
+
+// ✅ EDITORIAL DISPLAY FONT — self-hosted via next/font
+const fraunces = Fraunces({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-display",
+  axes: ["opsz"],
+  display: "swap",
+});
 
 // ✅ METADATA
 export const metadata: Metadata = {
@@ -47,7 +56,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="scroll-smooth">
+    <html lang="en" suppressHydrationWarning className={`scroll-smooth ${fraunces.variable}`}>
       <head>
         {/* ✅ STRUCTURED DATA */}
         <script
@@ -60,8 +69,6 @@ export default function RootLayout({
         />
         
         {/* ✅ CRITICAL PRECONNECTS ONLY */}
-        <link rel="preconnect" href="https://tnwbnlbmlqoxypsqdqii.supabase.co" />
-        <link rel="dns-prefetch" href="https://tnwbnlbmlqoxypsqdqii.supabase.co" />
         {process.env.NEXT_PUBLIC_GA_ID && (
           <link rel="preconnect" href="https://www.googletagmanager.com" />
         )}

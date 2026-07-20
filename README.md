@@ -1,11 +1,11 @@
 # Christos Kerigkas Portfolio
 
-Personal portfolio and CV website for a web developer focused on responsive websites and web applications, built with Next.js, React, TypeScript, Tailwind CSS, and Supabase.
+Personal portfolio and CV website for a web developer focused on responsive websites and web applications, built with Next.js, React, TypeScript, and Tailwind CSS.
 
 The current app surface includes:
 - Landing page with About, Projects, Certifications, and Contact sections
 - Interactive CV page at `/cv`
-- Supabase-backed APIs for projects, certifications, uploads, and contact
+- Static portfolio content compiled into the app — no database dependency
 - Theme switching, Sentry monitoring, security headers, and PDF export utilities
 
 The repository is intended to present projects, certifications, and contact details in a production-oriented format rather than as a generic starter template.
@@ -16,10 +16,21 @@ The repository is intended to present projects, certifications, and contact deta
 - React 19
 - TypeScript strict mode
 - Tailwind CSS
-- Supabase Auth, Database, and Storage
 - Framer Motion
 - Recharts
 - Sentry
+
+## Content model
+
+All portfolio content lives in the repository:
+
+- `src/lib/content/rows.generated.ts` — projects, skills, education, and experience rows (recovered from the last database backup)
+- `src/content/certifications.ts` — curated certifications list (source of truth)
+- `src/lib/data/project-copy.ts` — per-project copy overrides, supplemental projects, and cover images
+- `src/lib/data/cv-data.ts` — CV curation (ordering, skill definitions, languages)
+- `public/certificates/` and `public/images/projects/` — certificate PDFs and project covers
+
+Updating content is a code change: edit the relevant file, commit, and redeploy.
 
 ## Local Setup
 
@@ -31,19 +42,15 @@ npm install
 
 2. Create `.env.local` from `.env.example` and fill in the required values.
 
-Minimum useful env vars:
+Minimum useful env vars (only needed for the contact form):
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
 SMTP_HOST=
 SMTP_PORT=
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
 CONTACT_EMAIL=
-NEXT_PUBLIC_API_URL=
 ```
 
 3. Start the app:
@@ -65,15 +72,13 @@ npm run build
 npm run start
 npm run analyze
 npm run bundle-size
-npm run db:health
 npm run deps:check
 npm run clean
 npm run clean:install
 ```
 
 Notes:
-- `npm run type-check` runs `next typegen` before `tsc --noEmit` so route/layout types are generated consistently.
-- `npm run db:health` checks the Supabase-backed project connectivity used by the app.
+- `npm run type-check` runs TypeScript without emitting build artifacts.
 
 ## Project Structure
 
@@ -81,18 +86,17 @@ Notes:
 src/
   app/                App Router pages and API routes
   components/         Shared UI, layout, and feature components
-  content/            Static fallback content
+  content/            Curated certifications content
   hooks/              Client hooks
-  lib/                Auth, db, config, monitoring, utils
+  lib/                Config, content, monitoring, services, utils
   types/              Shared TypeScript types
-scripts/              Bundle size and DB health checks
-supabase/             Local Supabase config and migrations
+scripts/              Bundle size check
 ```
 
 ## Operational Notes
 
-- Certifications can come from Supabase or local fallback content, but the app normalizes them to one stable UI contract.
-- Certificate previews depend on Supabase Storage plus the CSP rules defined in `next.config.ts`.
+- The contact form delivers via SMTP only; without SMTP configuration it returns an error.
+- Public certificate files live under `public/certificates/`.
 - The repo intentionally ignores `.env*` except `.env.example`; do not commit real credentials.
 
 ## Quality Checks

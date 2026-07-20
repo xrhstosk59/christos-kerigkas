@@ -5,14 +5,13 @@ import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import { Suspense } from 'react'
-import { cn } from '@/lib/utils/utils'
 import dynamic from 'next/dynamic'
 
 // ΔΙΟΡΘΩΣΗ: Αφαίρεση της επιλογής ssr: true
 const ProjectsComponent = dynamic(() => import('./index'), {
   loading: () => (
     <div className="flex justify-center items-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
     </div>
   )
 })
@@ -33,13 +32,13 @@ export function Projects() {
     return (
       <section 
         id="projects" 
-        className="py-24 bg-white"
+        className="py-24 bg-background"
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div>
             <Suspense fallback={
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
               </div>
             }>
               {/* Pass light theme as default */}
@@ -55,7 +54,7 @@ export function Projects() {
   return (
     <motion.section 
       id="projects" 
-      className={cn("py-24", theme === 'dark' ? 'bg-gray-950' : 'bg-white')}
+      className="py-24 bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -68,7 +67,7 @@ export function Projects() {
         >
           <Suspense fallback={
             <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
           }>
             {/* Περνάμε μόνο τη τιμή string για ασφαλή σειριοποίηση */}

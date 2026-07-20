@@ -61,14 +61,14 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
         <Button 
           variant={view === 'all' ? 'default' : 'outline'} 
           onClick={() => setView('all')}
-          className={view === 'all' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
+          className={view === 'all' ? 'bg-primary hover:bg-primary dark:bg-primary dark:hover:bg-primary' : ''}
         >
           All
         </Button>
         <Button 
           variant={view === 'experience' ? 'default' : 'outline'} 
           onClick={() => setView('experience')}
-          className={view === 'experience' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
+          className={view === 'experience' ? 'bg-primary hover:bg-primary dark:bg-primary dark:hover:bg-primary' : ''}
         >
           <Briefcase className="w-4 h-4 mr-2" />
           Professional Experience
@@ -76,7 +76,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
         <Button 
           variant={view === 'education' ? 'default' : 'outline'} 
           onClick={() => setView('education')}
-          className={view === 'education' ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600' : ''}
+          className={view === 'education' ? 'bg-primary hover:bg-primary dark:bg-primary dark:hover:bg-primary' : ''}
         >
           <GraduationCap className="w-4 h-4 mr-2" />
           Education
@@ -96,7 +96,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
           <div className="mb-10">
             {view === 'all' && (
               <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-                <Briefcase className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
+                <Briefcase className="w-5 h-5 mr-2 text-primary dark:text-primary" />
                 Professional Experience
               </h2>
             )}
@@ -106,8 +106,8 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                 filteredExperience.map((exp) => (
                   <div key={exp.id} className="relative pl-14">
                     {/* Timeline dot */}
-                    <div className="absolute left-5 top-1 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                      <Briefcase className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <div className="absolute left-5 top-1 w-8 h-8 rounded-full bg-primary/15 dark:bg-primary/20 flex items-center justify-center">
+                      <Briefcase className="w-4 h-4 text-primary dark:text-primary" />
                     </div>
 
                     {/* Experience card */}
@@ -129,7 +129,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                               {exp.position}
                             </h3>
-                            <p className="text-indigo-600 dark:text-indigo-400">{exp.company}</p>
+                            <p className="text-primary dark:text-primary">{exp.company}</p>
                             
                             {/* Date and location */}
                             <div className="mt-2 flex flex-wrap gap-x-4 text-sm text-gray-600 dark:text-gray-400">
@@ -175,7 +175,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                           {exp.technologies.map(tech => (
                             <span 
                               key={tech} 
-                              className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300"
+                              className="inline-flex items-center rounded-md bg-primary/10 dark:bg-primary/10 px-2 py-1 text-xs font-medium text-primary dark:text-primary"
                             >
                               {tech}
                             </span>
@@ -233,7 +233,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                                   href={exp.companyUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:underline mt-2"
+                                  className="inline-flex items-center text-sm text-primary dark:text-primary hover:underline mt-2"
                                 >
                                   Visit website
                                   <ExternalLink className="w-3.5 h-3.5 ml-1" />
@@ -260,7 +260,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
           <div>
             {view === 'all' && (
               <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-                <GraduationCap className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
+                <GraduationCap className="w-5 h-5 mr-2 text-primary dark:text-primary" />
                 Education
               </h2>
             )}
@@ -269,8 +269,8 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
               {education.map((edu) => (
                 <div key={edu.id} className="relative pl-14">
                   {/* Timeline dot */}
-                  <div className="absolute left-5 top-1 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                    <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <div className="absolute left-5 top-1 w-8 h-8 rounded-full bg-primary/15 dark:bg-primary/20 flex items-center justify-center">
+                    <GraduationCap className="w-4 h-4 text-primary dark:text-primary" />
                   </div>
 
                   {/* Education card */}
@@ -292,7 +292,7 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {edu.degree} {edu.field}
                           </h3>
-                          <p className="text-indigo-600 dark:text-indigo-400">{edu.institution}</p>
+                          <p className="text-primary dark:text-primary">{edu.institution}</p>
                           
                           {/* Date and location */}
                           <div className="mt-2 flex flex-wrap gap-x-4 text-sm text-gray-600 dark:text-gray-400">

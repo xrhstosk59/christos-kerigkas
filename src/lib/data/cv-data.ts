@@ -1,19 +1,21 @@
 // src/lib/data/cv-data.ts
 'use server';
 
-import { projectsRepository } from '../db/repositories/projects-repository';
-import { getCertifications } from '../db/repositories/certifications-repository';
-import { getExperience } from '../db/repositories/experience-repository';
-import { getEducation } from '../db/repositories/education-repository';
-import { getSkills } from '../db/repositories/skills-repository';
+import {
+  getCertifications,
+  getEducation,
+  getExperience,
+  getProjectRows,
+  getSkills,
+  type ProjectRow,
+} from '@/lib/content';
 import { CVData, Experience, Skill } from '@/types/cv';
 import { Project, ProjectCategory, ProjectStatus } from '@/types/projects';
 import { Certification } from '@/types/certifications';
-import type { Database } from '../db/database.types';
 import { getProfileImageUrl } from '../utils/storage';
 import { mergePortfolioProjects } from './project-copy';
 
-type DbProject = Database['public']['Tables']['projects']['Row'];
+type DbProject = ProjectRow;
 type CVSkillDefinition = {
   name: string;
   category: Skill['category'];
@@ -275,11 +277,11 @@ function getCuratedCVSkills(skills: Skill[]): Skill[] {
  */
 export async function getCVData(): Promise<CVData> {
   try {
-    const projectsFromDb = await projectsRepository.findAll();
-    const certificationsFromDb = await getCertifications();
-    const experienceFromDb = await getExperience();
-    const educationFromDb = await getEducation();
-    const skillsFromDb = await getSkills();
+    const projectsFromDb = getProjectRows();
+    const certificationsFromDb = getCertifications();
+    const experienceFromDb = getExperience();
+    const educationFromDb = getEducation();
+    const skillsFromDb = getSkills();
 
     console.log(`[getCVData] Loaded ${certificationsFromDb.length} certifications from database`);
     console.log(`[getCVData] Loaded ${projectsFromDb.length} projects from database`);

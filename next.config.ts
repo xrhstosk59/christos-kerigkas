@@ -26,8 +26,8 @@ const essentialHeaders = [
   {
     key: 'Content-Security-Policy',
     value: isDev
-      ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob: https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io ws: wss:;"
-      : "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob: https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io; upgrade-insecure-requests;"
+      ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io ws: wss:;"
+      : "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; worker-src 'self' blob:; connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io; upgrade-insecure-requests;"
   },
   {
     key: 'Strict-Transport-Security',
@@ -72,10 +72,6 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'christoskerigkas.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'glxsayutlvqyajerownj.supabase.co',
       },
       {
         protocol: 'https',
@@ -147,16 +143,6 @@ const nextConfig: NextConfig = {
     {
       source: '/:all*(svg|jpg|jpeg|png|gif|webp|avif|ico|woff|woff2|ttf|eot)',
       locale: false,
-      headers: [
-        {
-          key: 'Cache-Control',
-          value: 'public, max-age=31536000, immutable',
-        }
-      ],
-    },
-    // Uploads - long cache with revalidation
-    {
-      source: '/uploads/:path*',
       headers: [
         {
           key: 'Cache-Control',

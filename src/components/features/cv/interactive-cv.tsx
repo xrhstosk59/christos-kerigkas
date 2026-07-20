@@ -1,189 +1,98 @@
 //src/components/features/cv/interactive-cv.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Download, Filter, Eye, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { CVData } from '@/types/cv'
-import { getCVData } from '@/lib/data/cv-data'
+import { Download, ArrowUpRight } from 'lucide-react'
+import { CVData, Skill } from '@/types/cv'
 import Image from 'next/image'
+import Link from 'next/link'
 
 const CV_DOWNLOAD_PATH = '/cv/Christos_Kerigkas_CV.pdf'
 
-// Dynamic imports for code splitting
+// Dynamic import for code splitting
 const CVTimeline = dynamic(() => import('./cv-timeline'))
-const CVSkillsChart = dynamic(() => import('./cv-skills-chart'))
-const CVCertifications = dynamic(() => import('./cv-certifications'))
-const CVProjects = dynamic(() => import('./cv-projects'))
-const CVFilters = dynamic(() => import('./cv-filters'))
 
-// Ορισμός των props του component
+const NO_FILTERS = {
+  skills: [] as string[],
+  categories: [] as string[],
+  years: { min: 2000, max: new Date().getFullYear() + 1 },
+}
+
 interface InteractiveCVProps {
-  initialCVData?: CVData;
+  initialCVData: CVData;
+}
+
+function groupSkills(skills: Skill[]): Map<string, Skill[]> {
+  const groups = new Map<string, Skill[]>()
+
+  for (const skill of skills) {
+    const group = groups.get(skill.category) ?? []
+    group.push(skill)
+    groups.set(skill.category, group)
+  }
+
+  return groups
 }
 
 export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
-  const [cvData, setCVData] = useState<CVData | null>(initialCVData || null)
-  const [loading, setLoading] = useState(!initialCVData)
-  const [error, setError] = useState<string | null>(null)
-  const [activeView, setActiveView] = useState<'compact' | 'detailed'>('detailed')
-  const [showFilters, setShowFilters] = useState(false)
-  const [filters, setFilters] = useState({
-    skills: [] as string[],
-    categories: [] as string[],
-    years: { min: 2000, max: new Date().getFullYear() + 1 }
-  })
-
-  // Φόρτωση δεδομένων μόνο αν δεν έχουν δοθεί ως prop
-  useEffect(() => {
-    if (initialCVData) return; // Παράλειψη φόρτωσης αν τα δεδομένα έχουν δοθεί ως prop
-    
-    const loadCVData = async () => {
-      try {
-        setLoading(true)
-        const data = await getCVData()
-        setCVData(data)
-      } catch (err) {
-        console.error('Error loading CV data:', err)
-        setError('Error loading data. Please try again later.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadCVData()
-  }, [initialCVData])
-
-  // Handle CV download from a local asset so the file always matches the repo version.
-  const handleDownloadCV = () => {
-    const link = document.createElement('a')
-    link.href = CV_DOWNLOAD_PATH
-    link.download = 'Christos_Kerigkas_CV.pdf'
-    link.rel = 'noopener'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
-
-  // If loading, show spinner
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    )
-  }
-
-  // If there's an error, show it
-  if (error) {
-    return (
-      <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg text-red-600 dark:text-red-400">
-        <h3 className="text-lg font-medium">Error</h3>
-        <p>{error}</p>
-      </div>
-    )
-  }
-
-  // If no data
-  if (!cvData) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-gray-600 dark:text-gray-400">No CV data found.</p>
-      </div>
-    )
-  }
+  const cvData = initialCVData
+  const skillGroups = groupSkills(cvData.skills)
 
   return (
-    <div className="cv-container">
-      {/* Header with title, view options and export button */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="cv-container mx-auto max-w-4xl">
+      {/* Header with title and download button */}
+      <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Interactive CV
+          <p className="text-[0.7rem] sm:text-xs font-semibold uppercase tracking-[0.35em] text-primary">
+            Resume
+          </p>
+          <h1 className="mt-3 font-display text-4xl sm:text-5xl font-medium tracking-tight text-foreground">
+            Curriculum Vitae
           </h1>
-          <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-            Browse through my professional journey, skills, and projects.
+          <p className="mt-3 text-lg text-muted-foreground">
+            Education, experience, and core skills at a glance.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            {showFilters ? <X size={16} /> : <Filter size={16} />}
-            <span>{showFilters ? 'Close filters' : 'Filters'}</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => setActiveView(activeView === 'compact' ? 'detailed' : 'compact')}
-          >
-            <Eye size={16} />
-            <span>{activeView === 'compact' ? 'Detailed view' : 'Compact view'}</span>
-          </Button>
-          <Button
-            variant="default"
-            className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 flex items-center gap-2"
-            onClick={handleDownloadCV}
-          >
-            <Download size={16} />
-            <span>Download CV</span>
-          </Button>
-        </div>
+        <a
+          href={CV_DOWNLOAD_PATH}
+          download="Christos_Kerigkas_CV.pdf"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-semibold tracking-wide text-primary-foreground shadow-sm hover:opacity-90 transition-opacity duration-200"
+        >
+          <Download size={16} />
+          <span>Download CV</span>
+        </a>
       </div>
 
-      {/* Filters panel */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mb-6"
-          >
-            <CVFilters 
-              filters={filters}
-              setFilters={setFilters}
-              cvData={cvData}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Personal info and profile picture */}
-      <div className="mb-10 bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+      <div className="mb-12 rounded-2xl border border-border bg-card overflow-hidden">
         <div className="p-6 sm:p-8">
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             {cvData.personalInfo.profileImage && (
               <div className="flex-shrink-0">
-                <Image 
-                  src={cvData.personalInfo.profileImage} 
+                <Image
+                  src={cvData.personalInfo.profileImage}
                   alt={cvData.personalInfo.name}
-                  width={112} // 28*4
-                  height={112} // 28*4
-                  className="w-28 h-28 rounded-full object-cover border-2 border-indigo-500 dark:border-indigo-400"
+                  width={112}
+                  height={112}
+                  className="w-28 h-28 rounded-full object-cover border-2 border-primary"
                 />
               </div>
             )}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="font-display text-2xl sm:text-3xl font-medium tracking-tight text-foreground">
                 {cvData.personalInfo.name}
               </h2>
-              <p className="text-xl text-indigo-600 dark:text-indigo-400">
+              <p className="text-xl text-primary">
                 {cvData.personalInfo.title}
               </p>
-              <p className="mt-2 text-gray-600 dark:text-gray-300">
+              <p className="mt-2 text-muted-foreground">
                 {cvData.personalInfo.bio}
               </p>
               <div className="mt-4 flex flex-wrap gap-4">
                 {cvData.personalInfo.email && (
-                  <a 
+                  <a
                     href={`mailto:${cvData.personalInfo.email}`}
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    className="text-sm text-muted-foreground hover:text-primary"
                   >
                     {cvData.personalInfo.email}
                   </a>
@@ -191,34 +100,34 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
                 {cvData.personalInfo.phone && (
                   <a
                     href={`tel:${cvData.personalInfo.phone.replace(/\s+/g, '')}`}
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    className="text-sm text-muted-foreground hover:text-primary"
                   >
                     {cvData.personalInfo.phone}
                   </a>
                 )}
                 {cvData.personalInfo.website && (
-                  <a 
+                  <a
                     href={cvData.personalInfo.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    className="text-sm text-muted-foreground hover:text-primary"
                   >
                     {cvData.personalInfo.website}
                   </a>
                 )}
                 {cvData.personalInfo.location && (
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-muted-foreground">
                     {cvData.personalInfo.location}
                   </span>
                 )}
               </div>
               <div className="mt-4 flex gap-3">
                 {cvData.personalInfo.socialLinks?.linkedin && (
-                  <a 
+                  <a
                     href={cvData.personalInfo.socialLinks.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    className="text-muted-foreground hover:text-primary"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.454C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z" />
@@ -230,7 +139,7 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
                     href={cvData.personalInfo.socialLinks.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    className="text-muted-foreground hover:text-primary"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
@@ -242,7 +151,7 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
                     href={cvData.personalInfo.socialLinks.credly}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    className="text-muted-foreground hover:text-primary"
                     title="Credly Badges"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -253,13 +162,13 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
               </div>
               {cvData.languages && cvData.languages.length > 0 && (
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm font-medium text-foreground">
                     Languages:
                   </span>
                   {cvData.languages.map(({ language, proficiency }) => (
                     <span
                       key={language}
-                      className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                      className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                     >
                       {language} • {proficiency}
                     </span>
@@ -271,48 +180,62 @@ export default function InteractiveCV({ initialCVData }: InteractiveCVProps) {
         </div>
       </div>
 
-      {/* Main content with tabs */}
-      <Tabs defaultValue="experience" className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-8">
-          <TabsTrigger value="experience">Experience</TabsTrigger>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
-          <TabsTrigger value="certifications">Certifications</TabsTrigger>
-          <TabsTrigger value="projects">Projects</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="experience" className="mt-0">
-          <CVTimeline 
-            experience={cvData.experience} 
-            education={cvData.education}
-            viewMode={activeView}
-            filters={filters}
-          />
-        </TabsContent>
-        
-        <TabsContent value="skills" className="mt-0">
-          <CVSkillsChart 
-            skills={cvData.skills}
-            viewMode={activeView}
-            filters={filters}
-          />
-        </TabsContent>
-        
-        <TabsContent value="certifications" className="mt-0">
-          <CVCertifications 
-            certifications={cvData.certifications}
-            viewMode={activeView}
-            filters={filters}
-          />
-        </TabsContent>
-        
-        <TabsContent value="projects" className="mt-0">
-          <CVProjects
-            projects={cvData.projects}
-            viewMode={activeView}
-            filters={filters}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Experience & Education */}
+      <div className="mb-12">
+        <h2 className="mb-8 font-display text-2xl sm:text-3xl font-medium tracking-tight text-foreground">
+          Experience &amp; Education
+        </h2>
+        <CVTimeline
+          experience={cvData.experience}
+          education={cvData.education}
+          viewMode="detailed"
+          filters={NO_FILTERS}
+        />
+      </div>
+
+      {/* Core skills — compact badges, no charts */}
+      <div className="mb-12">
+        <h2 className="mb-8 font-display text-2xl sm:text-3xl font-medium tracking-tight text-foreground">
+          Core Skills
+        </h2>
+        <div className="space-y-6 rounded-2xl border border-border bg-card p-6 sm:p-8">
+          {Array.from(skillGroups.entries()).map(([category, skills]) => (
+            <div key={category}>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                {category}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill) => (
+                  <span
+                    key={skill.name}
+                    className="inline-flex items-center rounded-md bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary"
+                  >
+                    {skill.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Projects and certifications live on the home page — link, don't repeat */}
+      <div className="mb-4 flex flex-col sm:flex-row gap-4">
+        <Link
+          href="/#projects"
+          className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors"
+        >
+          Browse my projects
+          <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+        </Link>
+        <Link
+          href="/#certifications"
+          className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors"
+        >
+          View certifications
+          <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+        </Link>
+      </div>
     </div>
   )
 }

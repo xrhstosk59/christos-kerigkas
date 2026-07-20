@@ -1,7 +1,6 @@
 // src/lib/utils/api-middleware.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { protectApiRoute } from '@/lib/supabase/server';
 import { apiResponse } from '@/lib/utils/api-response';
 import { logger } from '@/lib/utils/logger';
 import { 
@@ -16,48 +15,6 @@ import {
 
 // Απλοποιημένος τύπος για τις παραμέτρους στα API routes
 export type RouteParams = Record<string, string | string[]>;
-
-/**
- * Middleware για προστασία route βάσει αυθεντικοποίησης
- * 
- * @param handler Ο handler που θα εκτελεστεί αν ο χρήστης είναι αυθεντικοποιημένος
- */
-export function withAuth<P extends RouteParams = RouteParams>(
-  handler: (
-    req: NextRequest, 
-    context: { params: Promise<P> }
-  ) => Promise<NextResponse>
-): (
-  req: NextRequest, 
-  context: { params: Promise<P> }
-) => Promise<NextResponse> {
-  return async (req: NextRequest, context: { params: Promise<P> }) => {
-    try {
-      // Έλεγχος αυθεντικοποίησης
-      const authResult = await protectApiRoute(req);
-      
-      if (authResult) {
-        return authResult; // Επιστροφή του σφάλματος αυθεντικοποίησης
-      }
-      
-      // Αν ο χρήστης είναι αυθεντικοποιημένος, εκτέλεση του handler
-      return await handler(req, context);
-    } catch (error) {
-      if (error instanceof UnauthorizedError) {
-        logger.warn('Authentication failed:', { path: req.nextUrl.pathname, method: req.method }, 'api-middleware');
-        return apiResponse.unauthorized(error.message);
-      }
-      
-      if (error instanceof ForbiddenError) {
-        logger.warn('Authorization failed:', { path: req.nextUrl.pathname, method: req.method }, 'api-middleware');
-        return apiResponse.forbidden(error.message);
-      }
-      
-      logger.error('Authentication error:', error, 'api-middleware');
-      return apiResponse.internalError('An error occurred during authentication');
-    }
-  };
-}
 
 /**
  * Middleware για επικύρωση δεδομένων με Zod schema
@@ -270,13 +227,12 @@ export function createApiHandler<T extends z.ZodType, P extends RouteParams = Ro
   options: {
     name: string;
     source?: 'body' | 'query' | 'params';
-    requireAuth?: boolean;
   }
 ): (
-  req: NextRequest, 
+  req: NextRequest,
   context: { params: Promise<P> }
 ) => Promise<NextResponse> {
-  const { name, source = 'body', requireAuth = true } = options;
+  const { name, source = 'body' } = options;
   
   // Δημιουργία του αρχικού handler με callback για το validation
   let wrappedHandler = (req: NextRequest, context: { params: Promise<P> }) => {
@@ -295,11 +251,6 @@ export function createApiHandler<T extends z.ZodType, P extends RouteParams = Ro
   
   // 3. Validation middleware
   wrappedHandler = withValidation(schema, handler, source);
-  
-  // 4. Auth middleware (αν απαιτείται)
-  if (requireAuth) {
-    wrappedHandler = withAuth(wrappedHandler);
-  }
-  
+
   return wrappedHandler;
 }

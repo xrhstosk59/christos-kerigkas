@@ -1,17 +1,12 @@
 // src/lib/services/projects-service.ts
-import { projectsRepository } from '@/lib/db/repositories/projects-repository';
-import { cache } from '@/lib/cache';
-import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/lib/db/database.types';
-import { Permission, UserWithRole, checkPermission } from '@/lib/auth/access-control';
+import { getProjectRows, type ProjectRow } from '@/lib/content';
 import {
   applyProjectCopyOverrides,
   getSupplementalProjectBySlug,
   mergePortfolioProjects,
 } from '@/lib/data/project-copy';
 
-type Project = Database['public']['Tables']['projects']['Row'];
-type NewProject = Database['public']['Tables']['projects']['Insert'];
+type Project = ProjectRow;
 
 /**
  * Παράμετροι αναζήτησης για projects.
@@ -32,218 +27,49 @@ export interface ProjectsResult {
   total: number;
 }
 
-function normalizeProject(project: Project): Project {
-  return applyProjectCopyOverrides(project);
-}
-
 /**
- * Service για τη διαχείριση των projects.
- * Περιέχει την επιχειρησιακή λογική και χρησιμοποιεί το repository για πρόσβαση στα δεδομένα.
+ * Service για την ανάγνωση των projects.
+ * Τα δεδομένα είναι στατικά (src/lib/content), οπότε δεν απαιτείται cache ή
+ * πρόσβαση σε βάση δεδομένων.
  */
 export const projectsService = {
   /**
    * Ανάκτηση projects με δυνατότητα φιλτραρίσματος.
-   * 
-   * @param params Παράμετροι αναζήτησης
-   * @returns Promise με τα αποτελέσματα
    */
   async getProjects(params: ProjectsSearchParams): Promise<ProjectsResult> {
-    const { 
-      category, 
-      featured, 
-      limit,
-      // sortBy = 'order',
-      // sortOrder = 'desc'
-    } = params;
-    
-    let cacheKey = `projects`;
-    if (category) cacheKey += `:category:${category}`;
-    if (featured !== undefined) cacheKey += `:featured:${featured}`;
-    if (limit) cacheKey += `:limit:${limit}`;
-    
-    try {
-      // Προσπάθεια ανάκτησης από το cache
-      return await cache.getOrSet<ProjectsResult>(
-        cacheKey,
-        async () => {
-          let projects = mergePortfolioProjects(
-            (await projectsRepository.findAll()).map(normalizeProject)
-          );
+    const { category, featured, limit } = params;
 
-          if (featured !== undefined) {
-            projects = projects.filter(project => Boolean(project.featured) === featured);
-          }
+    let projects = mergePortfolioProjects(getProjectRows());
 
-          if (category) {
-            projects = projects.filter(project => project.categories?.includes(category));
-          }
-
-          if (limit && projects.length > limit) {
-            projects = projects.slice(0, limit);
-          }
-          
-          return {
-            projects,
-            total: projects.length
-          };
-        },
-        { expireInSeconds: 60 * 15 } // 15 λεπτά
-      );
-    } catch (error) {
-      logger.error('Σφάλμα κατά την ανάκτηση των projects:', error, 'project-service');
-      return {
-        projects: [],
-        total: 0
-      };
+    if (featured !== undefined) {
+      projects = projects.filter(project => Boolean(project.featured) === featured);
     }
+
+    if (category) {
+      projects = projects.filter(project => project.categories?.includes(category));
+    }
+
+    if (limit && projects.length > limit) {
+      projects = projects.slice(0, limit);
+    }
+
+    return {
+      projects,
+      total: projects.length,
+    };
   },
-  
+
   /**
    * Ανάκτηση ενός συγκεκριμένου project με βάση το slug.
-   * 
-   * @param slug Το slug του project
-   * @returns Promise με το project ή null αν δεν βρεθεί
    */
   async getProjectBySlug(slug: string): Promise<Project | null> {
-    const cacheKey = `project:slug:${slug}`;
-    
-    try {
-      return await cache.getOrSet<Project | null>(
-        cacheKey,
-        async () => {
-          const project = await projectsRepository.findBySlug(slug);
+    const project = getProjectRows().find(row => row.slug === slug);
 
-          if (project) {
-            return normalizeProject(project);
-          }
-
-          const supplementalProject = getSupplementalProjectBySlug(slug);
-          return supplementalProject ? normalizeProject(supplementalProject) : null;
-        },
-        { expireInSeconds: 60 * 30 } // 30 λεπτά
-      );
-    } catch (error) {
-      logger.error(`Σφάλμα κατά την ανάκτηση του project με slug ${slug}:`, error, 'project-service');
-      return null;
+    if (project) {
+      return applyProjectCopyOverrides(project);
     }
+
+    const supplementalProject = getSupplementalProjectBySlug(slug);
+    return supplementalProject ? applyProjectCopyOverrides(supplementalProject) : null;
   },
-  
-  /**
-   * Δημιουργία νέου project.
-   * 
-   * @param project Τα δεδομένα του νέου project
-   * @param user Ο χρήστης που επιχειρεί τη δημιουργία
-   * @returns Promise με το νέο project
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα
-   */
-  async createProject(project: NewProject, user: UserWithRole): Promise<Project> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.WRITE_PROJECTS)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για τη δημιουργία project');
-    }
-    
-    try {
-      // Δημιουργία του project
-      // Υπολογισμός αυτόματης σειράς ταξινόμησης μέσω του repository
-      // Το πεδίο order δεν υπάρχει στον τύπο NewProject, οπότε δεν το χρησιμοποιούμε εδώ
-      const newProject = await projectsRepository.create(project);
-
-      if (!newProject) {
-        throw new Error('Αποτυχία δημιουργίας project - δεν επιστράφηκε αποτέλεσμα');
-      }
-
-      // Εκκαθάριση του cache για τη λίστα projects
-      await this.invalidateProjectsCache();
-
-      logger.info(`Δημιουργία νέου project με slug: ${newProject.slug}`, null, 'project-service');
-
-      return newProject;
-    } catch (error) {
-      logger.error('Σφάλμα κατά τη δημιουργία project:', error, 'project-service');
-      throw new Error('Παρουσιάστηκε σφάλμα κατά τη δημιουργία του project');
-    }
-  },
-  
-  /**
-   * Ενημέρωση ενός υπάρχοντος project.
-   * 
-   * @param slug Το slug του project προς ενημέρωση
-   * @param projectData Τα νέα δεδομένα του project
-   * @param user Ο χρήστης που επιχειρεί την ενημέρωση
-   * @returns Promise με το ενημερωμένο project
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα ή αν το project δεν βρεθεί
-   */
-  async updateProject(slug: string, projectData: Partial<Omit<NewProject, "createdAt">>, user: UserWithRole): Promise<Project | null> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.WRITE_PROJECTS)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για την ενημέρωση project');
-    }
-    
-    try {
-      // Έλεγχος αν το project υπάρχει
-      const existingProject = await projectsRepository.findBySlug(slug);
-      if (!existingProject) {
-        throw new Error('Το project δεν βρέθηκε');
-      }
-      
-      // Ενημέρωση του project
-      // Το πεδίο updatedAt δεν υπάρχει στον τύπο Partial<Omit<NewProject, "createdAt">>, 
-      // οπότε το διαχειριζόμαστε μέσω του repository
-      const updatedProject = await projectsRepository.update(slug, projectData);
-      
-      if (!updatedProject) {
-        throw new Error('Το project δεν βρέθηκε κατά την ενημέρωση');
-      }
-      
-      // Εκκαθάριση του cache για το συγκεκριμένο project και τη λίστα
-      await cache.delete(`project:slug:${slug}`);
-      if (projectData.slug && projectData.slug !== slug) {
-        await cache.delete(`project:slug:${projectData.slug}`);
-      }
-      await this.invalidateProjectsCache();
-      
-      logger.info(`Ενημέρωση project με slug: ${slug} -> ${updatedProject.slug}`, null, 'project-service');
-      
-      return updatedProject;
-    } catch (error) {
-      logger.error(`Σφάλμα κατά την ενημέρωση project με slug ${slug}:`, error, 'project-service');
-      throw error;
-    }
-  },
-  
-  /**
-   * Διαγραφή ενός project.
-   * 
-   * @param slug Το slug του project προς διαγραφή
-   * @param user Ο χρήστης που επιχειρεί τη διαγραφή
-   * @returns Promise που ολοκληρώνεται μετά τη διαγραφή
-   * @throws Error αν ο χρήστης δεν έχει τα απαραίτητα δικαιώματα
-   */
-  async deleteProject(slug: string, user: UserWithRole): Promise<void> {
-    // Έλεγχος δικαιωμάτων
-    if (!checkPermission(user, Permission.DELETE_PROJECTS)) {
-      throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για τη διαγραφή project');
-    }
-    
-    try {
-      // Διαγραφή του project
-      await projectsRepository.delete(slug);
-      
-      // Εκκαθάριση του cache για το συγκεκριμένο project και τη λίστα
-      await cache.delete(`project:slug:${slug}`);
-      await this.invalidateProjectsCache();
-      
-      logger.info(`Διαγραφή project με slug: ${slug}`, null, 'project-service');
-    } catch (error) {
-      logger.error(`Σφάλμα κατά τη διαγραφή project με slug ${slug}:`, error, 'project-service');
-      throw new Error('Παρουσιάστηκε σφάλμα κατά τη διαγραφή του project');
-    }
-  },
-  
-  /**
-   * Εκκαθάριση του cache για τη λίστα των projects.
-   */
-  async invalidateProjectsCache(): Promise<void> {
-    await cache.invalidatePattern('projects:*');
-  }
 };

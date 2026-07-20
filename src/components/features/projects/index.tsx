@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react'
 import { Project } from '@/types/projects'
 import ProjectList from './project-list'
-import { cn } from '@/lib/utils/utils'
 
 // Τύπος των props
 interface ProjectsProps {
@@ -44,31 +43,33 @@ export default function Projects({ theme }: ProjectsProps) {
 
   return (
     <div className="mx-auto max-w-2xl lg:max-w-4xl">
-      <h2 className={cn("text-3xl font-bold tracking-tight sm:text-4xl mb-4 text-center",
-        theme === 'dark' ? 'text-white' : 'text-gray-900')}
-      >
-        Projects
-      </h2>
-      <p className={cn("text-center mb-16",
-        theme === 'dark' ? 'text-gray-400' : 'text-gray-600')}
-      >
-        Selected university, personal, and exploratory projects across web, mobile, and desktop development.
-      </p>
+      <div className="text-center mb-16">
+        <p className="text-[0.7rem] sm:text-xs font-semibold uppercase tracking-[0.35em] text-primary">
+          Selected Work
+        </p>
+        <h2 className="mt-4 font-display text-4xl sm:text-5xl font-medium tracking-tight text-foreground">
+          Projects
+        </h2>
+        <div aria-hidden="true" className="mt-6 mx-auto h-px w-16 bg-primary/60" />
+        <p className="mt-6 text-lg text-muted-foreground">
+          Selected university, personal, and exploratory projects across web, mobile, and desktop development.
+        </p>
+      </div>
 
       {loading && (
         <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       )}
 
       {error && (
         <div className="text-center py-12">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-            <p className="text-red-600 font-medium mb-4">Error loading projects</p>
-            <p className="text-sm text-gray-600 mb-4">{error}</p>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 max-w-md mx-auto">
+            <p className="text-destructive font-medium mb-4">Error loading projects</p>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-colors"
             >
               Retry
             </button>
@@ -78,7 +79,7 @@ export default function Projects({ theme }: ProjectsProps) {
 
       {!loading && !error && projects.length === 0 && (
         <div className="text-center py-12">
-          <p className={cn("text-lg", theme === 'dark' ? 'text-gray-400' : 'text-gray-600')}>
+          <p className="text-lg text-muted-foreground">
             No projects found.
           </p>
         </div>

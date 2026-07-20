@@ -28,7 +28,7 @@ function ThemeToggle() {
   if (!mounted) {
     return (
       <button
-        className="ml-4 p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+        className="ml-4 p-2 rounded-md text-muted-foreground transition-colors duration-200"
         aria-label="Toggle theme"
         disabled
       >
@@ -40,7 +40,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-      className="ml-4 p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="ml-4 p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors duration-200"
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? (
@@ -104,22 +104,20 @@ export default function Navbar() {
     }
   }, [pathname, router])
 
-  // ✅ SIMPLIFIED CSS CLASSES (removed theme references)
+  // ✅ TOKEN-BASED CSS CLASSES — follow the editorial palette in both themes
   const headerClasses = cn(
     'fixed w-full z-50 transition-all duration-300 backdrop-blur-sm',
-    scrolled && 'shadow-lg bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800'
+    scrolled && 'shadow-lg bg-background/90 border-b border-border'
   )
 
   const linkClasses = cn(
-    'text-sm font-medium transition-colors duration-200 hover:scale-105 transform px-3 py-2 rounded-md',
-    'text-gray-700 hover:text-gray-900 hover:bg-gray-100',
-    'dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
+    'text-sm font-medium tracking-wide transition-colors duration-200 px-3 py-2 rounded-md',
+    'text-muted-foreground hover:text-foreground hover:bg-accent'
   )
 
   const mobileMenuClasses = cn(
     'block rounded-lg px-4 py-3 text-base font-medium transition-all duration-200',
-    'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
-    'dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white'
+    'text-muted-foreground hover:bg-accent hover:text-foreground'
   )
 
   return (
@@ -127,17 +125,13 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 sm:p-6 lg:px-8" aria-label="Main navigation">
         {/* ✅ LOGO */}
         <div className="flex lg:flex-1">
-          <Link 
-            href="/" 
-            className={cn(
-              'text-xl font-bold transition-all duration-200 hover:scale-110 transform',
-              'text-gray-900 hover:text-gray-600',
-              'dark:text-white dark:hover:text-gray-300'
-            )}
+          <Link
+            href="/"
+            className="font-display text-xl font-medium tracking-tight text-foreground hover:text-primary transition-colors duration-200"
             onClick={(e) => pathname === '/' && handleLinkClick(e, '#')}
             aria-label="Go to home page"
           >
-            CK
+            Christos Kerigkas
           </Link>
         </div>
 
@@ -162,11 +156,7 @@ export default function Navbar() {
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={cn(
-              'ml-2 rounded-md p-2 transition-colors duration-200',
-              'text-gray-700 hover:text-gray-900 hover:bg-gray-100',
-              'dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800'
-            )}
+            className="ml-2 rounded-md p-2 transition-colors duration-200 text-muted-foreground hover:text-foreground hover:bg-accent"
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -181,9 +171,9 @@ export default function Navbar() {
         id="mobile-menu"
         className={cn(
           'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
-          'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800',
-          mobileMenuOpen 
-            ? 'max-h-96 opacity-100 border-t' 
+          'bg-background border-border',
+          mobileMenuOpen
+            ? 'max-h-96 opacity-100 border-t'
             : 'max-h-0 opacity-0'
         )}
         role="navigation"

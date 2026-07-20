@@ -28,16 +28,14 @@ export default function ProjectCard({
         index % 2 === 1 ? 'lg:flex-row-reverse' : '')}
     >
       <div className="lg:w-1/2">
-        <div className={cn("rounded-lg shadow-lg overflow-hidden aspect-video",
-          theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100')}>
+        <div className="rounded-2xl border border-border bg-muted shadow-lg overflow-hidden aspect-video">
           {renderImage(project.image, project.title)}
         </div>
       </div>
       
       <div className="lg:w-1/2 space-y-4">
         <div className="flex items-center gap-3 mb-1">
-          <h3 className={cn("text-2xl font-bold",
-            theme === 'dark' ? 'text-white' : 'text-gray-900')}>
+          <h3 className="font-display text-2xl sm:text-3xl font-medium tracking-tight text-foreground">
             {project.title}
           </h3>
 
@@ -50,14 +48,14 @@ export default function ProjectCard({
                 ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
                 : project.status === 'In Development'
                 ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300"
+                : "bg-muted text-muted-foreground"
             )}>
               {project.status}
             </span>
           )}
         </div>
         
-        <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+        <p className="text-muted-foreground leading-relaxed">
           {project.description}
         </p>
         

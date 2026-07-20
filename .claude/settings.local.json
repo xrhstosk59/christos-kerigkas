@@ -65,7 +65,11 @@
       "mcp__github__search_repositories",
       "mcp__github__get_file_contents",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npm run *)",
+      "Bash(grep -o \"DATABASE_URL=.\\\\{0,25\\\\}\" .env.local)"
     ],
     "deny": [],
     "ask": []

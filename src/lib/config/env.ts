@@ -21,19 +21,6 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().default('Christos Kerigkas'),
   NEXT_PUBLIC_APP_VERSION: optionalEnv(z.string()),
   
-  // Database
-  DATABASE_URL: optionalEnv(z.string().min(1)),
-  DATABASE_ADMIN_URL: optionalEnv(z.string()),
-  
-  // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: optionalEnv(z.string().url('Invalid Supabase URL')),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalEnv(z.string().min(1)),
-  SUPABASE_SERVICE_ROLE_KEY: optionalEnv(z.string().min(1)),
-
-  // Security
-  ENCRYPTION_KEY: optionalEnv(z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters')),
-  CSRF_SECRET: optionalEnv(z.string().min(32, 'CSRF_SECRET must be at least 32 characters')),
-  
   // Email (Optional)
   SMTP_HOST: optionalEnv(z.string()),
   SMTP_PORT: optionalEnv(z.string()),
@@ -55,13 +42,7 @@ const envSchema = z.object({
   SENTRY_PROJECT: optionalEnv(z.string()),
   SENTRY_AUTH_TOKEN: optionalEnv(z.string()),
   
-  // File Upload (Optional)
-  MAX_FILE_SIZE: z.string().transform(Number).pipe(z.number().positive()).default('5242880'),
-  ALLOWED_FILE_TYPES: z.string().default('image/jpeg,image/png,image/webp,application/pdf'),
-
   // Feature Flags
-  ENABLE_2FA: z.string().transform(val => val === 'true').default('true'),
-  ENABLE_AUDIT_LOGGING: z.string().transform(val => val === 'true').default('true'),
   ENABLE_RATE_LIMITING: z.string().transform(val => val === 'true').default('true'),
   ENABLE_OFFLINE_SUPPORT: z.string().transform(val => val === 'true').default('true'),
   
@@ -115,8 +96,6 @@ export const isTest = env.NODE_ENV === 'test';
  * Feature flags
  */
 export const features = {
-  enable2FA: env.ENABLE_2FA,
-  enableAuditLogging: env.ENABLE_AUDIT_LOGGING,
   enableRateLimiting: env.ENABLE_RATE_LIMITING,
   enableOfflineSupport: env.ENABLE_OFFLINE_SUPPORT,
   enablePerformanceMonitoring: env.ENABLE_PERFORMANCE_MONITORING,
@@ -129,31 +108,6 @@ export const appConfig = {
   name: env.NEXT_PUBLIC_APP_NAME,
   url: env.NEXT_PUBLIC_APP_URL,
   version: env.NEXT_PUBLIC_APP_VERSION,
-} as const;
-
-/**
- * Database configuration
- */
-export const dbConfig = {
-  url: env.DATABASE_URL,
-  adminUrl: env.DATABASE_ADMIN_URL,
-} as const;
-
-/**
- * Supabase configuration
- */
-export const supabaseConfig = {
-  url: env.NEXT_PUBLIC_SUPABASE_URL,
-  anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
-} as const;
-
-/**
- * Security configuration
- */
-export const securityConfig = {
-  encryptionKey: env.ENCRYPTION_KEY,
-  csrfSecret: env.CSRF_SECRET,
 } as const;
 
 /**
@@ -196,14 +150,6 @@ export const sentryConfig = {
 } as const;
 
 /**
- * File upload configuration
- */
-export const uploadConfig = {
-  maxFileSize: env.MAX_FILE_SIZE,
-  allowedTypes: env.ALLOWED_FILE_TYPES.split(',').map(type => type.trim()),
-} as const;
-
-/**
  * Social media configuration
  */
 export const socialConfig = {
@@ -211,28 +157,6 @@ export const socialConfig = {
   linkedin: env.NEXT_PUBLIC_LINKEDIN_URL,
   github: env.NEXT_PUBLIC_GITHUB_URL,
 } as const;
-
-/**
- * Validate critical environment variables are present
- */
-export function validateCriticalEnv(): void {
-  const criticalVars = [
-    'DATABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'SUPABASE_SERVICE_ROLE_KEY',
-  ];
-  
-  const missing = criticalVars.filter(varName => !process.env[varName]);
-  
-  if (missing.length > 0) {
-    console.error('❌ Critical environment variables missing:');
-    console.error(missing.map(varName => `  - ${varName}`).join('\n'));
-    throw new Error(`Missing critical environment variables: ${missing.join(', ')}`);
-  }
-  
-  console.log('✅ All critical environment variables are present');
-}
 
 /**
  * Log environment configuration (safe for development)
@@ -244,13 +168,9 @@ export function logEnvConfig(): void {
   console.log(`  - NODE_ENV: ${env.NODE_ENV}`);
   console.log(`  - App Name: ${appConfig.name}`);
   console.log(`  - App URL: ${appConfig.url || 'not set'}`);
-  console.log(`  - Database: ${dbConfig.url ? '✅ configured' : '❌ missing'}`);
-  console.log(`  - Supabase: ${supabaseConfig.url ? '✅ configured' : '❌ missing'}`);
   console.log(`  - Sentry: ${sentryConfig.dsn ? '✅ configured' : '⚠️  not configured'}`);
   console.log(`  - Analytics: ${analyticsConfig.googleAnalytics ? '✅ configured' : '⚠️  not configured'}`);
   console.log('🚀 Feature Flags:');
-  console.log(`  - 2FA: ${features.enable2FA ? '✅' : '❌'}`);
-  console.log(`  - Audit Logging: ${features.enableAuditLogging ? '✅' : '❌'}`);
   console.log(`  - Rate Limiting: ${features.enableRateLimiting ? '✅' : '❌'}`);
   console.log(`  - Offline Support: ${features.enableOfflineSupport ? '✅' : '❌'}`);
   console.log(`  - Performance Monitoring: ${features.enablePerformanceMonitoring ? '✅' : '❌'}`);

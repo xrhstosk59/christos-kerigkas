@@ -35,15 +35,12 @@ const memoryStore: RateLimitStore = {};
  * Gets a unique identifier for the request (IP address or other identifier)
  */
 function getRequestIdentifier(req: NextRequest | Request): string {
-  const nextRequest = req instanceof NextRequest
-    ? req
-    : new NextRequest(req, { headers: req.headers });
+  // Read headers directly — constructing a new NextRequest from the incoming
+  // request consumes its body stream and breaks req.json() in the route.
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const realIp = req.headers.get('x-real-ip');
 
-  const forwardedFor = nextRequest.headers.get('x-forwarded-for');
-  const realIp = nextRequest.headers.get('x-real-ip');
-  const ip = forwardedFor?.split(',')[0].trim() || realIp || 'unknown';
-
-  return ip;
+  return forwardedFor?.split(',')[0].trim() || realIp || 'unknown';
 }
 
 /**

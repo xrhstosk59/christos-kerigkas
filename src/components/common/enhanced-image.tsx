@@ -55,7 +55,7 @@ export function EnhancedImage({
       />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-200/30 dark:bg-gray-800/30">
-          <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-700 rounded-full animate-spin border-t-indigo-500"></div>
+          <div className="w-8 h-8 border-2 border-border rounded-full animate-spin border-t-primary"></div>
         </div>
       )}
     </div>

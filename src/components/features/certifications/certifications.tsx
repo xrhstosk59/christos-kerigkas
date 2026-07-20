@@ -164,10 +164,14 @@ export function Certifications() {
     <section id="certifications" className="bg-muted/30 py-24 transition-colors duration-200">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mb-16 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <p className="text-[0.7rem] sm:text-xs font-semibold uppercase tracking-[0.35em] text-primary">
+            Credentials
+          </p>
+          <h2 className="mt-4 font-display text-4xl sm:text-5xl font-medium tracking-tight text-foreground">
             Certifications
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
+          <div aria-hidden="true" className="mt-6 mx-auto h-px w-16 bg-primary/60" />
+          <p className="mt-6 text-lg text-muted-foreground">
             Professional certifications and achievements
           </p>
         </div>

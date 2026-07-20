@@ -28,7 +28,7 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
   }, ref) => {
     const variants = {
       default: "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700",
-      primary: "bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500",
+      primary: "bg-primary text-primary-foreground hover:opacity-90",
       outline: "border border-gray-300 bg-transparent hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800",
       secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
       ghost: "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800",
@@ -53,7 +53,7 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
         ref={ref}
         className={cn(
           "relative inline-flex items-center justify-center rounded-md font-medium transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
           "disabled:opacity-50 disabled:pointer-events-none",
           variants[variant],
           sizes[size],

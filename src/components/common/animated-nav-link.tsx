@@ -30,7 +30,7 @@ export function AnimatedNavLink({ href, children, className, onClick }: Animated
       {isActive && (
         <motion.span
           layoutId="navbar-indicator"
-          className="absolute inset-x-0 bottom-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
+          className="absolute inset-x-0 bottom-0 h-0.5 bg-primary"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{

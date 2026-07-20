@@ -7,48 +7,50 @@
   :root {
     --font-sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --accent: 214 32% 91%;
-    --accent-foreground: 222 47% 11%;
+    /* Editorial light — warm paper, ink text, brass accent */
+    --background: 40 30% 96%;
+    --foreground: 220 40% 12%;
+    --muted: 40 22% 91%;
+    --muted-foreground: 220 12% 40%;
+    --card: 40 36% 98%;
+    --card-foreground: 220 40% 12%;
+    --popover: 40 36% 98%;
+    --popover-foreground: 220 40% 12%;
+    --primary: 38 45% 38%;
+    --primary-foreground: 40 36% 97%;
+    --secondary: 40 22% 91%;
+    --secondary-foreground: 220 40% 12%;
+    --accent: 40 24% 88%;
+    --accent-foreground: 220 40% 12%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --destructive-foreground: 40 36% 97%;
+    --border: 40 18% 84%;
+    --input: 40 18% 84%;
+    --ring: 38 45% 38%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 217 33% 20%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 217 91% 60%;
+    /* Editorial dark — deep ink navy, warm cream text, brass accent */
+    --background: 219 45% 8%;
+    --foreground: 40 30% 91%;
+    --muted: 219 35% 13%;
+    --muted-foreground: 219 14% 64%;
+    --card: 219 40% 11%;
+    --card-foreground: 40 30% 91%;
+    --popover: 219 40% 11%;
+    --popover-foreground: 40 30% 91%;
+    --primary: 39 45% 62%;
+    --primary-foreground: 219 45% 10%;
+    --secondary: 219 35% 13%;
+    --secondary-foreground: 40 30% 91%;
+    --accent: 219 32% 17%;
+    --accent-foreground: 40 30% 91%;
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 40 30% 91%;
+    --border: 219 28% 19%;
+    --input: 219 28% 19%;
+    --ring: 39 45% 62%;
   }
 
   /* ✅ BASE STYLES - Pure Tailwind approach */
@@ -63,11 +65,11 @@
 
   /* ✅ SELECTION - Using Tailwind utilities */
   ::selection {
-    @apply bg-indigo-600/30 text-foreground;
+    @apply bg-primary/30 text-foreground;
   }
 
   .dark ::selection {
-    @apply bg-indigo-500/40 text-foreground;
+    @apply bg-primary/40 text-foreground;
   }
 }
 
