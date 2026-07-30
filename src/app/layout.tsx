@@ -17,11 +17,9 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   ...defaultMetadata,
   metadataBase: new URL('https://christoskerigkas.com'),
-  manifest: '/manifest.json',
-  icons: {
-    icon: '/favicon.ico',
-    apple: [{ url: '/apple-icon.png', sizes: '180x180' }]
-  },
+  // Χωρίς explicit `icons` / `manifest` εδώ: το Next.js τα κάνει auto-inject από τα
+  // file-based conventions (favicon.ico, icon.tsx, apple-icon.tsx, manifest.ts).
+  // Ένα explicit block θα τα υπερίσχυε και έδειχνε στο ανύπαρκτο /apple-icon.png.
   robots: {
     index: true,
     follow: true,

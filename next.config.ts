@@ -1,4 +1,5 @@
 // next.config.ts - OPTIMIZED FOR MAXIMUM PERFORMANCE
+import path from "node:path"
 import { type NextConfig } from "next"
 import BundleAnalyzer from "@next/bundle-analyzer"
 
@@ -67,14 +68,12 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year cache
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Κάθε host εδώ μπορεί να τροφοδοτήσει το /_next/image (και μαζί το sharp/libvips).
+    // Κρατάμε μόνο ό,τι χρησιμοποιείται όντως.
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'christoskerigkas.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
       },
     ],
   },
@@ -180,6 +179,10 @@ const nextConfig: NextConfig = {
   
   // ✅ OUTPUT SETTINGS
   output: 'standalone', // Optimize for deployment
+
+  // Χωρίς αυτό το Next εντόπιζε ένα ξένο package-lock.json έξω από το project
+  // και διάλεγε εκείνο το directory ως root για το file tracing του standalone build.
+  outputFileTracingRoot: path.join(__dirname),
   
   // ✅ COMPILER OPTIONS
   compiler: {

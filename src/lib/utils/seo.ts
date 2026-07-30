@@ -19,15 +19,16 @@ export const siteConfig = {
   },
   description: 'Computer Science student building responsive websites and web applications with TypeScript, React, and Next.js.',
   logo: {
-    url: '/logo.png',
-    width: 192,
-    height: 192,
+    // Παράγεται από src/app/icon.tsx
+    url: '/icon/512',
+    width: 512,
+    height: 512,
     alt: 'Christos Kerigkas Logo'
   },
   organization: {
     name: 'Christos Kerigkas',
     url: 'https://christoskerigkas.com',
-    logo: '/logo.png'
+    logo: '/icon/512'
   }
 };
 
@@ -54,20 +55,14 @@ export const defaultMetadata: Metadata = {
     siteName: 'Christos Kerigkas',
     title: 'Christos Kerigkas | Web Developer',
     description: 'Computer Science student building responsive websites and web applications with TypeScript, React, and Next.js.',
-    images: [
-      {
-        url: 'https://christoskerigkas.com/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Christos Kerigkas - Web Developer',
-      },
-    ],
+    // Το og:image / twitter:image παράγεται από src/app/opengraph-image.tsx.
+    // Μην ορίζεις εδώ images — το explicit metadata υπερισχύει του file-based
+    // και παλιότερα έδειχνε στο /og-image.jpg που δεν υπήρχε.
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Christos Kerigkas | Web Developer',
     description: 'Computer Science student building responsive websites and web applications with TypeScript, React, and Next.js.',
-    images: ['https://christoskerigkas.com/og-image.jpg'],
     creator: '@_xrhstos_k59_',
   },
   robots: {

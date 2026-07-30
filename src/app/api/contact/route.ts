@@ -3,6 +3,7 @@ import { NextResponse, NextRequest } from 'next/server'
 import { createTransport, SentMessageInfo } from 'nodemailer'
 import { z } from 'zod'
 import { contactFormRateLimit } from '@/lib/utils/rate-limit'
+import { escapeHtml } from '@/lib/utils/escape-html'
 
 // Form validation schema
 const contactSchema = z.object({
@@ -114,13 +115,15 @@ export async function POST(req: NextRequest) {
           Message: ${message}
           IP: ${maskedIp}
         `,
+        // Escape πρώτα, <br> μετά — αλλιώς το input του χρήστη γίνεται live HTML
+        // στο inbox του παραλήπτη.
         html: `
           <h3>New Contact Form Submission</h3>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+          <p><strong>Email:</strong> ${escapeHtml(email)}</p>
           <p><strong>Message:</strong></p>
-          <p>${message.replace(/\n/g, '<br>')}</p>
-          <p><strong>Origin:</strong> ${maskedIp}</p>
+          <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
+          <p><strong>Origin:</strong> ${escapeHtml(maskedIp)}</p>
         `,
       };
       

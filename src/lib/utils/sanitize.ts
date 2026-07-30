@@ -1,6 +1,7 @@
 // src/lib/utils/sanitize.ts
 import DOMPurify from 'dompurify';
 import { JSDOM, type DOMWindow } from 'jsdom';
+import { escapeHtml } from './escape-html';
 
 // Server-side DOMPurify initialization
 const createDOMPurify = () => {
@@ -103,16 +104,7 @@ export function sanitizeHtml(
  * Basic HTML entity escaping (fallback)
  */
 export function basicHtmlEscape(text: string): string {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2F;',
-  };
-
-  return text.replace(/[&<>"'/]/g, (match) => htmlEscapes[match] || match);
+  return escapeHtml(text);
 }
 
 /**

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-label="Project cover placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F1728" />
+      <stop offset="100%" stop-color="#1B2438" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)" />
+
+  <!-- hairline frame -->
+  <rect x="24.5" y="24.5" width="751" height="401" fill="none" stroke="#C9AB72" stroke-opacity="0.28" />
+
+  <!-- monogram mark -->
+  <g transform="translate(400 196)">
+    <circle r="54" fill="none" stroke="#C9AB72" stroke-opacity="0.55" stroke-width="1.5" />
+    <text x="0" y="0" fill="#C9AB72" font-family="Georgia, 'Times New Roman', serif" font-size="40" text-anchor="middle" dominant-baseline="central" letter-spacing="2">CK</text>
+  </g>
+
+  <text x="400" y="300" fill="#EFEAE1" fill-opacity="0.82" font-family="Georgia, 'Times New Roman', serif" font-size="26" text-anchor="middle">Preview coming soon</text>
+
+  <text x="400" y="336" fill="#969FB0" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" text-anchor="middle" letter-spacing="3">CHRISTOS KERIGKAS</text>
+</svg>
