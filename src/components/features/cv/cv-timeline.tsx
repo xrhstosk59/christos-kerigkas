@@ -95,8 +95,10 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
         {(view === 'all' || view === 'experience') && (
           <div className="mb-10">
             {view === 'all' && (
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-                <Briefcase className="w-5 h-5 mr-2 text-primary dark:text-primary" />
+              <h2 className="relative z-10 mb-4 flex min-h-8 items-center pl-14 text-xl font-bold text-gray-900 dark:text-white">
+                <span className="absolute left-5 flex h-8 w-8 items-center justify-center rounded-full bg-background">
+                  <Briefcase className="h-5 w-5 text-primary dark:text-primary" />
+                </span>
                 Professional Experience
               </h2>
             )}
@@ -259,8 +261,10 @@ export default function CVTimeline({ experience, education, viewMode, filters }:
         {(view === 'all' || view === 'education') && (
           <div>
             {view === 'all' && (
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-                <GraduationCap className="w-5 h-5 mr-2 text-primary dark:text-primary" />
+              <h2 className="relative z-10 mb-4 flex min-h-8 items-center pl-14 text-xl font-bold text-gray-900 dark:text-white">
+                <span className="absolute left-5 flex h-8 w-8 items-center justify-center rounded-full bg-background">
+                  <GraduationCap className="h-5 w-5 text-primary dark:text-primary" />
+                </span>
                 Education
               </h2>
             )}

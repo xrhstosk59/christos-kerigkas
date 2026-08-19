@@ -18,7 +18,6 @@ const CAR_STATION_PROJECT_IMAGE = '/images/projects/car-station-cover.jpg';
 const SQLATCH_PROJECT_IMAGE = '/images/projects/sqlatch-cover.jpg';
 const WARRIOR_PROJECT_IMAGE = '/images/projects/warrior-vs-aliens-cover.jpg';
 const QUIZ_MASTER_PROJECT_IMAGE = '/images/projects/quiz-master-cover.jpg';
-const SAAS_DASHBOARD_PROJECT_IMAGE = '/images/projects/saas-dashboard-template-cover.jpg';
 
 const EXCLUDED_PUBLIC_PROJECT_SLUGS = new Set(['smart-trader-bot', 'sniper4crypto']);
 
@@ -125,24 +124,6 @@ const SUPPLEMENTAL_PROJECTS: ProjectRow[] = [
     featured: false,
     status: 'Completed',
     order: 11,
-    created_at: null,
-    updated_at: null,
-  },
-  {
-    id: -4,
-    slug: 'saas-dashboard-template',
-    title: 'SaaS Dashboard Template',
-    description:
-      'Learning-focused SaaS dashboard template developed with a heavily AI-assisted workflow plus manual customization, cleanup, and local testing.',
-    short_description: 'Learning-focused dashboard template with auth and realtime features.',
-    categories: ['web-development', 'portfolio'],
-    tech: ['Next.js', 'TypeScript', 'Prisma', 'PostgreSQL', 'NextAuth.js', 'Socket.IO'],
-    github: 'https://github.com/xrhstosk59/saas-dashboard-template',
-    live_url: null,
-    image: SAAS_DASHBOARD_PROJECT_IMAGE,
-    featured: false,
-    status: 'Completed',
-    order: 12,
     created_at: null,
     updated_at: null,
   },

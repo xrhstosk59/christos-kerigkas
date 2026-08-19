@@ -32,7 +32,6 @@ const CV_PROJECT_ORDER = [
   'wait-less',
   'grade-calc',
   'bluewave-properties',
-  'saas-dashboard-template',
   'quiz-master',
 ] as const;
 
